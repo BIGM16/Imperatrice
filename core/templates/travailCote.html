@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interface Admin - Gestion des Produits</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+              
+        .theme-bg-primary { background-color: var(--bg-primary); }
+        .theme-bg-secondary { background-color: var(--bg-secondary); }
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        .theme-accent { color: var(--accent); }
+        .theme-navy { background-color: var(--navy); }
+        
+        .loading-spinner {
+            border: 2px solid transparent;
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        
+        
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="light theme-bg-primary theme-text-primary min-h-full">
+  <div class="container mx-auto px-4 py-6 max-w-6xl"><!-- Statistiques rapides -->
+   <!-- Liste des produits -->
+   <div class="theme-bg-secondary rounded-xl p-6 shadow-lg">
+    <div class="flex justify-between items-center mb-4">
+     <h2 class="text-xl font-semibold theme-text-primary">Gestion des Produits</h2>
+     <div class="flex gap-2"><select id="category-filter" class="p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border text-sm"> <option value="">Toutes les catégories</option> <option value="boissons-chaudes">Boissons Chaudes</option> <option value="boissons-froides">Boissons Froides</option> <option value="boissons-alcoolisees">Boissons Alcoolisées</option> <option value="jus-smoothies">Jus &amp; Smoothies</option> <option value="autres">Autres</option> </select> <input type="text" id="search-input" placeholder="Rechercher..." class="p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border text-sm">
+     </div>
+    </div>
+    <div id="products-list" class="space-y-3">
+     <p class="theme-text-secondary text-center py-8">Aucun produit enregistré</p>
+    </div>
+   </div>
+  </div><!-- Modal de confirmation de suppression -->
+  <div id="delete-modal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
+   <div class="theme-bg-primary rounded-xl p-6 max-w-md mx-4 shadow-2xl">
+    <h3 class="text-lg font-semibold theme-text-primary mb-4">Confirmer la suppression</h3>
+    <p class="theme-text-secondary mb-6">Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.</p>
+    <div class="flex gap-3 justify-end"><button id="cancel-delete" class="theme-bg-tertiary theme-text-primary px-4 py-2 rounded-lg hover:opacity-80 transition-opacity"> Annuler </button> <button id="confirm-delete" class="theme-danger text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"> <span>Supprimer</span>
+      <div id="delete-loading" class="loading-spinner hidden"></div></button>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Configuration par défaut
+        const defaultConfig = {
+            admin_title: "Interface Admin",
+            currency_symbol: "€",
+            low_stock_threshold: "10"
+        };
+
+        // Variables globales
+        let currentProducts = [];
+        let currentRecordCount = 0;
+        let isDarkMode = false;
+        let editingProduct = null;
+        let productToDelete = null;
+
+        // Gestionnaire de données
+        const dataHandler = {
+            onDataChanged(data) {
+                currentProducts = data;
+                currentRecordCount = data.length;
+                renderProductsList();
+                updateStatistics();
+            }
+        };
+
+        // Initialisation des SDKs
+        async function initializeApp() {
+            // Initialisation du Data SDK
+            const dataResult = await window.dataSdk.init(dataHandler);
+            if (!dataResult.isOk) {
+                console.error("Erreur d'initialisation du Data SDK");
+                return;
+            }
+
+            // Initialisation de l'Element SDK
+            if (window.elementSdk) {
+                await window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange: async (config) => {
+                        document.getElementById('admin-title').textContent = config.admin_title || defaultConfig.admin_title;
+                        const currencyElements = document.querySelectorAll('#currency-label, #currency-stat');
+                        currencyElements.forEach(el => {
+                            el.textContent = config.currency_symbol || defaultConfig.currency_symbol;
+                        });
+                        updateStatistics();
+                    },
+                    mapToCapabilities: (config) => ({
+                        recolorables: [
+                            {
+                                get: () => config.background_color || "#ffffff",
+                                set: (value) => {
+                                    if (window.elementSdk) {
+                                        window.elementSdk.setConfig({ background_color: value });
+                                    }
+                                }
+                            },
+                            {
+                                get: () => config.surface_color || "#f8fafc",
+                                set: (value) => {
+                                    if (window.elementSdk) {
+                                        window.elementSdk.setConfig({ surface_color: value });
+                                    }
+                                }
+                            },
+                            {
+                                get: () => config.text_color || "#1e293b",
+                                set: (value) => {
+                                    if (window.elementSdk) {
+                                        window.elementSdk.setConfig({ text_color: value });
+                                    }
+                                }
+                            },
+                            {
+                                get: () => config.accent_color || "#06b6d4",
+                                set: (value) => {
+                                    if (window.elementSdk) {
+                                        window.elementSdk.setConfig({ accent_color: value });
+                                    }
+                                }
+                            },
+                            {
+                                get: () => config.navy_color || "#1e3a8a",
+                                set: (value) => {
+                                    if (window.elementSdk) {
+                                        window.elementSdk.setConfig({ navy_color: value });
+                                    }
+                                }
+                            }
+                        ],
+                        borderables: [],
+                        fontEditable: {
+                            get: () => config.font_family || "Inter",
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ font_family: value });
+                                }
+                            }
+                        },
+                        fontSizeable: {
+                            get: () => config.font_size || 16,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ font_size: value });
+                                }
+                            }
+                        }
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ["admin_title", config.admin_title || defaultConfig.admin_title],
+                        ["currency_symbol", config.currency_symbol || defaultConfig.currency_symbol],
+                        ["low_stock_threshold", config.low_stock_threshold || defaultConfig.low_stock_threshold]
+                    ])
+                });
+            }
+        }
+
+        // Mise à jour des statistiques
+        function updateStatistics() {
+            const totalProducts = currentProducts.length;
+            const lowStockThreshold = parseInt(window.elementSdk?.config?.low_stock_threshold || defaultConfig.low_stock_threshold);
+            const lowStockCount = currentProducts.filter(p => p.stock <= lowStockThreshold).length;
+            const totalValue = currentProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
+            const categories = [...new Set(currentProducts.map(p => p.category))].length;
+
+            document.getElementById('total-products').textContent = totalProducts;
+            document.getElementById('low-stock-count').textContent = lowStockCount;
+            document.getElementById('total-value').innerHTML = `${totalValue.toFixed(2)}<span id="currency-stat">${window.elementSdk?.config?.currency_symbol || defaultConfig.currency_symbol}</span>`;
+            document.getElementById('categories-count').textContent = categories;
+        }
+
+        // Rendu de la liste des produits
+        function renderProductsList() {
+            const listContainer = document.getElementById('products-list');
+            const categoryFilter = document.getElementById('category-filter').value;
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            let filteredProducts = currentProducts;
+            
+            if (categoryFilter) {
+                filteredProducts = filteredProducts.filter(p => p.category === categoryFilter);
+            }
+            
+            if (searchTerm) {
+                filteredProducts = filteredProducts.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) ||
+                    p.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filteredProducts.length === 0) {
+                listContainer.innerHTML = '<p class="theme-text-secondary text-center py-8">Aucun produit trouvé</p>';
+                return;
+            }
+            
+            const lowStockThreshold = parseInt(window.elementSdk?.config?.low_stock_threshold || defaultConfig.low_stock_threshold);
+            const currencySymbol = window.elementSdk?.config?.currency_symbol || defaultConfig.currency_symbol;
+            
+            const productsHtml = filteredProducts.map(product => {
+                const stockClass = product.stock <= lowStockThreshold ? 'stock-low' : 
+                                 product.stock <= lowStockThreshold * 2 ? 'stock-medium' : 'stock-high';
+                
+                return `
+                    <div class="theme-bg-primary rounded-lg p-4 fade-in">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h3 class="font-semibold theme-text-primary">${product.name}</h3>
+                                    <span class="px-2 py-1 text-xs rounded-full theme-bg-tertiary theme-text-secondary">${getCategoryLabel(product.category)}</span>
+                                </div>
+                                ${product.description ? `<p class="text-sm theme-text-secondary mb-2">${product.description}</p>` : ''}
+                                <div class="flex items-center gap-4 text-sm">
+                                    <span class="theme-text-primary font-medium">${product.price}${currencySymbol}</span>
+                                    <span class="${stockClass} font-medium">Stock: ${product.stock}</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="editProduct('${product.__backendId}')" class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 transition-opacity" title="Modifier">
+                                    ✏️
+                                </button>
+                                <button onclick="adjustStock('${product.__backendId}', -1)" class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 transition-opacity" title="Diminuer stock">
+                                    ➖
+                                </button>
+                                <button onclick="adjustStock('${product.__backendId}', 1)" class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 transition-opacity" title="Augmenter stock">
+                                    ➕
+                                </button>
+                                <button onclick="showDeleteModal('${product.__backendId}')" class="p-2 theme-danger rounded-lg hover:opacity-80 transition-opacity text-white" title="Supprimer">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            listContainer.innerHTML = productsHtml;
+        }
+
+        // Obtenir le libellé de la catégorie
+        function getCategoryLabel(category) {
+            const labels = {
+                'boissons-chaudes': 'Boissons Chaudes',
+                'boissons-froides': 'Boissons Froides',
+                'boissons-alcoolisees': 'Boissons Alcoolisées',
+                'jus-smoothies': 'Jus & Smoothies',
+                'autres': 'Autres'
+            };
+            return labels[category] || category;
+        }
+
+        // Modifier un produit
+        function editProduct(productId) {
+            const product = currentProducts.find(p => p.__backendId === productId);
+            if (!product) return;
+            
+            editingProduct = product;
+            
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-category').value = product.category;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock;
+            document.getElementById('product-description').value = product.description || '';
+            
+            document.getElementById('form-title').textContent = 'Modifier le Produit';
+            document.getElementById('submit-text').textContent = 'Mettre à jour';
+            document.getElementById('cancel-button').classList.remove('hidden');
+            
+            document.getElementById('product-name').focus();
+        }
+
+        // Annuler la modification
+        function cancelEdit() {
+            editingProduct = null;
+            document.getElementById('product-form').reset();
+            document.getElementById('form-title').textContent = 'Ajouter un Produit';
+            document.getElementById('submit-text').textContent = 'Ajouter le produit';
+            document.getElementById('cancel-button').classList.add('hidden');
+        }
+
+        // Ajuster le stock
+        async function adjustStock(productId, change) {
+            const product = currentProducts.find(p => p.__backendId === productId);
+            if (!product) return;
+            
+            const newStock = Math.max(0, product.stock + change);
+            const updatedProduct = { ...product, stock: newStock };
+            
+            const result = await window.dataSdk.update(updatedProduct);
+            if (!result.isOk) {
+                showNotification("Erreur lors de la mise à jour du stock", "error");
+            }
+        }
+
+        // Afficher le modal de suppression
+        function showDeleteModal(productId) {
+            productToDelete = productId;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+        }
+
+        // Masquer le modal de suppression
+        function hideDeleteModal() {
+            productToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+            document.getElementById('delete-modal').classList.remove('flex');
+        }
+
+        // Supprimer un produit
+        async function deleteProduct() {
+            if (!productToDelete) return;
+            
+            const product = currentProducts.find(p => p.__backendId === productToDelete);
+            if (!product) return;
+            
+            const confirmButton = document.getElementById('confirm-delete');
+            const deleteLoading = document.getElementById('delete-loading');
+            
+            confirmButton.disabled = true;
+            deleteLoading.classList.remove('hidden');
+            
+            const result = await window.dataSdk.delete(product);
+            
+            confirmButton.disabled = false;
+            deleteLoading.classList.add('hidden');
+            
+            if (result.isOk) {
+                showNotification("Produit supprimé avec succès", "success");
+                hideDeleteModal();
+            } else {
+                showNotification("Erreur lors de la suppression", "error");
+            }
+        }
+
+        // Gestion du formulaire
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!editingProduct && currentRecordCount >= 999) {
+                showNotification("Limite de 999 produits atteinte", "error");
+                return;
+            }
+            
+            const submitButton = document.getElementById('submit-button');
+            const submitText = document.getElementById('submit-text');
+            const submitLoading = document.getElementById('submit-loading');
+            
+            submitButton.disabled = true;
+            submitText.textContent = editingProduct ? "Mise à jour..." : "Ajout...";
+            submitLoading.classList.remove('hidden');
+            
+            const formData = {
+                name: document.getElementById('product-name').value,
+                category: document.getElementById('product-category').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                stock: parseInt(document.getElementById('product-stock').value),
+                description: document.getElementById('product-description').value || '',
+                createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString()
+            };
+            
+            let result;
+            if (editingProduct) {
+                result = await window.dataSdk.update({ ...editingProduct, ...formData });
+            } else {
+                result = await window.dataSdk.create({
+                    ...formData,
+                    id: Date.now().toString()
+                });
+            }
+            
+            submitButton.disabled = false;
+            submitText.textContent = editingProduct ? "Mettre à jour" : "Ajouter le produit";
+            submitLoading.classList.add('hidden');
+            
+            if (result.isOk) {
+                showNotification(editingProduct ? "Produit mis à jour avec succès" : "Produit ajouté avec succès", "success");
+                cancelEdit();
+            } else {
+                showNotification("Erreur lors de l'opération", "error");
+            }
+        });
+
+        // Gestion du mode sombre
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (isDarkMode) {
+                body.className = body.className.replace('light', 'dark');
+                themeIcon.textContent = '☀️';
+            } else {
+                body.className = body.className.replace('dark', 'light');
+                themeIcon.textContent = '🌙';
+            }
+        });
+
+        // Notification système
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 fade-in ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } text-white`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Écouteurs d'événements
+        document.getElementById('cancel-button').addEventListener('click', cancelEdit);
+        document.getElementById('cancel-delete').addEventListener('click', hideDeleteModal);
+        document.getElementById('confirm-delete').addEventListener('click', deleteProduct);
+        document.getElementById('category-filter').addEventListener('change', renderProductsList);
+        document.getElementById('search-input').addEventListener('input', renderProductsList);
+
+        // Fermer le modal en cliquant sur le backdrop
+        document.getElementById('delete-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                hideDeleteModal();
+            }
+        });
+
+        // Rendre les fonctions globales
+        window.editProduct = editProduct;
+        window.adjustStock = adjustStock;
+        window.showDeleteModal = showDeleteModal;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998718b602213e9a',t:'MTc2MjEyMjgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Interface vendeur{% endblock %}
+{% block content %} 
+{% comment %} {#
+====================================================== DASHBOARD VENDEUR
+====================================================== Interface simplifiée pour
+les vendeurs permettant : 1. Enregistrement rapide des ventes 2. Visualisation
+de l'historique récent 3. Suivi du total des ventes Fonctionnalités AJAX : -
+Enregistrement des ventes en temps réel - Mise à jour dynamique de l'historique
+- Calcul automatique des totaux Caractéristiques : - Validation des stocks avant
+vente - Alertes pour stocks faibles - Mise à jour temps réel des totaux -
+Interface adaptative et responsive Dépendances : - Requiert CSRF pour les
+requêtes AJAX - Utilise le système de thèmes (light/dark) - JavaScript pour les
+calculs et interactions #} {% endcomment %}
+
+<div>
+  <!-- 1. En-tête de l'interface -->
+  <header class="flex justify-between items-center mb-8">
+    <h1 id="app-title" class="text-3xl font-bold theme-text-primary">
+      Interface de Vente
+    </h1>
+  </header>
+  <!-- 2. Formulaire d'enregistrement des ventes -->
+  {# Formulaire principal avec sélection produit et quantité #}
+  <div class="theme-bg-secondary rounded-xl p-6 mb-6 shadow-lg">
+    <h2 class="text-xl font-semibold mb-4 theme-text-primary">
+      Nouvelle Vente
+    </h2>
+    <form id="sale-form" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label
+          for="product-select"
+          class="block text-sm font-medium theme-text-secondary mb-2"
+          >Boisson</label
+        >
+        <select
+          id="drink"
+          class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+        >
+          <option value="">Sélectionner un produit</option>
+          {% for drink in drinks %}
+          <option value="{{ drink.id }}" data-price="{{ drink.price }}">
+            {{ drink.name }} - {{ drink.price }} FC
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label
+          for="quantity-input"
+          class="block text-sm font-medium theme-text-secondary mb-2"
+          >Quantité</label
+        >
+        <input
+          type="number"
+          id="quantity"
+          min="1"
+          value="1"
+          class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+        />
+      </div>
+      <div class="flex items-center justify-between pt-4">
+        <div class="text-lg font-semibold theme-text-primary">
+          Total:
+          <span id="total" type="text" readonly class="theme-accent"></span>
+        </div>
+        <button
+          type="submit"
+          id="sell-button"
+          class="theme-navy text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+        >
+          <span id="sell-button-text">Vendu</span>
+          <div id="sell-loading" class="loading-spinner hidden"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+  <!-- Historique des ventes -->
+  <div id="sales-summary" class="theme-bg-secondary rounded-xl p-6 shadow-lg">
+    <h2 class="text-xl font-semibold mb-4 theme-text-primary">
+      Historique des Ventes
+    </h2>
+    <p class="font-bold">
+      Total du moment :
+      <span class="text-green-500" id="total_global">{{ total }} FC</span>
+    </p>
+    <div id="sales-list" class="space-y-4 mt-4 flex flex-col">
+      {% for sale in sales %}
+      <div
+        class="flex justify-between items-center p-4 theme-bg-primary rounded-lg fade-in"
+      >
+        <div>
+          <div class="font-medium theme-text-primary">
+            {{ sale.drink.name }}
+          </div>
+          <div class="text-sm theme-text-secondary">
+            Quantité: {{ sale.quantity }} • {{ sale.created_at|date:"d/m H:i" }}
+          </div>
+        </div>
+        <div class="text-lg font-semibold theme-accent">
+          {{ sale.total }} FC
+        </div>
+      </div>
+      {% empty %}
+      <div class="space-y-3">
+        <p class="theme-text-secondary text-center py-8">
+          Aucune vente enregistrée
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Calcul automatique du total
+  const drinkSelect = document.getElementById("drink");
+  const quantityInput = document.getElementById("quantity");
+  const totalSpan = document.getElementById("total");
+
+  function updateTotal() {
+    const selectedOption = drinkSelect.options[drinkSelect.selectedIndex];
+    const price = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+    const qty = parseInt(quantityInput.value) || 0;
+    const total = price * qty;
+    totalSpan.textContent = total.toFixed(2) + " FC";
+  }
+  drinkSelect.addEventListener("change", updateTotal);
+  quantityInput.addEventListener("input", updateTotal);
+
+  // --- Envoi AJAX de la vente ---
+  document.getElementById("sale-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const drinkSelect = document.getElementById("drink");
+    const quantityInput = document.getElementById("quantity");
+    const totalSpan = document.getElementById("total");
+
+    const drinkId = drinkSelect.value;
+    const qty = parseInt(quantityInput.value);
+
+    // ✅ Récupérer le token CSRF de manière robuste
+    const csrfTokenElement = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    );
+    if (!csrfTokenElement) {
+      showToast("Erreur : Token CSRF manquant. Rechargez la page.", "error");
+      console.error("CSRF token not found in the form");
+      return;
+    }
+    const csrftoken = csrfTokenElement.value;
+
+    if (!drinkId || qty <= 0) {
+      showToast(
+        `Veuillez sélectionner une boisson et entrer une quantité valide.`,
+        "warning"
+      );
+      return;
+    }
+
+    const res = await fetch("{% url 'api_record_sale' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken,
+      },
+      body: JSON.stringify({ drink_id: drinkId, quantity: qty }),
+      credentials: "same-origin",
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.ok) {
+      showToast(
+        `${qty} × ${data.name} vendu ! Total : ${data.total} FC`,
+        "success"
+      );
+
+      // 🔔 Alerte si le stock devient faible (≤ 2)
+      if (data.remaining_stock <= 2) {
+        showToast(
+          `⚠️ Stock faible pour ${data.name} : ${data.remaining_stock} restant(s)`,
+          "warning"
+        );
+      }
+
+      const salesBody = document.getElementById("sales-list");
+      const div = document.createElement("div");
+      div.className =
+        "flex justify-between items-center p-4 theme-bg-primary rounded-lg fade-in";
+
+      // Formater la date en JavaScript
+      const date = new Date(data.created_at);
+      const dateStr = date
+        .toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        .replace(",", " ");
+
+      div.innerHTML = `
+      <div>
+        <div class="font-medium theme-text-primary">${data.name}</div>
+        <div class="text-sm theme-text-secondary">Quantité: ${data.quantity} • ${dateStr}</div>
+      </div>
+      <div class="text-lg font-semibold theme-accent">${data.total} FC</div>
+    `;
+      salesBody.prepend(div);
+
+      const totalElem = document.getElementById("total_global");
+      totalElem.textContent =
+        (parseFloat(totalElem.textContent) + data.total).toFixed(2) + "FC";
+
+      quantityInput.value = "1";
+      drinkSelect.selectedIndex = 0;
+      totalSpan.textContent = "0.00 FC";
+    } else {
+      showToast(
+        "Erreur: " + (data.error || "Impossible d'enregistrer la vente"),
+        "error"
+      );
+    }
+  });
+</script>
+
+{% endblock %}

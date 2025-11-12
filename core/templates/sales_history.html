@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Historique des ventes{% endblock %}
+{% block content %}
+
+{% comment %} {# ======================================================
+   HISTORIQUE DES VENTES
+   ======================================================
+   Page dédiée à l'analyse détaillée des ventes avec 
+   fonctionnalités de filtrage avancées.
+
+   Fonctionnalités principales :
+   1. Filtrage multi-critères :
+      - Par boisson spécifique
+      - Par période (date début/fin)
+   2. Affichage des totaux filtrés
+   3. Tableau détaillé des ventes
+
+   Caractéristiques :
+   - Interface responsive
+   - Pagination des résultats
+   - Calculs dynamiques des totaux
+   - Export des données (à venir)
+
+   Structure :
+   - En-tête avec navigation
+   - Section filtres
+   - Résumé des totaux
+   - Tableau des ventes
+#} {% endcomment %}
+
+<!-- 1. En-tête de la page -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold theme-text-primary">Historique des ventes</h1>
+    <p class="theme-text-secondary">
+      Liste complète des ventes (plus récentes en haut)
+    </p>
+  </div>
+  <a
+    href="{% url 'admin_dashboard' %}"
+    class="px-4 py-2 rounded-lg theme-bg-secondary"
+    >Retour</a
+  >
+</header>
+
+<!-- 2. Section des filtres -->
+{# Formulaire de filtrage avec critères multiples #}
+<div class="theme-bg-secondary p-6 rounded-xl shadow-lg mb-6">
+  <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Boisson</label>
+      <select name="drink" class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border">
+        <option value="">Toutes les boissons</option>
+        {% for drink in drinks %}
+        <option value="{{ drink.id }}" {% if selected_drink|stringformat:"s" == drink.id|stringformat:"s" %}selected{% endif %}>
+          {{ drink.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Date début</label>
+      <input 
+        type="date" 
+        name="date_debut" 
+        value="{{ date_debut|default:'' }}"
+        class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+      >
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Date fin</label>
+      <input 
+        type="date" 
+        name="date_fin" 
+        value="{{ date_fin|default:'' }}"
+        class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+      >
+    </div>
+    <div class="flex items-end">
+      <button type="submit" class="w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Filtrer
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- 3. Résumé des totaux filtrés -->
+{# Affichage du total des ventes correspondant aux critères de filtrage #}
+<div class="theme-bg-secondary p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+  <span class="theme-text-secondary">Total des ventes filtrées :</span>
+  <span class="text-xl font-bold theme-accent">{{ total_filtre }} FC</span>
+</div>
+
+<!-- 4. Tableau des ventes -->
+{# Tableau responsive avec défilement horizontal sur mobile #}
+<div class="theme-bg-secondary p-6 rounded-xl shadow-lg">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse min-w-[640px]">
+    <thead>
+      <tr class="border-b">
+        <th class="p-3">Date</th>
+        <th class="p-3">Boisson</th>
+        <th class="p-3">Quantité</th>
+        <th class="p-3">Vendeur</th>
+        <th class="p-3 text-right">Total (FC)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in sales %}
+      <tr class="border-b hover:theme-bg-primary transition-colors">
+        <td class="p-3 whitespace-nowrap">{{ sale.created_at|date:"d/m/Y H:i" }}</td>
+        <td class="p-3">{{ sale.drink.name }}</td>
+        <td class="p-3">{{ sale.quantity }}</td>
+        <td class="p-3">{{ sale.seller.get_full_name|default:sale.seller.username }}</td>
+        <td class="p-3 text-right font-semibold">{{ sale.total }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center py-8 theme-text-secondary">
+          Aucune vente enregistrée
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

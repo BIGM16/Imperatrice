@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+{% comment %} {# ======================================================
+DASHBOARD ADMINISTRATEUR ======================================================
+Ce template gère l'interface administrateur complète. Sections principales : 1.
+En-tête avec titre 2. Cards statistiques (produits, ventes, montants) 3. Gestion
+des boissons (CRUD) 4. Dernières ventes 5. Statistiques détaillées 6. Actions
+globales (résumé, historique) Fonctionnalités AJAX : -
+Création/modification/suppression de boissons - Gestion des stocks - Génération
+de résumés Dépendances : - Utilise le theme-system pour le mode sombre -
+Requiert CSRF pour les requêtes AJAX - JavaScript pour les modals et
+interactions #} {% endcomment %}
+
+<!-- 1. En-tête du dashboard -->
+<header class="flex justify-between items-center mb-8">
+  <div>
+    <h1 id="admin-title" class="text-3xl font-bold theme-text-primary">
+      Interface Administrateur
+    </h1>
+    <p class="theme-text-secondary">Gestion des produits et stocks</p>
+  </div>
+</header>
+{% comment %} {# 2. Cards statistiques #} {# Affiche les KPIs principaux : nombre de produits,
+ventes du jour, et montant total #} {% endcomment %}
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+  <div class="theme-bg-secondary rounded-xl p-4">
+    <div class="text-2xl font-bold theme-accent" id="total-products">
+      {{ total_drinks }}
+    </div>
+    <div class="text-sm theme-text-secondary">Produits totaux</div>
+  </div>
+  <div class="theme-bg-secondary rounded-xl p-4">
+    <div class="text-2xl font-bold theme-accent">{{ total_today }}</div>
+    <div class="text-sm theme-text-secondary">Total vendu</div>
+  </div>
+  <div class="theme-bg-secondary rounded-xl p-4">
+    <div class="text-2xl font-bold theme-accent">
+      {{ total_sales }}<span>FC</span>
+    </div>
+    <div class="text-sm theme-text-secondary">Valeur totale</div>
+  </div>
+</div>
+
+<!-- 🔹 Gestion des Boissons -->
+<div class="theme-bg-secondary rounded-xl p-6 mb-6 shadow-lg">
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-4"
+  >
+    <h2 class="text-xl font-semibold theme-text-primary">
+      Gestion des Boissons
+    </h2>
+    <button
+      id="open-create-modal"
+      class="theme-navy text-white px-4 py-2 rounded-lg hover:opacity-90"
+    >
+      + Ajouter une boisson
+    </button>
+  </div>
+
+  {% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+    <div
+      class="p-4 mb-2 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% endif %}"
+    >
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for drink in drinks %}
+    <div class="theme-bg-primary rounded-lg p-4">
+      <div class="flex justify-between items-start mb-3">
+        <h3 class="font-semibold theme-text-primary">{{ drink.name }}</h3>
+        <div class="font-bold theme-accent">{{ drink.price }} FC</div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="theme-text-secondary">Stock: {{ drink.stock }}</div>
+        <div class="flex gap-2">
+          <button
+            class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 stock-btn"
+            data-pk="{{ drink.pk }}"
+            data-action="remove"
+            data-update-stock-ajax-url="{% url 'update_stock_ajax' drink.pk %}"
+            title="Diminuer stock"
+          >
+            ➖
+          </button>
+          <button
+            class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 stock-btn"
+            data-pk="{{ drink.pk }}"
+            data-action="add"
+            data-update-stock-ajax-url="{% url 'update_stock_ajax' drink.pk %}"
+            title="Augmenter stock"
+          >
+            ➕
+          </button>
+
+          <button
+            class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 edit-drink-btn"
+            data-name="{{ drink.name }}"
+            data-price="{{ drink.price }}"
+            data-stock="{{ drink.stock }}"
+            data-update-ajax-url="{% url 'edit_drink_ajax' drink.pk %}"
+            title="Modifier"
+          >
+            ✏️
+          </button>
+
+          <button
+            class="p-2 theme-danger rounded-lg hover:opacity-80 text-white delete-drink-btn"
+            data-delete-ajax-url="{% url 'delete_drink_ajax' drink.pk %}"
+            data-name="{{ drink.name }}"
+            title="Supprimer"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <p class="col-span-3 text-center py-8 theme-text-secondary">
+      Aucune boisson enregistrée
+    </p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal: Formulaire (Ajouter / Modifier) -->
+<div
+  id="drink-modal"
+  class="fixed inset-0 hidden items-center justify-center z-50"
+>
+  <div
+    class="absolute inset-0 bg-black opacity-50"
+    onclick="closeDrinkModal()"
+  ></div>
+  <div
+    class="relative theme-bg-primary rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl z-10"
+  >
+    <h3
+      id="drink-modal-title"
+      class="text-lg font-semibold theme-text-primary mb-4"
+    >
+      Ajouter une boisson
+    </h3>
+    <form id="drink-modal-form" method="post">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-2"
+            >Nom</label
+          >
+          <input
+            type="text"
+            name="name"
+            id="modal-name"
+            required
+            class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-2"
+            >Prix (FC)</label
+          >
+          <input
+            type="number"
+            name="price"
+            id="modal-price"
+            step="0.01"
+            min="0"
+            required
+            class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-2"
+            >Stock</label
+          >
+          <input
+            type="number"
+            name="stock"
+            id="modal-stock"
+            min="0"
+            required
+            class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+          />
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button
+          type="button"
+          onclick="closeDrinkModal()"
+          class="px-4 py-2 rounded-lg theme-bg-tertiary"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-lg theme-navy text-white"
+        >
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Confirmation suppression -->
+<div
+  id="delete-modal"
+  class="fixed inset-0 hidden items-center justify-center z-50"
+>
+  <div
+    class="absolute inset-0 bg-black opacity-50"
+    onclick="closeDeleteModal()"
+  ></div>
+  <div
+    class="relative theme-bg-primary rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl z-10"
+  >
+    <h3
+      id="delete-modal-title"
+      class="text-lg font-semibold theme-text-primary mb-4"
+    >
+      Confirmer la suppression
+    </h3>
+    <p id="delete-modal-body" class="theme-text-secondary mb-6">
+      Êtes-vous sûr ?
+    </p>
+    <form id="delete-modal-form" method="post" action="">
+      {% csrf_token %}
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          onclick="closeDeleteModal()"
+          class="px-4 py-2 rounded-lg theme-bg-tertiary"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-lg bg-red-600 text-white"
+        >
+          Supprimer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 🔹 Section Dernières ventes -->
+<div class="theme-bg-secondary p-6 rounded-xl mb-6 shadow-lg">
+  <div class="flex items-center gap-3 mb-4">
+    <h2 class="text-xl font-semibold theme-text-primary">
+      <span
+        class="inline-block w-8 h-8 bg-blue-100 theme-text-primary rounded-lg flex items-center justify-center mr-2"
+        >🧾</span
+      >
+      10 Dernières ventes
+    </h2>
+  </div>
+  <div id="sales-list" class="space-y-2">
+    {% for sale in last_sales %}
+    <div
+      class="flex justify-between theme-bg-primary p-4 rounded-lg items-center"
+    >
+      <div class="flex items-center gap-3">
+        <span class="theme-text-primary">
+          <span class="font-semibold">{{ sale.quantity }}</span>
+          {{ sale.drink.name }}
+        </span>
+        <span class="theme-text-secondary text-sm">
+          {{ sale.created_at|date:"d/m H:i" }}
+        </span>
+      </div>
+      <span class="theme-accent font-semibold">{{ sale.total }} FC</span>
+    </div>
+    {% empty %}
+    <div class="py-12 text-center theme-text-secondary">
+      <div class="text-4xl mb-3">📊</div>
+      <p>Aucune vente enregistrée</p>
+    </div>
+    {% endfor %}
+  </div>
+  <div
+    class="mt-6 pt-4 border-t theme-border flex justify-between items-center"
+  >
+    <span class="theme-text-secondary">Total global</span>
+    <span class="text-lg font-semibold theme-accent">
+      {{ total_sales }} FC</span>
+  </div>
+</div>
+
+<!-- 🔹 Section Statistiques par boisson -->
+<div class="theme-bg-secondary p-6 rounded-xl mb-6 shadow-lg">
+  <h2 class="text-xl font-semibold mb-4">📦 Statistiques</h2>
+  <div class="overflow-x-auto mb-6">
+    <table class="w-full text-left border-collapse min-w-[640px]">
+      <thead>
+        <tr class="border-b">
+          <th class="whitespace-nowrap px-4">Boisson</th>
+          <th class="text-center whitespace-nowrap px-4">Quantité vendue</th>
+          <th class="text-center whitespace-nowrap px-4">Stock restant</th>
+          <th class="text-center whitespace-nowrap px-4">Total perçu (FC)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in stats %}
+        <tr class="border-b">
+          <td class="px-4 py-2">{{ s.drink__name }}</td>
+          <td class="text-center px-4 py-2">{{ s.total_vendu }}</td>
+          <td class="text-center px-4 py-2">{{ s.stock_restant }}</td>
+          <td class="text-center px-4 py-2">{{ s.total_montant }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 🔹 Bouton pour générer le résumé -->
+  <div class="text-center">
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+      <button
+        id="generate-summary"
+        class="bg-green-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto"
+      >
+        🧮 Générer le résumé du jour
+      </button>
+
+      <a
+        href="{% url 'sales_history' %}"
+        class="bg-blue-600 text-white px-6 py-3 rounded-lg inline-flex items-center justify-center w-full sm:w-auto"
+        id="view-sales-history"
+      >
+        📜 Historique des ventes
+      </a>
+    </div>
+  </div>
+  <!-- Notification -->
+  <div
+    id="popup"
+    class="hidden fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg"
+  ></div>
+  <script>
+    // Générer le résumé
+    document
+      .getElementById("generate-summary")
+      .addEventListener("click", async () => {
+        const res = await fetch("{% url 'generer_resume_ajax' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        });
+        const data = await res.json();
+        const popup = document.getElementById("popup");
+        popup.textContent = data.message || data.error;
+        popup.classList.remove("hidden");
+        setTimeout(() => popup.classList.add("hidden"), 2000);
+      });
+
+    // ----- Modals pour CRUD Boissons -----
+    const drinkModal = document.getElementById("drink-modal");
+    const deleteModal = document.getElementById("delete-modal");
+    const drinkForm = document.getElementById("drink-modal-form");
+    const deleteForm = document.getElementById("delete-modal-form");
+    const modalTitle = document.getElementById("drink-modal-title");
+    const modalName = document.getElementById("modal-name");
+    const modalPrice = document.getElementById("modal-price");
+    const modalStock = document.getElementById("modal-stock");
+
+    function openDrinkModal(mode = "create", options = {}) {
+      if (mode === "create") {
+        modalTitle.textContent = "Ajouter une boisson";
+        // URL AJAX de création
+        drinkForm.dataset.ajaxUrl = "{% url 'create_drink_ajax' %}";
+        modalName.value = "";
+        modalPrice.value = "";
+        modalStock.value = "";
+      } else if (mode === "edit") {
+        modalTitle.textContent = `Modifier ${options.name}`;
+        drinkForm.dataset.ajaxUrl = options.updateAjaxUrl;
+        modalName.value = options.name || "";
+        modalPrice.value = options.price || "";
+        modalStock.value = options.stock || "";
+      }
+      drinkModal.classList.remove("hidden");
+      drinkModal.classList.add("flex");
+    }
+
+    function closeDrinkModal() {
+      drinkModal.classList.add("hidden");
+      drinkModal.classList.remove("flex");
+    }
+
+    function openDeleteModal(options = {}) {
+      const body = document.getElementById("delete-modal-body");
+      body.textContent = `Supprimer "${options.name}" ? Cette action est irréversible.`;
+      deleteForm.dataset.ajaxUrl = options.deleteAjaxUrl;
+      deleteModal.classList.remove("hidden");
+      deleteModal.classList.add("flex");
+    }
+
+    function closeDeleteModal() {
+      deleteModal.classList.add("hidden");
+      deleteModal.classList.remove("flex");
+    }
+
+    // helper popup
+    function showPopup(msg) {
+      const popup = document.getElementById("popup");
+      popup.textContent = msg;
+      popup.classList.remove("hidden");
+      setTimeout(() => popup.classList.add("hidden"), 2000);
+    }
+
+    // Ouvrir modal création
+    document
+      .getElementById("open-create-modal")
+      .addEventListener("click", () => openDrinkModal("create"));
+
+    // Attacher events aux boutons edit (AJAX)
+    document.querySelectorAll(".edit-drink-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const name = btn.getAttribute("data-name");
+        const price = btn.getAttribute("data-price");
+        const stock = btn.getAttribute("data-stock");
+        const updateAjaxUrl = btn.getAttribute("data-update-ajax-url");
+        openDrinkModal("edit", { name, price, stock, updateAjaxUrl });
+      });
+    });
+
+    // Attacher events aux boutons delete (AJAX)
+    document.querySelectorAll(".delete-drink-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const name = btn.getAttribute("data-name");
+        const deleteAjaxUrl = btn.getAttribute("data-delete-ajax-url");
+        openDeleteModal({ name, deleteAjaxUrl });
+      });
+    });
+
+    // Attacher events aux boutons stock (AJAX)
+    document.querySelectorAll(".stock-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const url = btn.getAttribute("data-update-stock-ajax-url");
+        const action = btn.getAttribute("data-action");
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            body: new URLSearchParams({ action: action, quantity: 1 }),
+          });
+          const data = await res.json();
+          showPopup(data.message || data.error || "Réponse serveur");
+          if (data.ok) {
+            setTimeout(() => window.location.reload(), 300);
+          }
+        } catch (err) {
+          console.error(err);
+          showPopup("Erreur réseau lors de la mise à jour du stock.");
+        }
+      });
+    });
+
+    // Fermer les modals avec Echap
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeDrinkModal();
+        closeDeleteModal();
+      }
+    });
+
+    // Soumettre le formulaire du modal via AJAX
+    drinkForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = drinkForm.dataset.ajaxUrl || drinkForm.action;
+      const formData = new FormData(drinkForm);
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showPopup(data.message || "Opération réussie");
+          closeDrinkModal();
+          setTimeout(() => window.location.reload(), 300);
+        } else {
+          showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
+        }
+      } catch (err) {
+        console.error(err);
+        showPopup("Erreur réseau lors de l'envoi du formulaire.");
+      }
+    });
+
+    // Soumettre suppression via AJAX
+    deleteForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = deleteForm.dataset.ajaxUrl || deleteForm.action;
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showPopup(data.message || "Supprimé");
+          closeDeleteModal();
+          setTimeout(() => window.location.reload(), 300);
+        } else {
+          showPopup(data.error || "Erreur lors de la suppression");
+        }
+      } catch (err) {
+        console.error(err);
+        showPopup("Erreur réseau lors de la suppression.");
+      }
+    });
+  </script>
+  {% endblock %}
+</div>

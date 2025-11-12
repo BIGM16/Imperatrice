@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>{% block title %}Boissons Manager{% endblock %}</title>
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      body {
+        box-sizing: border-box;
+      }
+      .dark {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --accent: #06b6d4;
+        --navy: #1e40af;
+        --success: #10b981;
+        --danger: #ef4444;
+      }
+      .light {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --accent: #06b6d4;
+        --navy: #1e3a8a;
+        --success: #059669;
+        --danger: #dc2626;
+      }
+      .theme-bg-primary {
+        background-color: var(--bg-primary);
+      }
+      .theme-bg-tertiary {
+        background-color: var(--bg-tertiary);
+      }
+      .theme-bg-secondary {
+        background-color: var(--bg-secondary);
+      }
+      .theme-text-primary {
+        color: var(--text-primary);
+      }
+      .theme-text-secondary {
+        color: var(--text-secondary);
+      }
+      .theme-accent {
+        color: var(--accent);
+      }
+      .theme-navy {
+        background-color: var(--navy);
+      }
+      .theme-border {
+        border-color: var(--text-secondary);
+      }
+      .theme-success {
+        background-color: var(--success);
+      }
+      .theme-danger {
+        background-color: var(--danger);
+      }
+      .loading-spinner {
+        border: 2px solid transparent;
+        border-top: 2px solid var(--accent);
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      .stock-low {
+        color: var(--danger);
+      }
+      .stock-medium {
+        color: #f59e0b;
+      }
+      .stock-high {
+        color: var(--success);
+      }
+    </style>
+  </head>
+  <body class="light theme-bg-primary theme-text-primary min-h-screen">
+    <nav class="theme-bg-secondary p-4 shadow-sm">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <a href="{% url 'login' %}" class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg theme-bg-primary flex items-center justify-center text-xl"
+            >
+              🍹
+            </div>
+            <span class="text-lg font-bold theme-text-primary"
+              >Chez l'IMPERATRICE</span
+            >
+          </a>
+        </div>
+
+        <div class="hidden md:flex items-center gap-6">
+          {% if user.is_authenticated %} {% if user.is_staff %}
+          <a
+            href="{% url 'admin_dashboard' %}"
+            class="theme-text-secondary hover:underline"
+            >Dashboard</a
+          >
+          {% else %}
+          <a
+            href="{% url 'seller_dashboard' %}"
+            class="theme-text-secondary hover:underline"
+            >Espace Vendeur</a
+          >
+          {% endif %}
+          {% endif %}
+        </div>
+
+        <div class="flex items-center gap-4">
+          <button
+            id="theme-toggle"
+            class="p-2 rounded-md theme-bg-primary"
+            aria-label="Changer de thème"
+          >
+            <span id="theme-icon">🌙</span>
+          </button>
+
+          {% if user.is_authenticated %}
+          <div class="hidden sm:flex items-center gap-3">
+            <div class="text-sm theme-text-secondary">Connecté :</div>
+            <div class="text-sm font-medium theme-text-primary">
+              {{ user.username }}
+            </div>
+            <a
+              href="{% url 'logout' %}"
+              class="ml-3 px-3 py-1 rounded-md theme-danger text-white hover:opacity-90"
+              >Déconnexion</a
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile menu (hidden on md+) -->
+    <div
+      id="mobile-menu"
+      class="md:hidden hidden theme-bg-secondary border-t theme-border"
+    >
+      <div class="p-4 space-y-3">
+        {% if user.is_authenticated %} {% if user.is_staff %}
+        <a
+          href="{% url 'admin_dashboard' %}"
+          class="block theme-text-primary px-3 py-2 rounded hover:bg-opacity-5"
+          >Dashboard</a
+        >
+        {% else %}
+        <a
+          href="{% url 'seller_dashboard' %}"
+          class="block theme-text-primary px-3 py-2 rounded hover:bg-opacity-5"
+          >Espace Vendeur</a
+        >
+        {% endif %}
+        <div class="border-t theme-border mt-2 pt-3">
+          <div class="flex items-center justify-between">
+            <div class="text-sm theme-text-secondary">Connecté :</div>
+            <div class="text-sm font-medium theme-text-primary">
+              {{ user.username }}
+            </div>
+          </div>
+          <a
+            href="{% url 'logout' %}"
+            class="mt-3 inline-block px-3 py-2 rounded-md theme-danger text-white"
+            >Déconnexion</a
+          >
+        </div>
+        {% else %}
+        <a
+          href="{% url 'login' %}"
+          class="block theme-text-primary px-3 py-2 rounded hover:bg-opacity-5"
+          >Se connecter</a
+        >
+        {% endif %}
+      </div>
+    </div>
+
+    <main class="p-6">{% block content %} {% endblock %}</main>
+
+    <!-- Zone de notifications -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3"></div>
+
+    <script>
+      // Gestion du mode sombre (sécurisé si le bouton n'existe pas)
+      (function () {
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+        if (!themeToggle) return;
+
+        let isDarkMode = document.body.classList.contains("dark");
+
+        themeToggle.addEventListener("click", () => {
+          isDarkMode = !isDarkMode;
+          const body = document.body;
+
+          if (isDarkMode) {
+            body.classList.remove("light");
+            body.classList.add("dark");
+            if (themeIcon) themeIcon.textContent = "☀️";
+          } else {
+            body.classList.remove("dark");
+            body.classList.add("light");
+            if (themeIcon) themeIcon.textContent = "🌙";
+          }
+        });
+      })();
+
+      // Fonction pour afficher les notifications toast
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+
+        const colors = {
+          success: "bg-green-500",
+          error: "bg-red-500",
+          warning: "bg-yellow-500",
+          info: "bg-blue-500",
+        };
+
+        toast.className = `text-white px-4 py-3 rounded-lg shadow-lg fade-in ${
+          colors[type] || colors.info
+        }`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.add(
+            "opacity-0",
+            "transition-opacity",
+            "duration-500"
+          );
+          setTimeout(() => toast.remove(), 500);
+        }, 7000); // disparaît après 7 secondes
+      }
+    </script>
+    <script>
+      // Mobile menu toggle (safe if elements missing)
+      (function () {
+        const mobileBtnId = "mobile-menu-button";
+        const mobileMenu = document.getElementById("mobile-menu");
+        // create a mobile button if not present in markup
+        let mobileBtn = document.getElementById(mobileBtnId);
+        if (!mobileBtn) {
+          // insert button next to theme-toggle
+          const themeBtn = document.getElementById("theme-toggle");
+          if (themeBtn && themeBtn.parentNode) {
+            mobileBtn = document.createElement("button");
+            mobileBtn.id = mobileBtnId;
+            mobileBtn.className =
+              "md:hidden p-2 rounded-md theme-bg-primary mr-2";
+            mobileBtn.setAttribute("aria-label", "Ouvrir le menu");
+            mobileBtn.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 5h14a1 1 0 010 2H3a1 1 0 110-2zm0 4h14a1 1 0 010 2H3a1 1 0 110-2zm0 4h14a1 1 0 010 2H3a1 1 0 110-2z" clip-rule="evenodd"/></svg>';
+            themeBtn.parentNode.insertBefore(mobileBtn, themeBtn);
+          }
+        }
+
+        if (!mobileBtn || !mobileMenu) return;
+
+        mobileBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+
+        // Close mobile menu on window resize >= md
+        window.addEventListener("resize", () => {
+          if (
+            window.innerWidth >= 768 &&
+            !mobileMenu.classList.contains("hidden")
+          ) {
+            mobileMenu.classList.add("hidden");
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
