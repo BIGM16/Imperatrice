@@ -21,6 +21,10 @@ urlpatterns = [
     path("ajax/drinks/<int:pk>/delete/", views.delete_drink_ajax, name="delete_drink_ajax"),
     path("ajax/drinks/<int:pk>/update_stock/", views.update_stock_ajax, name="update_stock_ajax"),
 
+    # ===== API AJAX pour la gestion des dépenses =====
+    path("ajax/depenses/add/", views.create_depense_ajax, name="create_depense_ajax"),
+    path("ajax/depenses/<int:pk>/delete/", views.delete_depense_ajax, name="delete_depense_ajax"),
+
     # ===== Interface historique des ventes =====
     path("sales/history/", views.sales_history, name="sales_history"),
 

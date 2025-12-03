@@ -23,8 +23,8 @@ from django.core import management
 import json
 
 # Import locaux
-from .models import Drink, Sale, DailySummary
-from .forms import DrinkForm
+from .models import Drink, Sale, DailySummary, Depense
+from .forms import DrinkForm, DepenseForm
 
 # =================================================================
 # Vues d'authentification
@@ -101,16 +101,25 @@ def admin_dashboard(request):
     last_sales = Sale.objects.order_by('-created_at')[:10]
     sales = Sale.objects.filter(created_at__date=today)
     total_sales = sales.aggregate(Sum('total'))['total__sum'] or 0
+    total_benefice = sales.aggregate(Sum('benefice_total'))['benefice_total__sum'] or 0
     total_today = sales.count()
     total_drinks = drinks.count()
+
+    # ✅ Dépenses du jour
+    depenses = Depense.objects.filter(date=today)
+    total_depenses = depenses.aggregate(Sum('montant'))['montant__sum'] or 0
+    
+    # ✅ Bénéfice net
+    benefice_net = total_benefice - total_depenses
 
     # ✅ Statistiques par boisson (pour la journée)
     stats = (
         Sale.objects.filter(created_at__date=today)
-        .values('drink__name')
+        .values('drink__name', 'drink__id')
         .annotate(
             total_vendu=Sum('quantity'),
             total_montant=Sum('total'),
+            benefice=Sum('benefice_total'),
             stock_restant=F('drink__stock')
         )
         .order_by('drink__name')
@@ -121,6 +130,10 @@ def admin_dashboard(request):
         "last_sales": last_sales,
         "stats": stats,
         "total_sales": total_sales,
+        "total_benefice": total_benefice,
+        "total_depenses": total_depenses,
+        "benefice_net": benefice_net,
+        "depenses": depenses,
         "total_today": total_today,
         "total_drinks": total_drinks,
     }
@@ -161,7 +174,8 @@ def api_record_sale(request):
         drink_id = data.get("drink_id")
         qty = int(data.get("quantity", 1))
         drink = Drink.objects.get(pk=drink_id)
-        total = drink.price * qty
+        # Utiliser le prix de vente pour le calcul en production
+        total = drink.prix_vente * qty
 
         # Vérifier le stock avant toute modification
         if drink.stock < qty:
@@ -176,11 +190,12 @@ def api_record_sale(request):
         return JsonResponse({
             "ok": True,
             "name": drink.name,
-            "price": float(drink.price),
+            "price": float(drink.prix_vente),
             "quantity": qty,
             "remaining_stock": drink.stock,
             "total": float(total),
             "sale_id": sale.id,
+            "created_at": sale.created_at.isoformat(),
         }, status=201)
 
     except Drink.DoesNotExist:
@@ -307,6 +322,45 @@ Sécurité :
 - Vérifie les permissions staff
 - Validation des données via DrinkForm
 """
+
+@login_required
+@require_POST
+def create_depense_ajax(request):
+    """Création d'une dépense occasionnelle via AJAX"""
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "error": "Accès refusé."}, status=403)
+
+    form = DepenseForm(request.POST)
+    if form.is_valid():
+        depense = form.save()
+        return JsonResponse({
+            "ok": True,
+            "message": f"Dépense '{depense.motif}' enregistrée.",
+            "depense": {
+                "id": depense.id,
+                "motif": depense.motif,
+                "montant": float(depense.montant),
+                "responsable": depense.responsable,
+                "date": depense.date.strftime("%d/%m %H:%M")
+            }
+        }, status=201)
+    else:
+        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+
+
+@login_required
+@require_POST
+def delete_depense_ajax(request, pk):
+    """Suppression d'une dépense via AJAX"""
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "error": "Accès refusé."}, status=403)
+
+    try:
+        depense = Depense.objects.get(pk=pk)
+        depense.delete()
+        return JsonResponse({"ok": True, "message": "Dépense supprimée."}, status=200)
+    except Depense.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "Dépense introuvable."}, status=404)
 
 @login_required
 @require_POST

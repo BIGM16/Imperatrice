@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard{% endblock %}
-{% block content %}
-{% comment %} {# ======================================================
-DASHBOARD ADMINISTRATEUR ======================================================
-Ce template gère l'interface administrateur complète. Sections principales : 1.
-En-tête avec titre 2. Cards statistiques (produits, ventes, montants) 3. Gestion
-des boissons (CRUD) 4. Dernières ventes 5. Statistiques détaillées 6. Actions
-globales (résumé, historique) Fonctionnalités AJAX : -
-Création/modification/suppression de boissons - Gestion des stocks - Génération
-de résumés Dépendances : - Utilise le theme-system pour le mode sombre -
-Requiert CSRF pour les requêtes AJAX - JavaScript pour les modals et
-interactions #} {% endcomment %}
+{% block content %} {% comment %} {#
+====================================================== DASHBOARD ADMINISTRATEUR
+====================================================== Ce template gère
+l'interface administrateur complète. Sections principales : 1. En-tête avec
+titre 2. Cards statistiques (produits, ventes, montants) 3. Gestion des boissons
+(CRUD) 4. Dernières ventes 5. Statistiques détaillées 6. Actions globales
+(résumé, historique) Fonctionnalités AJAX : - Création/modification/suppression
+de boissons - Gestion des stocks - Génération de résumés Dépendances : - Utilise
+le theme-system pour le mode sombre - Requiert CSRF pour les requêtes AJAX -
+JavaScript pour les modals et interactions #} {% endcomment %}
 
 <!-- 1. En-tête du dashboard -->
 <header class="flex justify-between items-center mb-8">
@@ -21,8 +20,8 @@ interactions #} {% endcomment %}
     <p class="theme-text-secondary">Gestion des produits et stocks</p>
   </div>
 </header>
-{% comment %} {# 2. Cards statistiques #} {# Affiche les KPIs principaux : nombre de produits,
-ventes du jour, et montant total #} {% endcomment %}
+{% comment %} {# 2. Cards statistiques #} {# Affiche les KPIs principaux :
+nombre de produits, ventes du jour, et montant total #} {% endcomment %}
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
   <div class="theme-bg-secondary rounded-xl p-4">
     <div class="text-2xl font-bold theme-accent" id="total-products">
@@ -39,6 +38,12 @@ ventes du jour, et montant total #} {% endcomment %}
       {{ total_sales }}<span>FC</span>
     </div>
     <div class="text-sm theme-text-secondary">Valeur totale</div>
+  </div>
+  <div class="theme-bg-secondary rounded-xl p-4">
+    <div class="text-2xl font-bold theme-accent">
+      {{ total_benefice }}<span>FC</span>
+    </div>
+    <div class="text-sm theme-text-secondary">Bénéfice total</div>
   </div>
 </div>
 
@@ -75,7 +80,7 @@ ventes du jour, et montant total #} {% endcomment %}
     <div class="theme-bg-primary rounded-lg p-4">
       <div class="flex justify-between items-start mb-3">
         <h3 class="font-semibold theme-text-primary">{{ drink.name }}</h3>
-        <div class="font-bold theme-accent">{{ drink.price }} FC</div>
+        <div class="font-bold theme-accent">{{ drink.prix_vente }} FC</div>
       </div>
 
       <div class="flex items-center justify-between">
@@ -103,7 +108,8 @@ ventes du jour, et montant total #} {% endcomment %}
           <button
             class="p-2 theme-bg-secondary rounded-lg hover:opacity-80 edit-drink-btn"
             data-name="{{ drink.name }}"
-            data-price="{{ drink.price }}"
+            data-prix-achat="{{ drink.prix_achat }}"
+            data-prix-vente="{{ drink.prix_vente }}"
             data-stock="{{ drink.stock }}"
             data-update-ajax-url="{% url 'edit_drink_ajax' drink.pk %}"
             title="Modifier"
@@ -165,12 +171,26 @@ ventes du jour, et montant total #} {% endcomment %}
         </div>
         <div>
           <label class="block text-sm font-medium theme-text-secondary mb-2"
-            >Prix (FC)</label
+            >Prix d'achat (FC)</label
           >
           <input
             type="number"
-            name="price"
-            id="modal-price"
+            name="prix_achat"
+            id="modal-prix-achat"
+            step="0.01"
+            min="0"
+            required
+            class="w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-2"
+            >Prix de vente (FC)</label
+          >
+          <input
+            type="number"
+            name="prix_vente"
+            id="modal-prix-vente"
             step="0.01"
             min="0"
             required
@@ -291,7 +311,112 @@ ventes du jour, et montant total #} {% endcomment %}
   >
     <span class="theme-text-secondary">Total global</span>
     <span class="text-lg font-semibold theme-accent">
-      {{ total_sales }} FC</span>
+      {{ total_sales }} FC</span
+    >
+  </div>
+</div>
+
+<!-- 🔹 Section Bénéfices & Dépenses -->
+<div class="theme-bg-secondary p-6 rounded-xl mb-6 shadow-lg">
+  <h2 class="text-xl font-semibold mb-4">💰 Bilan Financier</h2>
+
+  <!-- KPIs Financiers -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="theme-bg-primary rounded-lg p-4">
+      <div class="text-sm theme-text-secondary mb-2">Bénéfice Brut</div>
+      <div class="text-2xl font-bold text-green-500">
+        {{ total_benefice }} FC
+      </div>
+    </div>
+    <div class="theme-bg-primary rounded-lg p-4">
+      <div class="text-sm theme-text-secondary mb-2">Dépenses du jour</div>
+      <div class="text-2xl font-bold text-red-500">{{ total_depenses }} FC</div>
+    </div>
+    <div class="theme-bg-primary rounded-lg p-4">
+      <div class="text-sm theme-text-secondary mb-2">Bénéfice Net</div>
+      <div
+        class="text-2xl font-bold {% if benefice_net >= 0 %}text-green-500{% else %}text-red-500{% endif %}"
+      >
+        {{ benefice_net }} FC
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire d'ajout de dépense -->
+  <div class="mb-6 p-4 theme-bg-primary rounded-lg">
+    <h3 class="font-semibold theme-text-primary mb-4">
+      ➕ Ajouter une dépense
+    </h3>
+    <form id="depense-form" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      {% csrf_token %}
+      <input
+        type="text"
+        name="motif"
+        id="depense-motif"
+        placeholder="Motif..."
+        required
+        class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border"
+      />
+      <input
+        type="number"
+        name="montant"
+        id="depense-montant"
+        placeholder="Montant (FC)"
+        step="0.01"
+        min="0"
+        required
+        class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border"
+      />
+      <input
+        type="text"
+        name="responsable"
+        id="depense-responsable"
+        placeholder="Responsable"
+        required
+        class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border"
+      />
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
+      >
+        Enregistrer
+      </button>
+    </form>
+  </div>
+
+  <!-- Liste des dépenses -->
+  <div>
+    <h3 class="font-semibold theme-text-primary mb-3">📋 Dépenses du jour</h3>
+    <div id="depenses-list" class="space-y-2">
+      {% for depense in depenses %}
+      <div
+        class="flex justify-between items-center p-3 theme-bg-primary rounded-lg"
+        data-depense-id="{{ depense.id }}"
+      >
+        <div>
+          <div class="font-medium theme-text-primary">{{ depense.motif }}</div>
+          <div class="text-sm theme-text-secondary">
+            {{ depense.responsable }}
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="font-semibold text-red-500">{{ depense.montant }} FC</div>
+          <button
+            class="delete-depense-btn p-2 theme-danger rounded-lg hover:opacity-80 text-white"
+            data-depense-id="{{ depense.id }}"
+            data-delete-ajax-url="{% url 'delete_depense_ajax' depense.id %}"
+            title="Supprimer"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-4 theme-text-secondary">
+        Aucune dépense enregistrée
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 
@@ -306,6 +431,7 @@ ventes du jour, et montant total #} {% endcomment %}
           <th class="text-center whitespace-nowrap px-4">Quantité vendue</th>
           <th class="text-center whitespace-nowrap px-4">Stock restant</th>
           <th class="text-center whitespace-nowrap px-4">Total perçu (FC)</th>
+          <th class="text-center whitespace-nowrap px-4">Bénéfice (FC)</th>
         </tr>
       </thead>
       <tbody>
@@ -315,6 +441,9 @@ ventes du jour, et montant total #} {% endcomment %}
           <td class="text-center px-4 py-2">{{ s.total_vendu }}</td>
           <td class="text-center px-4 py-2">{{ s.stock_restant }}</td>
           <td class="text-center px-4 py-2">{{ s.total_montant }}</td>
+          <td class="text-center px-4 py-2 font-semibold theme-accent">
+            {{ s.benefice }}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -368,7 +497,8 @@ ventes du jour, et montant total #} {% endcomment %}
     const deleteForm = document.getElementById("delete-modal-form");
     const modalTitle = document.getElementById("drink-modal-title");
     const modalName = document.getElementById("modal-name");
-    const modalPrice = document.getElementById("modal-price");
+    const modalPrixAchat = document.getElementById("modal-prix-achat");
+    const modalPrixVente = document.getElementById("modal-prix-vente");
     const modalStock = document.getElementById("modal-stock");
 
     function openDrinkModal(mode = "create", options = {}) {
@@ -377,13 +507,16 @@ ventes du jour, et montant total #} {% endcomment %}
         // URL AJAX de création
         drinkForm.dataset.ajaxUrl = "{% url 'create_drink_ajax' %}";
         modalName.value = "";
-        modalPrice.value = "";
+        modalPrixAchat.value = "";
+        modalPrixVente.value = "";
         modalStock.value = "";
       } else if (mode === "edit") {
         modalTitle.textContent = `Modifier ${options.name}`;
         drinkForm.dataset.ajaxUrl = options.updateAjaxUrl;
         modalName.value = options.name || "";
-        modalPrice.value = options.price || "";
+        // support clefs différentes selon provenance
+        modalPrixAchat.value = options.prixAchat || options.prix_achat || "";
+        modalPrixVente.value = options.prixVente || options.prix_vente || "";
         modalStock.value = options.stock || "";
       }
       drinkModal.classList.remove("hidden");
@@ -425,10 +558,17 @@ ventes du jour, et montant total #} {% endcomment %}
     document.querySelectorAll(".edit-drink-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const name = btn.getAttribute("data-name");
-        const price = btn.getAttribute("data-price");
+        const prixAchat = btn.getAttribute("data-prix-achat");
+        const prixVente = btn.getAttribute("data-prix-vente");
         const stock = btn.getAttribute("data-stock");
         const updateAjaxUrl = btn.getAttribute("data-update-ajax-url");
-        openDrinkModal("edit", { name, price, stock, updateAjaxUrl });
+        openDrinkModal("edit", {
+          name,
+          prixAchat,
+          prixVente,
+          stock,
+          updateAjaxUrl,
+        });
       });
     });
 
@@ -518,6 +658,69 @@ ventes du jour, et montant total #} {% endcomment %}
         console.error(err);
         showPopup("Erreur réseau lors de la suppression.");
       }
+    });
+
+    // ===== GESTION DES DÉPENSES =====
+    const depenseForm = document.getElementById("depense-form");
+    const depensesList = document.getElementById("depenses-list");
+
+    // Ajouter une dépense
+    depenseForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const motif = document.getElementById("depense-motif").value;
+      const montant = document.getElementById("depense-montant").value;
+      const responsable = document.getElementById("depense-responsable").value;
+
+      try {
+        const res = await fetch("{% url 'create_depense_ajax' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          body: new URLSearchParams({
+            motif: motif,
+            montant: montant,
+            responsable: responsable,
+          }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showPopup(data.message || "Dépense enregistrée");
+          // Réinitialiser le formulaire
+          depenseForm.reset();
+          // Recharger la page pour mettre à jour les totaux
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
+        }
+      } catch (err) {
+        console.error(err);
+        showPopup("Erreur réseau lors de l'enregistrement de la dépense.");
+      }
+    });
+
+    // Supprimer une dépense
+    document.querySelectorAll(".delete-depense-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer cette dépense ?")) {
+          return;
+        }
+        const url = btn.getAttribute("data-delete-ajax-url");
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showPopup(data.message || "Dépense supprimée");
+            setTimeout(() => window.location.reload(), 300);
+          } else {
+            showPopup(data.error || "Erreur lors de la suppression");
+          }
+        } catch (err) {
+          console.error(err);
+          showPopup("Erreur réseau lors de la suppression.");
+        }
+      });
     });
   </script>
   {% endblock %}

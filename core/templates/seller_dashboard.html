@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Interface vendeur{% endblock %}
-{% block content %} 
-{% comment %} {#
+{% block content %} {% comment %} {#
 ====================================================== DASHBOARD VENDEUR
 ====================================================== Interface simplifiée pour
 les vendeurs permettant : 1. Enregistrement rapide des ventes 2. Visualisation
@@ -40,8 +39,11 @@ calculs et interactions #} {% endcomment %}
         >
           <option value="">Sélectionner un produit</option>
           {% for drink in drinks %}
-          <option value="{{ drink.id }}" data-price="{{ drink.price }}">
-            {{ drink.name }} - {{ drink.price }} FC
+          <option
+            value="{{ drink.id }}"
+            data-prix-vente="{{ drink.prix_vente }}"
+          >
+            {{ drink.name }} - {{ drink.prix_vente }} FC
           </option>
           {% endfor %}
         </select>
@@ -121,7 +123,8 @@ calculs et interactions #} {% endcomment %}
 
   function updateTotal() {
     const selectedOption = drinkSelect.options[drinkSelect.selectedIndex];
-    const price = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+    const price =
+      parseFloat(selectedOption.getAttribute("data-prix-vente")) || 0;
     const qty = parseInt(quantityInput.value) || 0;
     const total = price * qty;
     totalSpan.textContent = total.toFixed(2) + " FC";
