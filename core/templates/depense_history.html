@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Historique des dépenses{% endblock %}
+{% block content %}
+
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold theme-text-primary">Historique des dépenses</h1>
+    <p class="theme-text-secondary">Liste complète des dépenses (plus récentes en haut)</p>
+  </div>
+  <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 rounded-lg theme-bg-secondary">Retour</a>
+</header>
+
+<div class="theme-bg-secondary p-6 rounded-xl shadow-lg mb-6">
+  <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Personne</label>
+      <select name="personne" class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border">
+        <option value="">Toutes les personnes</option>
+        {% for p in personnes %}
+        <option value="{{ p.id }}" {% if selected_personne|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Date début</label>
+      <input type="date" name="date_debut" value="{{ date_debut|default:'' }}" class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-2 theme-text-secondary">Date fin</label>
+      <input type="date" name="date_fin" value="{{ date_fin|default:'' }}" class="w-full p-2 rounded-lg theme-bg-primary theme-text-primary theme-border border">
+    </div>
+
+    <div class="flex items-end">
+      <button type="submit" class="w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filtrer</button>
+    </div>
+  </form>
+</div>
+
+<div class="theme-bg-secondary p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+  <span class="theme-text-secondary">Total des dépenses filtrées :</span>
+  <span class="text-xl font-bold theme-accent">{{ total_filtre }} FC</span>
+</div>
+
+<div class="theme-bg-secondary p-6 rounded-xl shadow-lg">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse min-w-[640px]">
+      <thead>
+        <tr class="border-b">
+          <th class="p-3">Date</th>
+          <th class="p-3">Motif</th>
+          <th class="p-3">Montant (FC)</th>
+          <th class="p-3">Responsable</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in depenses %}
+        <tr class="border-b hover:theme-bg-primary transition-colors">
+          <td class="p-3 whitespace-nowrap">{{ d.date|date:"d/m/Y" }}</td>
+          <td class="p-3">{{ d.motif }}</td>
+          <td class="p-3 font-semibold">{{ d.montant }}</td>
+          {% if d.responsable %}
+          <td class="p-3">{{ d.responsable.name }}</td>
+          {% else %}
+          <td class="p-3 theme-text-secondary">N/A</td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-center py-8 theme-text-secondary">Aucune dépense enregistrée</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

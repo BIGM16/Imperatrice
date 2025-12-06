@@ -23,8 +23,8 @@ from django.core import management
 import json
 
 # Import locaux
-from .models import Drink, Sale, DailySummary, Depense
-from .forms import DrinkForm, DepenseForm
+from .models import Drink, Sale, DailySummary, Depense, Personne
+from .forms import DrinkForm, DepenseForm, PersonneForm
 
 # =================================================================
 # Vues d'authentification
@@ -108,6 +108,8 @@ def admin_dashboard(request):
     # ✅ Dépenses du jour
     depenses = Depense.objects.filter(date=today)
     total_depenses = depenses.aggregate(Sum('montant'))['montant__sum'] or 0
+    # Liste des personnes connues (pour le select du formulaire)
+    personnes = Personne.objects.order_by('name')
     
     # ✅ Bénéfice net
     benefice_net = total_benefice - total_depenses
@@ -134,6 +136,7 @@ def admin_dashboard(request):
         "total_depenses": total_depenses,
         "benefice_net": benefice_net,
         "depenses": depenses,
+        "personnes": personnes,
         "total_today": total_today,
         "total_drinks": total_drinks,
     }
@@ -330,7 +333,37 @@ def create_depense_ajax(request):
     if not request.user.is_staff:
         return JsonResponse({"ok": False, "error": "Accès refusé."}, status=403)
 
-    form = DepenseForm(request.POST)
+    # Supporter deux modes d'envoi pour 'responsable':
+    # - soit l'id d'une Personne existante
+    # - soit un nom en texte libre (créera ou récupérera la Personne si valide)
+    post = request.POST.copy()
+    responsable_val = post.get('responsable')
+    if responsable_val:
+        # si c'est un entier, on laisse tel quel (id)
+        try:
+            responsable_id = int(responsable_val)
+            post['responsable'] = responsable_id
+        except (ValueError, TypeError):
+            # sinon on cherche/crée la personne par nom
+            nom = responsable_val.strip()
+            if nom:
+                personne = None
+                try:
+                    personne = Personne.objects.get(name=nom)
+                except Personne.DoesNotExist:
+                    # créer après validation via form
+                    p = Personne(name=nom)
+                    try:
+                        p.full_clean()
+                        p.save()
+                        personne = p
+                    except Exception:
+                        # nom invalide -> laisser tel quel et laisser le form reporter l'erreur
+                        personne = None
+                if personne:
+                    post['responsable'] = personne.id
+
+    form = DepenseForm(post)
     if form.is_valid():
         depense = form.save()
         return JsonResponse({
@@ -340,8 +373,8 @@ def create_depense_ajax(request):
                 "id": depense.id,
                 "motif": depense.motif,
                 "montant": float(depense.montant),
-                "responsable": depense.responsable,
-                "date": depense.date.strftime("%d/%m %H:%M")
+                "responsable": depense.responsable.name if depense.responsable else None,
+                "date": depense.date.strftime("%d/%m")
             }
         }, status=201)
     else:
@@ -469,3 +502,44 @@ def sales_history(request):
         'total_filtre': total_filtre
     }
     return render(request, 'sales_history.html', context)
+
+# ------------- Page historique des dépenses ------------------
+@login_required
+def depense_histrory(request) :
+    return redirect("depense_history")
+
+
+@login_required
+def depense_history(request):
+    """Page historique des dépenses avec filtres par date et par personne."""
+    if not request.user.is_staff:
+        return redirect('seller_dashboard')
+
+    depenses = Depense.objects.order_by('-date', '-id')
+    personnes = Personne.objects.order_by('name')
+
+    # Filtres
+    personne_id = request.GET.get('personne')
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+
+    if personne_id:
+        depenses = depenses.filter(responsable_id=personne_id)
+
+    if date_debut:
+        depenses = depenses.filter(date__gte=date_debut)
+
+    if date_fin:
+        depenses = depenses.filter(date__lte=date_fin)
+
+    total_filtre = depenses.aggregate(Sum('montant'))['montant__sum'] or 0
+
+    context = {
+        'depenses': depenses,
+        'personnes': personnes,
+        'selected_personne': personne_id,
+        'date_debut': date_debut,
+        'date_fin': date_fin,
+        'total_filtre': total_filtre,
+    }
+    return render(request, 'depense_history.html', context)

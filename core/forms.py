@@ -1,5 +1,5 @@
 from django import forms
-from .models import Drink, Depense
+from .models import Drink, Depense, Personne
 
 class DrinkForm(forms.ModelForm):
     class Meta:
@@ -49,7 +49,8 @@ class DepenseForm(forms.ModelForm):
         widgets = {
             'motif': forms.TextInput(attrs={'class': 'w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent', 'placeholder': 'Ex: Achat de glaçons, maintenance...'}),
             'montant': forms.NumberInput(attrs={'class': 'w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent', 'min': '0', 'step': '0.01'}),
-            'responsable': forms.TextInput(attrs={'class': 'w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent', 'placeholder': 'Nom de la personne'})
+            # utiliser un select lié au modèle Personne
+            'responsable': forms.Select(attrs={'class': 'w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent'})
         }
 
     def clean_montant(self):
@@ -57,3 +58,19 @@ class DepenseForm(forms.ModelForm):
         if montant and montant < 0:
             raise forms.ValidationError("Le montant ne peut pas être négatif.")
         return montant
+
+
+class PersonneForm(forms.ModelForm):
+    class Meta:
+        model = Personne
+        fields = ['name']
+        labels = {'name': 'Nom'}
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'w-full p-3 rounded-lg theme-bg-primary theme-text-primary theme-border border focus:ring-2 focus:ring-cyan-400 focus:border-transparent', 'placeholder': 'Nom (un seul mot, max 10 lettres)'}),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name and (len(name) > 10 or ' ' in name):
+            raise forms.ValidationError("Le nom doit être un seul mot et maximum 10 caractères.")
+        return name

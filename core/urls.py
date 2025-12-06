@@ -27,6 +27,7 @@ urlpatterns = [
 
     # ===== Interface historique des ventes =====
     path("sales/history/", views.sales_history, name="sales_history"),
+    path("depenses/history/", views.depense_history, name="depense_history"),
 
     # ===== URLs CRUD pour les boissons (non-AJAX) =====
     # Ces routes sont principalement utilisées comme fallback et pour les redirections

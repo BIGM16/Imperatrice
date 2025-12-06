@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard{% endblock %}
-{% block content %} {% comment %} {#
+{% block content %}
+{% comment %} {#
 ====================================================== DASHBOARD ADMINISTRATEUR
 ====================================================== Ce template gère
 l'interface administrateur complète. Sections principales : 1. En-tête avec
@@ -367,14 +368,27 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
         required
         class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border"
       />
-      <input
-        type="text"
-        name="responsable"
-        id="depense-responsable"
-        placeholder="Responsable"
-        required
-        class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border"
-      />
+      <div class="relative">
+        <select
+          name="responsable_select"
+          id="depense-responsable-select"
+          required
+          class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border w-full"
+        >
+          <option value="">-- Sélectionner une personne --</option>
+          {% for p in personnes %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+          <option value="other">Autre (saisir un nom)</option>
+        </select>
+        <input
+          type="text"
+          name="responsable"
+          id="depense-responsable-other"
+          placeholder="Saisir un nom si non listé"
+          class="p-2 rounded-lg theme-bg-secondary theme-text-primary border theme-border mt-2 hidden w-full"
+        />
+      </div>
       <button
         type="submit"
         class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90"
@@ -395,9 +409,13 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
       >
         <div>
           <div class="font-medium theme-text-primary">{{ depense.motif }}</div>
+          {% if depense.responsable %}
           <div class="text-sm theme-text-secondary">
-            {{ depense.responsable }}
+            {{ depense.responsable.name }}
           </div>
+          {% else %}
+          <div class="text-sm theme-text-secondary">—</div>
+          {% endif %}
         </div>
         <div class="flex items-center gap-3">
           <div class="font-semibold text-red-500">{{ depense.montant }} FC</div>
@@ -467,6 +485,13 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
       >
         📜 Historique des ventes
       </a>
+      <a
+        href="{% url 'depense_history' %}"
+        class="bg-yellow-600 text-white px-6 py-3 rounded-lg inline-flex items-center justify-center w-full sm:w-auto"
+        id="view-depense-history"
+      >
+        💸 Historique des dépenses
+      </a>
     </div>
   </div>
   <!-- Notification -->
@@ -474,173 +499,268 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
     id="popup"
     class="hidden fixed bottom-6 right-6 bg-green-600 text-white px-4 py-2 rounded shadow-lg"
   ></div>
-  <script>
-    // Générer le résumé
-    document
-      .getElementById("generate-summary")
-      .addEventListener("click", async () => {
-        const res = await fetch("{% url 'generer_resume_ajax' %}", {
-          method: "POST",
-          headers: { "X-CSRFToken": "{{ csrf_token }}" },
-        });
-        const data = await res.json();
-        const popup = document.getElementById("popup");
-        popup.textContent = data.message || data.error;
-        popup.classList.remove("hidden");
-        setTimeout(() => popup.classList.add("hidden"), 2000);
+</div>
+
+<script>
+  // Générer le résumé
+  document
+    .getElementById("generate-summary")
+    .addEventListener("click", async () => {
+      const res = await fetch("{% url 'generer_resume_ajax' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
       });
-
-    // ----- Modals pour CRUD Boissons -----
-    const drinkModal = document.getElementById("drink-modal");
-    const deleteModal = document.getElementById("delete-modal");
-    const drinkForm = document.getElementById("drink-modal-form");
-    const deleteForm = document.getElementById("delete-modal-form");
-    const modalTitle = document.getElementById("drink-modal-title");
-    const modalName = document.getElementById("modal-name");
-    const modalPrixAchat = document.getElementById("modal-prix-achat");
-    const modalPrixVente = document.getElementById("modal-prix-vente");
-    const modalStock = document.getElementById("modal-stock");
-
-    function openDrinkModal(mode = "create", options = {}) {
-      if (mode === "create") {
-        modalTitle.textContent = "Ajouter une boisson";
-        // URL AJAX de création
-        drinkForm.dataset.ajaxUrl = "{% url 'create_drink_ajax' %}";
-        modalName.value = "";
-        modalPrixAchat.value = "";
-        modalPrixVente.value = "";
-        modalStock.value = "";
-      } else if (mode === "edit") {
-        modalTitle.textContent = `Modifier ${options.name}`;
-        drinkForm.dataset.ajaxUrl = options.updateAjaxUrl;
-        modalName.value = options.name || "";
-        // support clefs différentes selon provenance
-        modalPrixAchat.value = options.prixAchat || options.prix_achat || "";
-        modalPrixVente.value = options.prixVente || options.prix_vente || "";
-        modalStock.value = options.stock || "";
-      }
-      drinkModal.classList.remove("hidden");
-      drinkModal.classList.add("flex");
-    }
-
-    function closeDrinkModal() {
-      drinkModal.classList.add("hidden");
-      drinkModal.classList.remove("flex");
-    }
-
-    function openDeleteModal(options = {}) {
-      const body = document.getElementById("delete-modal-body");
-      body.textContent = `Supprimer "${options.name}" ? Cette action est irréversible.`;
-      deleteForm.dataset.ajaxUrl = options.deleteAjaxUrl;
-      deleteModal.classList.remove("hidden");
-      deleteModal.classList.add("flex");
-    }
-
-    function closeDeleteModal() {
-      deleteModal.classList.add("hidden");
-      deleteModal.classList.remove("flex");
-    }
-
-    // helper popup
-    function showPopup(msg) {
+      const data = await res.json();
       const popup = document.getElementById("popup");
-      popup.textContent = msg;
+      popup.textContent = data.message || data.error;
       popup.classList.remove("hidden");
       setTimeout(() => popup.classList.add("hidden"), 2000);
+    });
+
+  // ----- Modals pour CRUD Boissons -----
+  const drinkModal = document.getElementById("drink-modal");
+  const deleteModal = document.getElementById("delete-modal");
+  const drinkForm = document.getElementById("drink-modal-form");
+  const deleteForm = document.getElementById("delete-modal-form");
+  const modalTitle = document.getElementById("drink-modal-title");
+  const modalName = document.getElementById("modal-name");
+  const modalPrixAchat = document.getElementById("modal-prix-achat");
+  const modalPrixVente = document.getElementById("modal-prix-vente");
+  const modalStock = document.getElementById("modal-stock");
+
+  function openDrinkModal(mode = "create", options = {}) {
+    if (mode === "create") {
+      modalTitle.textContent = "Ajouter une boisson";
+      // URL AJAX de création
+      drinkForm.dataset.ajaxUrl = "{% url 'create_drink_ajax' %}";
+      modalName.value = "";
+      modalPrixAchat.value = "";
+      modalPrixVente.value = "";
+      modalStock.value = "";
+    } else if (mode === "edit") {
+      modalTitle.textContent = `Modifier ${options.name}`;
+      drinkForm.dataset.ajaxUrl = options.updateAjaxUrl;
+      modalName.value = options.name || "";
+      // support clefs différentes selon provenance
+      modalPrixAchat.value = options.prixAchat || options.prix_achat || "";
+      modalPrixVente.value = options.prixVente || options.prix_vente || "";
+      modalStock.value = options.stock || "";
     }
+    drinkModal.classList.remove("hidden");
+    drinkModal.classList.add("flex");
+  }
 
-    // Ouvrir modal création
-    document
-      .getElementById("open-create-modal")
-      .addEventListener("click", () => openDrinkModal("create"));
+  function closeDrinkModal() {
+    drinkModal.classList.add("hidden");
+    drinkModal.classList.remove("flex");
+  }
 
-    // Attacher events aux boutons edit (AJAX)
-    document.querySelectorAll(".edit-drink-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const name = btn.getAttribute("data-name");
-        const prixAchat = btn.getAttribute("data-prix-achat");
-        const prixVente = btn.getAttribute("data-prix-vente");
-        const stock = btn.getAttribute("data-stock");
-        const updateAjaxUrl = btn.getAttribute("data-update-ajax-url");
-        openDrinkModal("edit", {
-          name,
-          prixAchat,
-          prixVente,
-          stock,
-          updateAjaxUrl,
-        });
+  function openDeleteModal(options = {}) {
+    const body = document.getElementById("delete-modal-body");
+    body.textContent = `Supprimer "${options.name}" ? Cette action est irréversible.`;
+    deleteForm.dataset.ajaxUrl = options.deleteAjaxUrl;
+    deleteModal.classList.remove("hidden");
+    deleteModal.classList.add("flex");
+  }
+
+  function closeDeleteModal() {
+    deleteModal.classList.add("hidden");
+    deleteModal.classList.remove("flex");
+  }
+
+  // helper popup
+  function showPopup(msg) {
+    const popup = document.getElementById("popup");
+    popup.textContent = msg;
+    popup.classList.remove("hidden");
+    setTimeout(() => popup.classList.add("hidden"), 2000);
+  }
+
+  // Ouvrir modal création
+  document
+    .getElementById("open-create-modal")
+    .addEventListener("click", () => openDrinkModal("create"));
+
+  // Attacher events aux boutons edit (AJAX)
+  document.querySelectorAll(".edit-drink-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const name = btn.getAttribute("data-name");
+      const prixAchat = btn.getAttribute("data-prix-achat");
+      const prixVente = btn.getAttribute("data-prix-vente");
+      const stock = btn.getAttribute("data-stock");
+      const updateAjaxUrl = btn.getAttribute("data-update-ajax-url");
+      openDrinkModal("edit", {
+        name,
+        prixAchat,
+        prixVente,
+        stock,
+        updateAjaxUrl,
       });
     });
+  });
 
-    // Attacher events aux boutons delete (AJAX)
-    document.querySelectorAll(".delete-drink-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const name = btn.getAttribute("data-name");
-        const deleteAjaxUrl = btn.getAttribute("data-delete-ajax-url");
-        openDeleteModal({ name, deleteAjaxUrl });
-      });
+  // Attacher events aux boutons delete (AJAX)
+  document.querySelectorAll(".delete-drink-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const name = btn.getAttribute("data-name");
+      const deleteAjaxUrl = btn.getAttribute("data-delete-ajax-url");
+      openDeleteModal({ name, deleteAjaxUrl });
     });
+  });
 
-    // Attacher events aux boutons stock (AJAX)
-    document.querySelectorAll(".stock-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        const url = btn.getAttribute("data-update-stock-ajax-url");
-        const action = btn.getAttribute("data-action");
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "X-CSRFToken": "{{ csrf_token }}" },
-            body: new URLSearchParams({ action: action, quantity: 1 }),
-          });
-          const data = await res.json();
-          showPopup(data.message || data.error || "Réponse serveur");
-          if (data.ok) {
-            setTimeout(() => window.location.reload(), 300);
-          }
-        } catch (err) {
-          console.error(err);
-          showPopup("Erreur réseau lors de la mise à jour du stock.");
-        }
-      });
-    });
-
-    // Fermer les modals avec Echap
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        closeDrinkModal();
-        closeDeleteModal();
-      }
-    });
-
-    // Soumettre le formulaire du modal via AJAX
-    drinkForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const url = drinkForm.dataset.ajaxUrl || drinkForm.action;
-      const formData = new FormData(drinkForm);
+  // Attacher events aux boutons stock (AJAX)
+  document.querySelectorAll(".stock-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const url = btn.getAttribute("data-update-stock-ajax-url");
+      const action = btn.getAttribute("data-action");
       try {
         const res = await fetch(url, {
           method: "POST",
           headers: { "X-CSRFToken": "{{ csrf_token }}" },
-          body: formData,
+          body: new URLSearchParams({ action: action, quantity: 1 }),
         });
         const data = await res.json();
+        showPopup(data.message || data.error || "Réponse serveur");
         if (data.ok) {
-          showPopup(data.message || "Opération réussie");
-          closeDrinkModal();
           setTimeout(() => window.location.reload(), 300);
-        } else {
-          showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
         }
       } catch (err) {
         console.error(err);
-        showPopup("Erreur réseau lors de l'envoi du formulaire.");
+        showPopup("Erreur réseau lors de la mise à jour du stock.");
       }
     });
+  });
 
-    // Soumettre suppression via AJAX
-    deleteForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const url = deleteForm.dataset.ajaxUrl || deleteForm.action;
+  // Fermer les modals avec Echap
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDrinkModal();
+      closeDeleteModal();
+    }
+  });
+
+  // Soumettre le formulaire du modal via AJAX
+  drinkForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const url = drinkForm.dataset.ajaxUrl || drinkForm.action;
+    const formData = new FormData(drinkForm);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showPopup(data.message || "Opération réussie");
+        closeDrinkModal();
+        setTimeout(() => window.location.reload(), 300);
+      } else {
+        showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
+      }
+    } catch (err) {
+      console.error(err);
+      showPopup("Erreur réseau lors de l'envoi du formulaire.");
+    }
+  });
+
+  // Soumettre suppression via AJAX
+  deleteForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const url = deleteForm.dataset.ajaxUrl || deleteForm.action;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showPopup(data.message || "Supprimé");
+        closeDeleteModal();
+        setTimeout(() => window.location.reload(), 300);
+      } else {
+        showPopup(data.error || "Erreur lors de la suppression");
+      }
+    } catch (err) {
+      console.error(err);
+      showPopup("Erreur réseau lors de la suppression.");
+    }
+  });
+
+  // ===== GESTION DES DÉPENSES =====
+  const depenseForm = document.getElementById("depense-form");
+  const depensesList = document.getElementById("depenses-list");
+
+  // Toggle champ 'Autre' pour responsable
+  const responsableSelect = document.getElementById(
+    "depense-responsable-select"
+  );
+  const responsableOther = document.getElementById("depense-responsable-other");
+  if (responsableSelect) {
+    responsableSelect.addEventListener("change", (e) => {
+      if (e.target.value === "other") {
+        responsableOther.classList.remove("hidden");
+        responsableOther.required = true;
+      } else {
+        responsableOther.classList.add("hidden");
+        responsableOther.required = false;
+        responsableOther.value = "";
+      }
+    });
+  }
+
+  // Ajouter une dépense
+  depenseForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const motif = document.getElementById("depense-motif").value;
+    const montant = document.getElementById("depense-montant").value;
+    let responsable = "";
+    const sel = document.getElementById("depense-responsable-select");
+    const other = document.getElementById("depense-responsable-other");
+    if (sel) {
+      const val = sel.value;
+      if (val === "other") {
+        responsable = other ? other.value.trim() : "";
+      } else {
+        responsable = val; // id of Personne or empty
+      }
+    } else if (other) {
+      responsable = other.value.trim();
+    }
+
+    try {
+      const res = await fetch("{% url 'create_depense_ajax' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: new URLSearchParams({
+          motif: motif,
+          montant: montant,
+          responsable: responsable,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showPopup(data.message || "Dépense enregistrée");
+        // Réinitialiser le formulaire
+        depenseForm.reset();
+        // Recharger la page pour mettre à jour les totaux
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
+      }
+    } catch (err) {
+      console.error(err);
+      showPopup("Erreur réseau lors de l'enregistrement de la dépense.");
+    }
+  });
+
+  // Supprimer une dépense
+  document.querySelectorAll(".delete-depense-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      if (!confirm("Êtes-vous sûr de vouloir supprimer cette dépense ?")) {
+        return;
+      }
+      const url = btn.getAttribute("data-delete-ajax-url");
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -648,8 +768,7 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
         });
         const data = await res.json();
         if (data.ok) {
-          showPopup(data.message || "Supprimé");
-          closeDeleteModal();
+          showPopup(data.message || "Dépense supprimée");
           setTimeout(() => window.location.reload(), 300);
         } else {
           showPopup(data.error || "Erreur lors de la suppression");
@@ -659,69 +778,6 @@ nombre de produits, ventes du jour, et montant total #} {% endcomment %}
         showPopup("Erreur réseau lors de la suppression.");
       }
     });
-
-    // ===== GESTION DES DÉPENSES =====
-    const depenseForm = document.getElementById("depense-form");
-    const depensesList = document.getElementById("depenses-list");
-
-    // Ajouter une dépense
-    depenseForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const motif = document.getElementById("depense-motif").value;
-      const montant = document.getElementById("depense-montant").value;
-      const responsable = document.getElementById("depense-responsable").value;
-
-      try {
-        const res = await fetch("{% url 'create_depense_ajax' %}", {
-          method: "POST",
-          headers: { "X-CSRFToken": "{{ csrf_token }}" },
-          body: new URLSearchParams({
-            motif: motif,
-            montant: montant,
-            responsable: responsable,
-          }),
-        });
-        const data = await res.json();
-        if (data.ok) {
-          showPopup(data.message || "Dépense enregistrée");
-          // Réinitialiser le formulaire
-          depenseForm.reset();
-          // Recharger la page pour mettre à jour les totaux
-          setTimeout(() => window.location.reload(), 500);
-        } else {
-          showPopup(data.message || JSON.stringify(data.errors) || "Erreur");
-        }
-      } catch (err) {
-        console.error(err);
-        showPopup("Erreur réseau lors de l'enregistrement de la dépense.");
-      }
-    });
-
-    // Supprimer une dépense
-    document.querySelectorAll(".delete-depense-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        if (!confirm("Êtes-vous sûr de vouloir supprimer cette dépense ?")) {
-          return;
-        }
-        const url = btn.getAttribute("data-delete-ajax-url");
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "X-CSRFToken": "{{ csrf_token }}" },
-          });
-          const data = await res.json();
-          if (data.ok) {
-            showPopup(data.message || "Dépense supprimée");
-            setTimeout(() => window.location.reload(), 300);
-          } else {
-            showPopup(data.error || "Erreur lors de la suppression");
-          }
-        } catch (err) {
-          console.error(err);
-          showPopup("Erreur réseau lors de la suppression.");
-        }
-      });
-    });
-  </script>
-  {% endblock %}
-</div>
+  });
+</script>
+{% endblock %}

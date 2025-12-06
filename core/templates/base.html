@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <title>{% block title %}Boissons Manager{% endblock %}</title>
     <link href="{% static 'css/style.css' %}" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
       body {
         box-sizing: border-box;
@@ -123,19 +123,20 @@
         </div>
 
         <div class="hidden md:flex items-center gap-6">
-          {% if user.is_authenticated %} {% if user.is_staff %}
-          <a
-            href="{% url 'admin_dashboard' %}"
-            class="theme-text-secondary hover:underline"
-            >Dashboard</a
-          >
-          {% else %}
-          <a
-            href="{% url 'seller_dashboard' %}"
-            class="theme-text-secondary hover:underline"
-            >Espace Vendeur</a
-          >
-          {% endif %}
+          {% if user.is_authenticated %}
+            {% if user.is_staff %}
+            <a
+              href="{% url 'admin_dashboard' %}"
+              class="theme-text-secondary hover:underline"
+              >Dashboard</a
+            >
+            {% else %}
+            <a
+              href="{% url 'seller_dashboard' %}"
+              class="theme-text-secondary hover:underline"
+              >Espace Vendeur</a
+            >
+            {% endif %}
           {% endif %}
         </div>
 
@@ -207,7 +208,10 @@
       </div>
     </div>
 
-    <main class="p-6">{% block content %} {% endblock %}</main>
+    <main class="p-6">
+      {% block content %}
+      {% endblock %}
+    </main>
 
     <!-- Zone de notifications -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3"></div>
