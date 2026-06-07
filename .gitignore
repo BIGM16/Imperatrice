@@ -15,7 +15,12 @@ media/
 *.egg-info/
 dist/
 build/
-
+CHECKUP.md
+DEPLOYMENT.md
+FINAL_REPORT.md
+INDEX.md
+QUICK_DEPLOY.md
+staticfiles
 # ========== Node & Frontend Build ==========
 node_modules/
 package-lock.json
