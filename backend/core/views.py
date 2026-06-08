@@ -59,6 +59,7 @@ def login_view(request):
     return render(request, "connexion.html")
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect("login")
@@ -159,6 +160,8 @@ Tous ces endpoints :
 - Utilisent CSRF
 """
 
+from django.db import transaction
+
 @login_required
 def api_record_sale(request):
     """Enregistre une nouvelle vente et met à jour le stock
@@ -176,19 +179,20 @@ def api_record_sale(request):
         data = json.loads(request.body)
         drink_id = data.get("drink_id")
         qty = int(data.get("quantity", 1))
-        drink = Drink.objects.get(pk=drink_id)
-        # Utiliser le prix de vente pour le calcul en production
-        total = drink.prix_vente * qty
 
-        # Vérifier le stock avant toute modification
-        if drink.stock < qty:
-            return JsonResponse({"ok": False, "warning": "Stock insuffisant pour cette vente."}, status=409)
+        with transaction.atomic():
+            drink = Drink.objects.select_for_update().get(pk=drink_id)
 
-        # Décrémenter une seule fois
-        drink.stock = max(drink.stock - qty, 0)
-        drink.save()
+            # Vérifier le stock avant toute modification
+            if drink.stock < qty:
+                return JsonResponse({"ok": False, "warning": "Stock insuffisant pour cette vente."}, status=409)
 
-        sale = Sale.objects.create(drink=drink, quantity=qty, total=total, seller=request.user)
+            # Décrémenter
+            drink.stock = max(drink.stock - qty, 0)
+            drink.save()
+
+            total = drink.prix_vente * qty
+            sale = Sale.objects.create(drink=drink, quantity=qty, total=total, seller=request.user)
 
         return JsonResponse({
             "ok": True,
@@ -283,26 +287,7 @@ class DrinkDeleteView(LoginRequiredMixin, StaffRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         return redirect('admin_dashboard')
 
-# @login_required
-# def update_stock(request, pk):
-#     if not request.user.is_staff:
-#         messages.error(request, "Accès refusé.")
-#         return redirect('drink_list')
-        
-#     drink = get_object_or_404(Drink, pk=pk)
-#     action = request.POST.get('action')
-    
-#     try:
-#         if action == 'add':
-#             drink.stock += 1
-#         elif action == 'remove':
-#             drink.stock = max(0, drink.stock - 1)
-#         drink.save()
-#         messages.success(request, f"Stock de {drink.name} mis à jour : {drink.stock}")
-#     except Exception as e:
-#         messages.error(request, f"Erreur lors de la mise à jour du stock : {str(e)}")
-    
-#     return redirect('admin_dashboard')
+
 
 
 # =================================================================

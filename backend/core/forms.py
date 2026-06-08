@@ -36,6 +36,17 @@ class DrinkForm(forms.ModelForm):
             raise forms.ValidationError("Le stock ne peut pas être négatif.")
         return stock
 
+    def clean(self):
+        cleaned_data = super().clean()
+        prix_achat = cleaned_data.get('prix_achat')
+        prix_vente = cleaned_data.get('prix_vente')
+        if prix_achat is not None and prix_vente is not None:
+            if prix_vente < prix_achat:
+                raise forms.ValidationError(
+                    "Le prix de vente ne peut pas être inférieur au prix d'achat."
+                )
+        return cleaned_data
+
 
 class DepenseForm(forms.ModelForm):
     class Meta:

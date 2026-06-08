@@ -1,0 +1,8 @@
+
+POST http://127.0.0.1:8000/api/v1/auth/login/
+Content-Type: application/json
+
+{
+    "username": "ton_admin",
+    "password": "ton_mot_de_passe"
+}

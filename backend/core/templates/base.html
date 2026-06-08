@@ -155,11 +155,14 @@
             <div class="text-sm font-medium theme-text-primary">
               {{ user.username }}
             </div>
-            <a
-              href="{% url 'logout' %}"
-              class="ml-3 px-3 py-1 rounded-md theme-danger text-white hover:opacity-90"
-              >Déconnexion</a
-            >
+            <form method="post" action="{% url 'logout' %}" class="inline">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="ml-3 px-3 py-1 rounded-md theme-danger text-white hover:opacity-90 cursor-pointer"
+                >Déconnexion</button
+              >
+            </form>
           </div>
           {% endif %}
         </div>
@@ -192,11 +195,14 @@
               {{ user.username }}
             </div>
           </div>
-          <a
-            href="{% url 'logout' %}"
-            class="mt-3 inline-block px-3 py-2 rounded-md theme-danger text-white"
-            >Déconnexion</a
-          >
+          <form method="post" action="{% url 'logout' %}" class="block mt-3">
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="w-full text-left px-3 py-2 rounded-md theme-danger text-white cursor-pointer"
+              >Déconnexion</button
+            >
+          </form>
         </div>
         {% else %}
         <a
@@ -223,21 +229,19 @@
         const themeIcon = document.getElementById("theme-icon");
         if (!themeToggle) return;
 
-        let isDarkMode = document.body.classList.contains("dark");
+        // Restaurer le thème sauvegardé
+        const savedTheme = localStorage.getItem("theme") || (document.body.classList.contains("dark") ? "dark" : "light");
+        document.body.classList.remove("light", "dark");
+        document.body.classList.add(savedTheme);
+        if (themeIcon) themeIcon.textContent = savedTheme === "dark" ? "☀️" : "🌙";
 
         themeToggle.addEventListener("click", () => {
-          isDarkMode = !isDarkMode;
-          const body = document.body;
-
-          if (isDarkMode) {
-            body.classList.remove("light");
-            body.classList.add("dark");
-            if (themeIcon) themeIcon.textContent = "☀️";
-          } else {
-            body.classList.remove("dark");
-            body.classList.add("light");
-            if (themeIcon) themeIcon.textContent = "🌙";
-          }
+          const isDark = document.body.classList.contains("dark");
+          const nextTheme = isDark ? "light" : "dark";
+          document.body.classList.remove("light", "dark");
+          document.body.classList.add(nextTheme);
+          localStorage.setItem("theme", nextTheme);
+          if (themeIcon) themeIcon.textContent = nextTheme === "dark" ? "☀️" : "🌙";
         });
       })();
 

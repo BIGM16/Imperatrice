@@ -36,5 +36,4 @@ urlpatterns = [
     path("drinks/create/", views.DrinkCreateView.as_view(), name="drink_create"),
     path("drinks/<int:pk>/update/", views.DrinkUpdateView.as_view(), name="drink_update"),
     path("drinks/<int:pk>/delete/", views.DrinkDeleteView.as_view(), name="drink_delete"),
-    # path("drinks/<int:pk>/update-stock/", views.update_stock, name="update_stock"),
 ]
