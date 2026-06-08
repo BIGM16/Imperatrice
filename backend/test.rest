@@ -3,6 +3,47 @@ POST http://127.0.0.1:8000/api/v1/auth/login/
 Content-Type: application/json
 
 {
-    "username": "ton_admin",
-    "password": "ton_mot_de_passe"
+    "username": "Jonathan",
+    "password": "Kadanga2003"
+}
+
+###
+
+
+GET http://127.0.0.1:8000/api/v1/inventory/drinks/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwOTExNTIzLCJpYXQiOjE3ODA5MDk3MjMsImp0aSI6IjhmNjEyZGUzODQwOTRhNWU4MDYyNmY1ZDJiMDBiMTk2IiwidXNlcl9pZCI6IjEifQ.W2OEWg3vOiGQQ2WUOr20BA6ON24c5HV0rKYYTcvJkxM
+
+###
+
+POST http://127.0.0.1:8000/api/v1/inventory/drinks/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwOTA2NzY2LCJpYXQiOjE3ODA5MDQ5NjYsImp0aSI6IjEwZjc2OWUyOGJkNTQ5ZTk5N2Y2NTI2NGI5YWIxNzRkIiwidXNlcl9pZCI6IjEifQ.2ktdnbnzcnAzKQfp-a2q_oGZQIUoT5u-BUl0-oKXk9I
+Content-type: application/json
+
+{
+    "name":"Heineken",
+    "price_purchase":1800,
+    "price_sale":3000,
+    "stock":24
+}
+
+###
+
+POST http://127.0.0.1:8000/api/v1/inventory/drinks/1/update_stock/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwOTA2NzY2LCJpYXQiOjE3ODA5MDQ5NjYsImp0aSI6IjEwZjc2OWUyOGJkNTQ5ZTk5N2Y2NTI2NGI5YWIxNzRkIiwidXNlcl9pZCI6IjEifQ.2ktdnbnzcnAzKQfp-a2q_oGZQIUoT5u-BUl0-oKXk9I
+Content-type: application/json
+
+{
+    "action":"remove",
+    "quantity":5
+}
+
+###
+
+POST http://127.0.0.1:8000/api/v1/sales/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwOTExNTIzLCJpYXQiOjE3ODA5MDk3MjMsImp0aSI6IjhmNjEyZGUzODQwOTRhNWU4MDYyNmY1ZDJiMDBiMTk2IiwidXNlcl9pZCI6IjEifQ.W2OEWg3vOiGQQ2WUOr20BA6ON24c5HV0rKYYTcvJkxM
+Content-type: application/json
+
+{
+    "drink_id":"1",
+    "quantity": 99999
 }

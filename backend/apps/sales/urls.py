@@ -7,9 +7,9 @@ from .views import (
 router = DefaultRouter()
 
 router.register(
-    r"record",
+    "sales",
     SaleViewSet,
-    basename="record"
+    basename="sales"
 )
 
 urlpatterns = router.urls

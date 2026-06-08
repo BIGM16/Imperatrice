@@ -33,16 +33,13 @@ class SaleService:
 
         drink.save()
 
-        total = (
-            drink.prix_vente
-            * quantity
-        )
-
+        
         sale = Sale.objects.create(
             drink=drink,
             quantity=quantity,
-            total_price=total,
-            served_by=seller
+            served_by=seller,
+            unit_price=drink.price_sale,
+            total_price=drink.price_sale * quantity,
         )
 
         return sale

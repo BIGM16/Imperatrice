@@ -38,6 +38,6 @@ urlpatterns = [
     
     # Inclusion des URLs des différentes applications
     path("inventory/", include("apps.inventory.urls")),
-    path("sales/", include("apps.sales.urls")),
+    path("", include("apps.sales.urls")),
 
 ]

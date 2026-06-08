@@ -36,9 +36,9 @@ class SaleViewSet(
         SaleSerializer
     )
 
-    def post(
+    def create(
         self,
-        request
+        request, *args, **kwargs
     ):
 
         serializer = (
