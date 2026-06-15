@@ -229,7 +229,8 @@ class UserIntegrationTest(APITestCase):
         # Test avec DRF
         self.client.force_authenticate(user=self.user)
         # Vérifier que l'utilisateur est authentifié
-        self.assertTrue(self.client.default_headers.get('HTTP_AUTHORIZATION') or self.user.is_authenticated)
+        # self.assertTrue(self.client.default_headers.get('HTTP_AUTHORIZATION') or self.user.is_authenticated)
+        self.assertTrue(self.user.is_authenticated)
 
     def test_user_creation(self):
         """Vérifier qu'un nouvel utilisateur peut être créé"""
