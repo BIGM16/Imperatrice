@@ -39,5 +39,8 @@ urlpatterns = [
     # Inclusion des URLs des différentes applications
     path("inventory/", include("apps.inventory.urls")),
     path("", include("apps.sales.urls")),
+    path("", include("apps.accounts.urls")),
+    path("", include("apps.reports.urls")),
+    path("", include("apps.common.urls")),
 
 ]

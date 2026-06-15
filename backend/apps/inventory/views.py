@@ -2,12 +2,18 @@ from rest_framework.viewsets import (
     ModelViewSet
 )
 
+from django_filters.rest_framework import (
+    DjangoFilterBackend
+)
+
+from rest_framework.filters import (
+    SearchFilter,
+    OrderingFilter
+)
+
 from .models import Drink
 from .serializers import (
     DrinkSerializer
-)
-from .permissions import (
-    IsAdminOrReadOnly
 )
 
 from rest_framework.decorators import (
@@ -24,6 +30,10 @@ from .services import (
     InventoryService
 )
 
+from apps.accounts.permissions import (
+    IsAdminOrReadOnly
+)
+
 
 class DrinkViewSet(
     ModelViewSet
@@ -35,6 +45,27 @@ class DrinkViewSet(
 
     permission_classes = [
         IsAdminOrReadOnly
+    ]
+
+    filter_backends = [
+        SearchFilter,
+        OrderingFilter
+    ]
+
+    filterset_fields = [
+        'name',
+        'price_sale',
+        'stock'
+    ]
+
+    search_fields = [
+        'name'
+    ]
+
+    ordering_fields = [
+        'price_sale',
+        'stock',
+        'created_at'
     ]
 
     @action(

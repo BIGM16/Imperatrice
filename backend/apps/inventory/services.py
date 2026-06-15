@@ -2,6 +2,8 @@ from django.db import transaction
 
 from .models import Drink
 
+from apps.common.service import AuditLogService
+
 
 class InventoryService:
 
@@ -15,6 +17,14 @@ class InventoryService:
 
         drink.stock += quantity
         drink.save()
+
+        AuditLogService.log_action(
+            user=None,  # Replace with actual user if available
+            action="add_stock",
+            model_name="Drink",
+            object_id=drink.id,
+            description=f"Stock ajouté pour {drink.name}: {quantity}"
+        )
 
         return drink
 
@@ -33,6 +43,14 @@ class InventoryService:
 
         drink.stock -= quantity
         drink.save()
+
+        AuditLogService.log_action(
+            user=None,  # Replace with actual user if available
+            action="remove_stock",
+            model_name="Drink",
+            object_id=drink.id,
+            description=f"Stock retiré pour {drink.name}: {quantity}"
+        )
 
         return drink
 

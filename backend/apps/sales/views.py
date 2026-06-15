@@ -2,6 +2,15 @@ from rest_framework.viewsets import (
     ModelViewSet
 )
 
+from django_filters.rest_framework import (
+    DjangoFilterBackend
+)
+
+from rest_framework.filters import (
+    SearchFilter,
+    OrderingFilter
+)
+
 from rest_framework.response import (
     Response
 )
@@ -21,6 +30,10 @@ from .models import (
     Sale
 )
 
+from apps.accounts.permissions import (
+    IsSellerOrAdmin
+)
+
 
 class SaleViewSet(
     ModelViewSet
@@ -29,12 +42,41 @@ class SaleViewSet(
     queryset = (
         Sale
         .objects
-        .all()
+        .select_related(
+            "served_by",
+            "drink"
+        )
     )
 
     serializer_class = (
         SaleSerializer
     )
+
+    permission_classes = [
+        IsSellerOrAdmin
+    ]
+
+    filter_backends = [
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter
+    ]
+
+    filterset_fields = [
+        'served_by',
+        'created_at',
+        'drink'
+    ]
+
+    search_fields = [
+        'served_by__username',
+        'drink__name'
+    ]
+
+    ordering_fields = [
+        'created_at',
+        'total_price'
+    ]
 
     def create(
         self,
