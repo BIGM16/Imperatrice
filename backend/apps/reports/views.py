@@ -1,9 +1,10 @@
+# pyrefly: ignore [missing-import]
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .service import DashboardService, FinanceReportService, SalesReportService
-from .serializers import DashboardSerializer, FinanceReportSerializer, TopDrinksSerializer
+from .service import DashboardService, FinanceReportService, SalesReportService, SalesByDayService, SalesBySellerService
+from .serializers import DashboardSerializer, FinanceReportSerializer, TopDrinksSerializer, SalesByDaySerializer, SalesBySellerSerializer
 
 class DashboardView(APIView):
 
@@ -32,4 +33,18 @@ class TopDrinksView(APIView):
 
         serializer = TopDrinksSerializer(top_drinks_data, many=True)
         
+        return Response(serializer.data)
+
+class SalesByDayView(APIView):
+
+    def get(self, request):
+        sales_by_day_data = SalesByDayService.sales_by_day()
+        serializer = SalesByDaySerializer(sales_by_day_data, many=True)
+        return Response(serializer.data)
+
+class SalesBySellerView(APIView):
+
+    def get(self, request):
+        sales_by_seller_data = SalesBySellerService.sales_by_seller()
+        serializer = SalesBySellerSerializer(sales_by_seller_data, many=True)
         return Response(serializer.data)

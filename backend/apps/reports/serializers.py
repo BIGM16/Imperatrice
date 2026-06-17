@@ -21,3 +21,25 @@ class FinanceReportSerializer(serializers.Serializer):
 class TopDrinksSerializer(serializers.Serializer):
     drink_name = serializers.CharField()
     total_sold = serializers.IntegerField() 
+
+class SalesByDaySerializer(
+    serializers.Serializer
+):
+
+    day = serializers.DateField()
+
+    total_sales = serializers.FloatField()
+
+    sales_count = serializers.IntegerField()
+
+class SalesBySellerSerializer(
+    serializers.Serializer
+):
+
+    served_by__id = serializers.IntegerField()
+
+    served_by__username = serializers.CharField()
+
+    total_sales = serializers.FloatField()
+
+    total_items = serializers.IntegerField()

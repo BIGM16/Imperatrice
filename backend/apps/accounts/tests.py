@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APITestCase, APIClient, APIRequestFactory, force_authenticate
+from rest_framework.request import Request
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
@@ -138,79 +139,70 @@ class PermissionsTest(TestCase):
             username="regular",
             is_staff=False
         )
+        self.factory = APIRequestFactory()
 
     def test_is_admin_user_custom_permission(self):
         """Vérifier la permission IsAdminUserCustom"""
-        from rest_framework.test import APIRequestFactory
-        from rest_framework.request import Request
-        
-        factory = APIRequestFactory()
         permission = IsAdminUserCustom()
         
         # Admin devrait avoir accès
-        request = factory.get('/')
+        request = self.factory.get('/')
         request.user = self.admin_user
-        drf_request = Request(request)
-        self.assertTrue(permission.has_permission(drf_request, None))
+        self.assertTrue(permission.has_permission(request, None))
         
         # Utilisateur régulier ne devrait pas avoir accès
-        request = factory.get('/')
+        request = self.factory.get('/')
         request.user = self.regular_user
-        drf_request = Request(request)
-        self.assertFalse(permission.has_permission(drf_request, None))
+        self.assertFalse(permission.has_permission(request, None))
+        # permission = IsAdminUserCustom()
+        
+        # # Admin devrait avoir accès
+        # request = factory.get('/')
+        # request.user = self.admin_user
+        # drf_request = Request(request)
+        # self.assertTrue(permission.has_permission(drf_request, None))
+        
+        # # Utilisateur régulier ne devrait pas avoir accès
+        # request = factory.get('/')
+        # request.user = self.regular_user
+        # drf_request = Request(request)
+        # self.assertFalse(permission.has_permission(drf_request, None))
 
     def test_is_seller_or_admin_permission(self):
         """Vérifier la permission IsSellerOrAdmin"""
-        from rest_framework.test import APIRequestFactory
-        from rest_framework.request import Request
-        
-        factory = APIRequestFactory()
         permission = IsSellerOrAdmin()
         
         # Admin et utilisateur régulier authentifiés devraient avoir accès
-        request = factory.get('/')
+        request = self.factory.get('/')
         request.user = self.admin_user
-        drf_request = Request(request)
-        self.assertTrue(permission.has_permission(drf_request, None))
+        self.assertTrue(permission.has_permission(request, None))
         
-        request = factory.get('/')
+        request = self.factory.get('/')
         request.user = self.regular_user
-        drf_request = Request(request)
-        self.assertTrue(permission.has_permission(drf_request, None))
+        self.assertTrue(permission.has_permission(request, None))
 
     def test_is_admin_or_read_only_permission_for_safe_methods(self):
         """Vérifier IsAdminOrReadOnly pour les méthodes sûres (GET, HEAD, OPTIONS)"""
-        from rest_framework.test import APIRequestFactory
-        from rest_framework.request import Request
-        
-        factory = APIRequestFactory()
         permission = IsAdminOrReadOnly()
         
-        # Les utilisateurs authentifiés devraient pouvoir faire des requêtes GET
-        request = factory.get('/')
+        # N'importe qui (même régulier ou anonyme) peut faire un GET
+        request = self.factory.get('/')
         request.user = self.regular_user
-        drf_request = Request(request)
-        self.assertTrue(permission.has_permission(drf_request, None))
+        self.assertTrue(permission.has_permission(request, None))
 
     def test_is_admin_or_read_only_permission_for_write_methods(self):
         """Vérifier IsAdminOrReadOnly pour les méthodes d'écriture"""
-        from rest_framework.test import APIRequestFactory
-        from rest_framework.request import Request
-        
-        factory = APIRequestFactory()
         permission = IsAdminOrReadOnly()
         
-        # Seuls les admins devraient pouvoir faire des requêtes POST
-        request = factory.post('/')
+        # Un utilisateur régulier ne peut pas faire de POST
+        request = self.factory.post('/')
         request.user = self.regular_user
-        drf_request = Request(request)
-        self.assertFalse(permission.has_permission(drf_request, None))
+        self.assertFalse(permission.has_permission(request, None))
         
-        request = factory.post('/')
+        # Seul l'admin peut POST
+        request = self.factory.post('/')
         request.user = self.admin_user
-        drf_request = Request(request)
-        self.assertTrue(permission.has_permission(drf_request, None))
-
+        self.assertTrue(permission.has_permission(request, None))
 
 class UserIntegrationTest(APITestCase):
     """Tests d'intégration pour les utilisateurs"""
