@@ -70,4 +70,31 @@ class SalesReportService:
     def top_drinks(start_date, end_date, limit=10):
 
         return Sale.objects.filter(created_at__date__range=(start_date, end_date)).values('drink__id', 'drink__name') \
-            .annotate(total_sold=Sum('quantity'), revenue=Sum('total_price')).order_by('-total_sold')[:limit]
+            .annotate(total_sold=Sum('quantity'), drink_name=F('drink__name'), revenue=Sum('total_price')).order_by('-total_sold')[:5]
+    
+class SalesByDayService :
+    @staticmethod
+    def sales_by_day():
+        return(
+            Sale.objects
+            .annotate(
+                day=TruncDate("create_at")
+            )
+            .values("day")
+        )
+    
+class SalesBySellerService : 
+    @staticmethod
+    def sales_by_seller():
+        return(
+            Sale.objects
+            .values(
+                "served_by__id",
+                "served_by__username"
+            )
+            .annotate(
+                total_sales=Sum("total_price"),
+                total_items=Sum("quantity")
+            )
+            .order_by("-total_sales")
+        )

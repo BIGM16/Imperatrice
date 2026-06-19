@@ -8,9 +8,9 @@ from .models import AuditLog
 def create_audit_log(sender, instance, created, **kwargs):
     if created:
         AuditLog.objects.create(
+            user=instance.served_by,
             action='SALE',
             model_name='Sale',
             object_id=instance.id,
-            details=f'Sale ID: {instance.id}, Total Price: {instance.total_price}, Quantity: {instance.quantity}',
-            user=instance.served_by
+            description=f'Sale ID: {instance.id}, Total Price: {instance.total_price}, Quantity: {instance.quantity}'
         )
