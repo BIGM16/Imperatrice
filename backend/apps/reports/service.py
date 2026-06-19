@@ -67,7 +67,7 @@ class FinanceReportService:
 
 class SalesReportService:
     @staticmethod
-    def top_drinks(start_date, end_date):
+    def top_drinks(start_date, end_date, limit=10):
 
-        return Sale.objects.filter(created_at__date__range=(start_date, end_date)).values('drink__id') \
-            .annotate(total_sold=Sum('quantity'), drink_name=F('drink__name')).order_by('-total_sold')[:5]
+        return Sale.objects.filter(created_at__date__range=(start_date, end_date)).values('drink__id', 'drink__name') \
+            .annotate(total_sold=Sum('quantity'), revenue=Sum('total_price')).order_by('-total_sold')[:limit]

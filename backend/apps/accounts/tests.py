@@ -22,7 +22,7 @@ class UserSerializerTest(TestCase):
             first_name="Test",
             last_name="User",
             email="test@example.com",
-            is_staff=True
+            is_staff=True,
         )
 
     def test_serialize_user(self):
@@ -36,7 +36,6 @@ class UserSerializerTest(TestCase):
         self.assertEqual(data['last_name'], 'User')
         self.assertEqual(data['email'], 'test@example.com')
         self.assertTrue(data['is_staff'])
-
     def test_serializer_fields(self):
         """Vérifier que tous les champs requis sont présents"""
         serializer = UserSerializer(self.user)
@@ -47,7 +46,7 @@ class UserSerializerTest(TestCase):
         """Vérifier la sérialisation d'un utilisateur non-staff"""
         non_staff_user = User.objects.create_user(
             username="regular",
-            is_staff=False
+            is_staff=False,
         )
         serializer = UserSerializer(non_staff_user)
         self.assertFalse(serializer.data['is_staff'])
@@ -132,11 +131,11 @@ class PermissionsTest(TestCase):
     def setUp(self):
         self.admin_user = User.objects.create_user(
             username="admin",
-            is_staff=True
+            is_staff=True,
         )
         self.regular_user = User.objects.create_user(
             username="regular",
-            is_staff=False
+            is_staff=False,
         )
 
     def test_is_admin_user_custom_permission(self):
@@ -229,7 +228,7 @@ class UserIntegrationTest(APITestCase):
         # Test avec DRF
         self.client.force_authenticate(user=self.user)
         # Vérifier que l'utilisateur est authentifié
-        self.assertTrue(self.client.default_headers.get('HTTP_AUTHORIZATION') or self.user.is_authenticated)
+        self.assertTrue(self.user.is_authenticated)
 
     def test_user_creation(self):
         """Vérifier qu'un nouvel utilisateur peut être créé"""

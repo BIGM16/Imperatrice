@@ -19,5 +19,7 @@ class FinanceReportSerializer(serializers.Serializer):
     net_profit = serializers.FloatField()
 
 class TopDrinksSerializer(serializers.Serializer):
+    drink_id = serializers.IntegerField()
     drink_name = serializers.CharField()
-    total_sold = serializers.IntegerField() 
+    total_sold = serializers.IntegerField()
+    revenue = serializers.FloatField()

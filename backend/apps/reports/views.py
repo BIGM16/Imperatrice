@@ -27,8 +27,9 @@ class TopDrinksView(APIView):
         start_date = request.query_params.get('start_date')
 
         end_date = request.query_params.get('end_date')
+        limit = int(request.query_params.get('limit', 10))
 
-        top_drinks_data = SalesReportService.top_drinks(start_date, end_date)
+        top_drinks_data = SalesReportService.top_drinks(start_date, end_date, limit)
 
         serializer = TopDrinksSerializer(top_drinks_data, many=True)
         
