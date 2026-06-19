@@ -1,10 +1,10 @@
 from django.db.models import Sum, Count, F
 from django.utils import timezone
+from django.db.models.functions import TruncDate
 
 from apps.sales.models import Sale
 from apps.finance.models import Depense
 from apps.inventory.models import Drink
-from datetime import date
 
 class DashboardService:
     @staticmethod
@@ -19,7 +19,7 @@ class DashboardService:
 
         total_sales = Sale.objects.filter(created_at__date__range=(start_of_month, end_of_month)).aggregate(total=Sum('total_price'))['total'] or 0
 
-        total_today_sales = Sale.objects.filter(created_at__date=today).aggregate(total=Sum('total_price'))['total'] or 0
+        # total_today_sales = Sale.objects.filter(created_at__date=today).aggregate(total=Sum('total_price'))['total'] or 0
 
         today_sales = Sale.objects.filter(created_at__date=today)
 
@@ -31,7 +31,7 @@ class DashboardService:
 
         total_drinks_sold = Drink.objects.filter(sale__created_at__date__range=(start_of_month, end_of_month)).aggregate(total=Count('id'))['total'] or 0
 
-        sales_count = sales_today.count() if sales_today else 0
+        sales_count = today_sales.count() if today_sales else 0
 
         low_stock_drinks = Drink.objects.filter(stock__lte=10).count()
 
@@ -46,8 +46,8 @@ class DashboardService:
             'expenses_today': expenses_today,
             'sales_count': sales_count,
             'low_stock_drinks': low_stock_drinks,
-            'today_net_profit': total_today_sales - total_today_expenses,
-            'total_today_sales': total_today_sales,
+            'today_net_profit': sales_today - total_today_expenses,
+            'total_today_sales': sales_today,
             'total_today_expenses': total_today_expenses
         }
 
