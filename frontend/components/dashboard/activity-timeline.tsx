@@ -1,32 +1,51 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Activity } from '@/lib/types';
-import { Clock, CreditCard, Package, UserCheck, ShoppingBag, DollarSign, AlertTriangle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Activity } from "@/types/types";
+import {
+  Clock,
+  CreditCard,
+  Package,
+  UserCheck,
+  ShoppingBag,
+  DollarSign,
+  AlertTriangle,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ActivityTimelineProps {
   activities: Activity[];
 }
 
 const activityIcons = {
-  sale: { icon: ShoppingBag, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  expense: { icon: DollarSign, color: 'text-red-400', bg: 'bg-red-400/10' },
-  inventory: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  user: { icon: UserCheck, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+  sale: {
+    icon: ShoppingBag,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  expense: { icon: DollarSign, color: "text-red-400", bg: "bg-red-400/10" },
+  inventory: { icon: Package, color: "text-blue-400", bg: "bg-blue-400/10" },
+  user: { icon: UserCheck, color: "text-purple-400", bg: "bg-purple-400/10" },
 };
 
 const activityBadges = {
-  sale: { label: 'Sale', variant: 'default' as const },
-  expense: { label: 'Expense', variant: 'secondary' as const },
-  inventory: { label: 'Inventory', variant: 'outline' as const },
-  user: { label: 'User', variant: 'outline' as const },
+  sale: { label: "Sale", variant: "default" as const },
+  expense: { label: "Expense", variant: "secondary" as const },
+  inventory: { label: "Inventory", variant: "outline" as const },
+  user: { label: "User", variant: "outline" as const },
 };
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
+  const rows = Array.isArray(activities) ? activities : [];
   return (
     <Card className="bg-card border-border card-hover">
       <CardHeader>
@@ -42,7 +61,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {activities.map((activity, index) => {
+          {rows.map((activity, index) => {
             const IconConfig = activityIcons[activity.type];
             const BadgeConfig = activityBadges[activity.type];
 
@@ -50,8 +69,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
               <div
                 key={activity.id}
                 className={cn(
-                  'relative flex gap-4',
-                  index !== activities.length - 1 && 'pb-6 border-b border-border'
+                  "relative flex gap-4",
+                  index !== activities.length - 1 &&
+                    "pb-6 border-b border-border",
                 )}
               >
                 {/* Timeline connector */}
@@ -62,11 +82,13 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                 {/* Icon */}
                 <div
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
-                    IconConfig.bg
+                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                    IconConfig.bg,
                   )}
                 >
-                  <IconConfig.icon className={cn('w-5 h-5', IconConfig.color)} />
+                  <IconConfig.icon
+                    className={cn("w-5 h-5", IconConfig.color)}
+                  />
                 </div>
 
                 {/* Content */}
@@ -78,8 +100,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                     <Badge
                       variant={BadgeConfig.variant}
                       className={cn(
-                        'text-xs',
-                        BadgeConfig.variant === 'default' && 'bg-gold/20 text-gold hover:bg-gold/30'
+                        "text-xs",
+                        BadgeConfig.variant === "default" &&
+                          "bg-gold/20 text-gold hover:bg-gold/30",
                       )}
                     >
                       {BadgeConfig.label}
@@ -94,19 +117,24 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                     )}
                     {activity.user && (
                       <div className="flex items-center gap-1.5">
-                      <Avatar className="w-4 h-4">
-                        <AvatarImage src={activity.user.avatar_url || ''} />
-                        <AvatarFallback className="text-[8px] bg-gold/20 text-gold">
-                          {activity.user.full_name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{activity.user.full_name}</span>
+                        <Avatar className="w-4 h-4">
+                          <AvatarImage src={activity.user.avatar_url || ""} />
+                          <AvatarFallback className="text-[8px] bg-gold/20 text-gold">
+                            {activity.user.username
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{activity.user.username}</span>
                       </div>
                     )}
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(activity.timestamp), {
+                      addSuffix: true,
+                    })}
                   </p>
                 </div>
               </div>

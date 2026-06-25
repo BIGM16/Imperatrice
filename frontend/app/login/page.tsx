@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Wine, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Wine, Eye, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -24,13 +24,13 @@ export default function LoginPage() {
     try {
       const success = await login(email, password);
       if (success) {
-        toast.success('Welcome back!');
-        router.push('/dashboard');
+        toast.success("Welcome back!");
+        router.push("/dashboard");
       } else {
-        toast.error('Invalid credentials. Try admin@imperatrice.com');
+        toast.error("Invalid credentials. Try admin@imperatrice.com");
       }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -43,8 +43,9 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1470337455729-039a2a9c6448?w=1920)',
-            filter: 'brightness(0.3)',
+            backgroundImage:
+              "url(https://images.unsplash.com/photo-1470337455729-039a2a9c6448?w=1920)",
+            filter: "brightness(0.3)",
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-pitch/80 via-coffee/60 to-walnut/80" />
@@ -73,7 +74,10 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-8 pb-10 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-foreground"
+              >
                 Email Address
               </Label>
               <Input
@@ -88,13 +92,16 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground">
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-foreground"
+              >
                 Password
               </Label>
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -106,7 +113,11 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -119,7 +130,10 @@ export default function LoginPage() {
                 />
                 Remember me
               </label>
-              <button type="button" className="text-gold hover:text-gold-light transition-colors">
+              <button
+                type="button"
+                className="text-gold hover:text-gold-light transition-colors"
+              >
                 Forgot password?
               </button>
             </div>
@@ -135,17 +149,23 @@ export default function LoginPage() {
                   Signing in...
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </Button>
           </form>
 
-          {/* Demo hint */}
+          {/* Backend hint */}
           <div className="px-8 pb-8">
             <div className="bg-gold/10 border border-gold/20 rounded-lg p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Demo Access</p>
-              <p className="text-sm text-foreground font-medium">admin@imperatrice.com</p>
-              <p className="text-xs text-muted-foreground mt-1">Use any password (4+ chars)</p>
+              <p className="text-xs text-muted-foreground mb-1">
+                Backend access
+              </p>
+              <p className="text-sm text-foreground font-medium">
+                Use your Django account credentials
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Email or username supported
+              </p>
             </div>
           </div>
         </div>

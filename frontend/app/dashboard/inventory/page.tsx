@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -41,46 +41,91 @@ import {
   Wine,
   Grid3X3,
   List,
-} from 'lucide-react';
-import { mockDrinks, mockCategories } from '@/lib/mock-data';
-import { Drink } from '@/lib/types';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { Drink } from "@/types/types";
+import { cn } from "@/lib/utils";
+import api from "@/lib/axios";
+import { useEffect } from "react";
 
 export default function InventoryPage() {
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [stockFilter, setStockFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [stockFilter, setStockFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAddDrink, setShowAddDrink] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [updatingStock, setUpdatingStock] = useState<Drink | null>(null);
+  const [drinks, setDrinks] = useState<Drink[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
-  // Filter drinks
-  const filteredDrinks = mockDrinks.filter((drink) => {
-    const matchesSearch = drink.name.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    const loadInventory = async () => {
+      try {
+        const [drinksResponse, categoriesResponse] = await Promise.all([
+          api.get<Drink[]>("/inventory/"),
+          api.get<{ id: string; name: string }[]>("/inventory/categories/"),
+        ]);
+        setDrinks(drinksResponse.data || []);
+        setCategories(categoriesResponse.data || []);
+      } catch {
+        setDrinks([]);
+        setCategories([]);
+      }
+    };
+
+    loadInventory();
+  }, []);
+
+  const filteredDrinks = drinks.filter((drink) => {
+    const matchesSearch = drink.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
     const matchesCategory =
-      categoryFilter === 'all' || drink.category_id === categoryFilter;
+      categoryFilter === "all" || drink.category_id === categoryFilter;
+    const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
+    const minStockLevel = drink.min_stock_level ?? 0;
     const matchesStock =
-      stockFilter === 'all' ||
-      (stockFilter === 'low' && drink.stock_quantity > 0 && drink.stock_quantity <= drink.min_stock_level) ||
-      (stockFilter === 'out' && drink.stock_quantity === 0) ||
-      (stockFilter === 'ok' && drink.stock_quantity > drink.min_stock_level);
+      stockFilter === "all" ||
+      (stockFilter === "low" &&
+        stockQuantity > 0 &&
+        stockQuantity <= minStockLevel) ||
+      (stockFilter === "out" && stockQuantity === 0) ||
+      (stockFilter === "ok" && stockQuantity > minStockLevel);
     return matchesSearch && matchesCategory && matchesStock;
   });
 
   const getStockStatus = (drink: Drink) => {
-    if (drink.stock_quantity === 0) {
-      return { label: 'Out of Stock', color: 'text-red-500', bg: 'bg-red-500/10', icon: X };
+    const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
+    const minStockLevel = drink.min_stock_level ?? 0;
+    if (stockQuantity === 0) {
+      return {
+        label: "Out of Stock",
+        color: "text-red-500",
+        bg: "bg-red-500/10",
+        icon: X,
+      };
     }
-    if (drink.stock_quantity <= drink.min_stock_level) {
-      return { label: 'Low Stock', color: 'text-amber-500', bg: 'bg-amber-500/10', icon: AlertTriangle };
+    if (stockQuantity <= minStockLevel) {
+      return {
+        label: "Low Stock",
+        color: "text-amber-500",
+        bg: "bg-amber-500/10",
+        icon: AlertTriangle,
+      };
     }
-    return { label: 'In Stock', color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: Check };
+    return {
+      label: "In Stock",
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      icon: Check,
+    };
   };
 
   const getStockPercentage = (drink: Drink) => {
-    const maxStock = Math.max(drink.min_stock_level * 3, 50);
-    return Math.min(100, (drink.stock_quantity / maxStock) * 100);
+    const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
+    const minStockLevel = drink.min_stock_level ?? 0;
+    const maxStock = Math.max(minStockLevel * 3, 50);
+    return Math.min(100, (stockQuantity / maxStock) * 100);
   };
 
   return (
@@ -89,7 +134,9 @@ export default function InventoryPage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Inventory Management</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Inventory Management
+            </h1>
             <p className="text-muted-foreground mt-1">
               Manage drinks and track stock levels
             </p>
@@ -103,7 +150,9 @@ export default function InventoryPage() {
             </DialogTrigger>
             <DialogContent className="max-w-md bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-foreground">Add New Drink</DialogTitle>
+                <DialogTitle className="text-foreground">
+                  Add New Drink
+                </DialogTitle>
                 <DialogDescription>
                   Enter the details for the new drink
                 </DialogDescription>
@@ -111,7 +160,9 @@ export default function InventoryPage() {
 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-foreground">Name</Label>
+                  <Label htmlFor="name" className="text-foreground">
+                    Name
+                  </Label>
                   <Input
                     id="name"
                     placeholder="Drink name"
@@ -119,13 +170,15 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-foreground">Category</Label>
+                  <Label htmlFor="category" className="text-foreground">
+                    Category
+                  </Label>
                   <Select>
                     <SelectTrigger className="bg-secondary/50 border-border">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border">
-                      {mockCategories.map((cat) => (
+                      {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
                         </SelectItem>
@@ -135,7 +188,9 @@ export default function InventoryPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price" className="text-foreground">Price (€)</Label>
+                    <Label htmlFor="price" className="text-foreground">
+                      Price (€)
+                    </Label>
                     <Input
                       id="price"
                       type="number"
@@ -145,7 +200,9 @@ export default function InventoryPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cost" className="text-foreground">Cost (€)</Label>
+                    <Label htmlFor="cost" className="text-foreground">
+                      Cost (€)
+                    </Label>
                     <Input
                       id="cost"
                       type="number"
@@ -157,7 +214,9 @@ export default function InventoryPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="stock" className="text-foreground">Initial Stock</Label>
+                    <Label htmlFor="stock" className="text-foreground">
+                      Initial Stock
+                    </Label>
                     <Input
                       id="stock"
                       type="number"
@@ -166,7 +225,9 @@ export default function InventoryPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="min-stock" className="text-foreground">Min Stock Level</Label>
+                    <Label htmlFor="min-stock" className="text-foreground">
+                      Min Stock Level
+                    </Label>
                     <Input
                       id="min-stock"
                       type="number"
@@ -176,7 +237,9 @@ export default function InventoryPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-foreground">Description</Label>
+                  <Label htmlFor="description" className="text-foreground">
+                    Description
+                  </Label>
                   <Textarea
                     id="description"
                     placeholder="Drink description"
@@ -187,12 +250,15 @@ export default function InventoryPage() {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowAddDrink(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddDrink(false)}
+                >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => {
-                    toast.success('Drink added successfully');
+                    toast.success("Drink added successfully");
                     setShowAddDrink(false);
                   }}
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
@@ -211,7 +277,9 @@ export default function InventoryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold text-foreground">{mockDrinks.length}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {drinks.length}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
                   <Package className="w-5 h-5 text-gold" />
@@ -225,7 +293,13 @@ export default function InventoryPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">In Stock</p>
                   <p className="text-2xl font-bold text-emerald-500">
-                    {mockDrinks.filter(d => d.stock_quantity > d.min_stock_level).length}
+                    {
+                      drinks.filter((d) => {
+                        const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
+                        const minStockLevel = d.min_stock_level ?? 0;
+                        return stockQuantity > minStockLevel;
+                      }).length
+                    }
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -240,7 +314,13 @@ export default function InventoryPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Low Stock</p>
                   <p className="text-2xl font-bold text-amber-500">
-                    {mockDrinks.filter(d => d.stock_quantity > 0 && d.stock_quantity <= d.min_stock_level).length}
+                    {
+                      drinks.filter((d) => {
+                        const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
+                        const minStockLevel = d.min_stock_level ?? 0;
+                        return stockQuantity > 0 && stockQuantity <= minStockLevel;
+                      }).length
+                    }
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -255,7 +335,7 @@ export default function InventoryPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Out of Stock</p>
                   <p className="text-2xl font-bold text-red-500">
-                    {mockDrinks.filter(d => d.stock_quantity === 0).length}
+                    {drinks.filter((d) => (d.stock_quantity ?? d.stock ?? 0) === 0).length}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
@@ -286,7 +366,7 @@ export default function InventoryPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
                   <SelectItem value="all">All Categories</SelectItem>
-                  {mockCategories.map((cat) => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>
@@ -306,18 +386,18 @@ export default function InventoryPage() {
               </Select>
               <div className="flex gap-1">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  variant={viewMode === "grid" ? "default" : "ghost"}
                   size="icon"
-                  onClick={() => setViewMode('grid')}
-                  className={viewMode === 'grid' ? 'bg-gold text-pitch' : ''}
+                  onClick={() => setViewMode("grid")}
+                  className={viewMode === "grid" ? "bg-gold text-pitch" : ""}
                 >
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  variant={viewMode === "list" ? "default" : "ghost"}
                   size="icon"
-                  onClick={() => setViewMode('list')}
-                  className={viewMode === 'list' ? 'bg-gold text-pitch' : ''}
+                  onClick={() => setViewMode("list")}
+                  className={viewMode === "list" ? "bg-gold text-pitch" : ""}
                 >
                   <List className="w-4 h-4" />
                 </Button>
@@ -327,12 +407,15 @@ export default function InventoryPage() {
         </Card>
 
         {/* Inventory grid/list */}
-        {viewMode === 'grid' ? (
+        {viewMode === "grid" ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredDrinks.map((drink) => {
               const status = getStockStatus(drink);
               return (
-                <Card key={drink.id} className="bg-card border-border card-hover overflow-hidden">
+                <Card
+                  key={drink.id}
+                  className="bg-card border-border card-hover overflow-hidden"
+                >
                   {/* Image placeholder */}
                   <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
                     <Wine className="w-12 h-12 text-muted-foreground/30" />
@@ -347,7 +430,7 @@ export default function InventoryPage() {
                           {drink.category?.name}
                         </p>
                       </div>
-                      <Badge className={cn('text-xs', status.bg, status.color)}>
+                      <Badge className={cn("text-xs", status.bg, status.color)}>
                         {status.label}
                       </Badge>
                     </div>
@@ -356,8 +439,12 @@ export default function InventoryPage() {
                     <div className="space-y-3">
                       {/* Price row */}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Price</span>
-                        <span className="font-semibold text-gold">€{drink.price.toFixed(2)}</span>
+                        <span className="text-sm text-muted-foreground">
+                          Price
+                        </span>
+                        <span className="font-semibold text-gold">
+                          €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
+                        </span>
                       </div>
 
                       {/* Stock progress */}
@@ -365,24 +452,24 @@ export default function InventoryPage() {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Stock</span>
                           <span className="font-medium text-foreground">
-                            {drink.stock_quantity} units
+                            {(drink.stock_quantity ?? drink.stock ?? 0)} units
                           </span>
                         </div>
                         <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
                           <div
                             className={cn(
-                              'h-full rounded-full transition-all',
-                              drink.stock_quantity <= drink.min_stock_level
-                                ? drink.stock_quantity === 0
-                                  ? 'bg-red-500'
-                                  : 'bg-amber-500'
-                                : 'bg-gold'
+                              "h-full rounded-full transition-all",
+                              (drink.stock_quantity ?? drink.stock ?? 0) <= (drink.min_stock_level ?? 0)
+                                ? (drink.stock_quantity ?? drink.stock ?? 0) === 0
+                                  ? "bg-red-500"
+                                  : "bg-amber-500"
+                                : "bg-gold",
                             )}
                             style={{ width: `${getStockPercentage(drink)}%` }}
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Min: {drink.min_stock_level} units
+                          Min: {drink.min_stock_level ?? 0} units
                         </p>
                       </div>
 
@@ -425,17 +512,25 @@ export default function InventoryPage() {
                         <Wine className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground truncate">{drink.name}</p>
-                            <Badge className={cn('text-xs', status.bg, status.color)}>
+                            <p className="font-medium text-foreground truncate">
+                              {drink.name}
+                            </p>
+                            <Badge
+                              className={cn("text-xs", status.bg, status.color)}
+                            >
                               {status.label}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">{drink.category?.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {drink.category?.name}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gold">€{drink.price.toFixed(2)}</p>
+                          <p className="font-semibold text-gold">
+                            €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            Stock: {drink.stock_quantity}
+                            Stock: {drink.stock_quantity ?? drink.stock ?? 0}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -464,35 +559,42 @@ export default function InventoryPage() {
         )}
 
         {/* Update stock dialog */}
-        <Dialog open={!!updatingStock} onOpenChange={(open) => !open && setUpdatingStock(null)}>
+        <Dialog
+          open={!!updatingStock}
+          onOpenChange={(open) => !open && setUpdatingStock(null)}
+        >
           <DialogContent className="max-w-md bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Update Stock</DialogTitle>
-              <DialogDescription>
-                {updatingStock?.name}
-              </DialogDescription>
+              <DialogTitle className="text-foreground">
+                Update Stock
+              </DialogTitle>
+              <DialogDescription>{updatingStock?.name}</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border">
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Current Stock</p>
-                  <p className="text-2xl font-bold text-foreground">{updatingStock?.stock_quantity}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {updatingStock ? (updatingStock.stock_quantity ?? updatingStock.stock ?? 0) : 0}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Min Level</p>
                   <p className="text-lg font-semibold text-muted-foreground">
-                    {updatingStock?.min_stock_level}
+                    {updatingStock?.min_stock_level ?? 0}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new-stock" className="text-foreground">New Stock Quantity</Label>
+                <Label htmlFor="new-stock" className="text-foreground">
+                  New Stock Quantity
+                </Label>
                 <Input
                   id="new-stock"
                   type="number"
-                  defaultValue={updatingStock?.stock_quantity}
+                  defaultValue={updatingStock ? (updatingStock.stock_quantity ?? updatingStock.stock ?? 0) : 0}
                   className="bg-secondary/50 border-border focus:border-gold"
                 />
               </div>
@@ -505,7 +607,7 @@ export default function InventoryPage() {
                     if (updatingStock) {
                       setUpdatingStock({
                         ...updatingStock,
-                        stock_quantity: updatingStock.stock_quantity + 10,
+                        stock_quantity: (updatingStock.stock_quantity ?? updatingStock.stock ?? 0) + 10,
                       });
                     }
                   }}
@@ -520,7 +622,10 @@ export default function InventoryPage() {
                     if (updatingStock) {
                       setUpdatingStock({
                         ...updatingStock,
-                        stock_quantity: Math.max(0, updatingStock.stock_quantity - 10),
+                        stock_quantity: Math.max(
+                          0,
+                          (updatingStock.stock_quantity ?? updatingStock.stock ?? 0) - 10,
+                        ),
                       });
                     }
                   }}
@@ -537,7 +642,7 @@ export default function InventoryPage() {
               </Button>
               <Button
                 onClick={() => {
-                  toast.success('Stock updated successfully');
+                  toast.success("Stock updated successfully");
                   setUpdatingStock(null);
                 }}
                 className="bg-gold hover:bg-gold-light text-pitch font-semibold"
@@ -549,18 +654,21 @@ export default function InventoryPage() {
         </Dialog>
 
         {/* Edit drink dialog */}
-        <Dialog open={!!editingDrink} onOpenChange={(open) => !open && setEditingDrink(null)}>
+        <Dialog
+          open={!!editingDrink}
+          onOpenChange={(open) => !open && setEditingDrink(null)}
+        >
           <DialogContent className="max-w-md bg-card border-border">
             <DialogHeader>
               <DialogTitle className="text-foreground">Edit Drink</DialogTitle>
-              <DialogDescription>
-                Update drink details
-              </DialogDescription>
+              <DialogDescription>Update drink details</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-name" className="text-foreground">Name</Label>
+                <Label htmlFor="edit-name" className="text-foreground">
+                  Name
+                </Label>
                 <Input
                   id="edit-name"
                   defaultValue={editingDrink?.name}
@@ -569,7 +677,9 @@ export default function InventoryPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-price" className="text-foreground">Price (€)</Label>
+                  <Label htmlFor="edit-price" className="text-foreground">
+                    Price (€)
+                  </Label>
                   <Input
                     id="edit-price"
                     type="number"
@@ -579,7 +689,9 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-cost" className="text-foreground">Cost (€)</Label>
+                  <Label htmlFor="edit-cost" className="text-foreground">
+                    Cost (€)
+                  </Label>
                   <Input
                     id="edit-cost"
                     type="number"
@@ -590,20 +702,21 @@ export default function InventoryPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-description" className="text-foreground">Description</Label>
+                <Label htmlFor="edit-description" className="text-foreground">
+                  Description
+                </Label>
                 <Textarea
                   id="edit-description"
-                  defaultValue={editingDrink?.description || ''}
+                  defaultValue={editingDrink?.description || ""}
                   className="bg-secondary/50 border-border focus:border-gold resize-none"
                   rows={3}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="active" className="text-foreground">Active</Label>
-                <Switch
-                  id="active"
-                  defaultChecked={editingDrink?.is_active}
-                />
+                <Label htmlFor="active" className="text-foreground">
+                  Active
+                </Label>
+                <Switch id="active" defaultChecked={editingDrink?.is_active} />
               </div>
             </div>
 
@@ -613,7 +726,7 @@ export default function InventoryPage() {
               </Button>
               <Button
                 onClick={() => {
-                  toast.success('Drink updated successfully');
+                  toast.success("Drink updated successfully");
                   setEditingDrink(null);
                 }}
                 className="bg-gold hover:bg-gold-light text-pitch font-semibold"

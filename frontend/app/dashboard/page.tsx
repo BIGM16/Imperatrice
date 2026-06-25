@@ -7,27 +7,53 @@ import { SalesTrendChart } from '@/components/dashboard/sales-trend-chart';
 import { RevenueExpensesChart } from '@/components/dashboard/revenue-expenses-chart';
 import { TopSellersTable } from '@/components/dashboard/top-sellers-table';
 import { ActivityTimeline } from '@/components/dashboard/activity-timeline';
-import { mockDashboardStats, generateSalesTrendData, generateRevenueExpensesData, mockTopSellingDrinks, mockActivities } from '@/lib/mock-data';
-import { DollarSign, TrendingUp, TrendingDown, ShoppingCart, AlertTriangle, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { getDashboardStats, getDashboardSalesTrend, getDashboardTopSellers, getDashboardActivity } from '@/services/dashboard';
+import type { Activity, ChartData, DashboardStats, TopSellingDrink } from '@/types/types';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState(mockDashboardStats);
+  const [stats, setStats] = useState<DashboardStats>({
+    revenueToday: 0,
+    expensesToday: 0,
+    netProfit: 0,
+    salesCount: 0,
+    lowStockCount: 0,
+  });
+  const [salesTrendData, setSalesTrendData] = useState<ChartData[]>([]);
+  const [revenueExpensesData, setRevenueExpensesData] = useState<ChartData[]>([]);
+  const [topSellers, setTopSellers] = useState<TopSellingDrink[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const loadDashboard = async () => {
+      try {
+        const [dashboardStats, salesTrend, topSellersData, activityData] = await Promise.all([
+          getDashboardStats(),
+          getDashboardSalesTrend(),
+          getDashboardTopSellers(),
+          getDashboardActivity(),
+        ]);
 
-  const salesTrendData = generateSalesTrendData();
-  const revenueExpensesData = generateRevenueExpensesData();
+        setStats(dashboardStats);
+        setSalesTrendData(salesTrend);
+        setRevenueExpensesData([
+          { name: 'Revenue', value: dashboardStats.revenueToday, color: '#9C6C29' },
+          { name: 'Expenses', value: dashboardStats.expensesToday, color: '#46290C' },
+        ]);
+        setTopSellers(topSellersData);
+        setActivities(activityData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -35,9 +61,12 @@ export default function DashboardPage() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Dashboard
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Welcome back! Here&apos;s what&apos;s happening at Chez l&apos;Impératrice today.
+              Welcome back! Here&apos;s what&apos;s happening at Chez
+              l&apos;Impératrice today.
             </p>
           </div>
           <Link href="/dashboard/sales">
@@ -54,8 +83,11 @@ export default function DashboardPage() {
             <AlertTriangle className="w-4 h-4 text-amber-500" />
             <AlertTitle className="text-amber-500">Low Stock Alert</AlertTitle>
             <AlertDescription className="text-muted-foreground">
-              {stats.lowStockCount} items are running low on stock.{' '}
-              <Link href="/dashboard/inventory" className="text-gold hover:underline">
+              {stats.lowStockCount} items are running low on stock.{" "}
+              <Link
+                href="/dashboard/inventory"
+                className="text-gold hover:underline"
+              >
                 View inventory
               </Link>
             </AlertDescription>
@@ -66,7 +98,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Revenue Today"
-            value={`€${stats.revenueToday.toLocaleString()}`}
+            value={`€${(stats?.revenueToday ?? 0).toLocaleString()}`}
             description="from yesterday"
             icon={TrendingUp}
             trend={{ value: 12.5, isPositive: true }}
@@ -74,7 +106,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Expenses Today"
-            value={`€${stats.expensesToday.toLocaleString()}`}
+            value={`€${(stats?.expensesToday ?? 0).toLocaleString()}`}
             description="from yesterday"
             icon={TrendingDown}
             trend={{ value: 3.2, isPositive: false }}
@@ -82,15 +114,15 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Net Profit"
-            value={`€${stats.netProfit.toLocaleString()}`}
+            value={`€${(stats?.netProfit ?? 0).toLocaleString()}`}
             description="today's margin"
             icon={DollarSign}
-            trend={{ value: 8.1, isPositive: stats.netProfit > 0 }}
+            trend={{ value: 8.1, isPositive: (stats?.netProfit ?? 0) > 0 }}
             isLoading={isLoading}
           />
           <StatCard
             title="Sales Count"
-            value={stats.salesCount.toString()}
+            value={(stats?.salesCount ?? 0).toString()}
             description="transactions"
             icon={ShoppingCart}
             trend={{ value: 15.3, isPositive: true }}
@@ -107,9 +139,9 @@ export default function DashboardPage() {
         {/* Bottom row */}
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <TopSellersTable data={mockTopSellingDrinks} />
+            <TopSellersTable data={topSellers} />
           </div>
-          <ActivityTimeline activities={mockActivities} />
+          <ActivityTimeline activities={activities} />
         </div>
       </div>
     </DashboardLayout>

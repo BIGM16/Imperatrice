@@ -1,11 +1,15 @@
 export interface User {
-  id: string;
+  id: string | number;
   email: string;
-  full_name: string;
-  role: 'admin' | 'manager' | 'staff';
-  avatar_url: string | null;
-  is_active: boolean;
-  created_at: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  role?: "admin" | "manager" | "staff" | string;
+  avatar_url?: string | null;
+  is_active?: boolean;
+  is_staff?: boolean;
+  created_at?: string;
 }
 
 export interface Category {
@@ -17,27 +21,35 @@ export interface Category {
 export interface Drink {
   id: string;
   name: string;
-  description: string | null;
-  category_id: string | null;
-  price: number;
-  cost: number;
-  stock_quantity: number;
-  min_stock_level: number;
-  image_url: string | null;
-  is_active: boolean;
+  description?: string | null;
+  category_id?: string | null;
+  price?: number;
+  cost?: number;
+  stock_quantity?: number;
+  min_stock_level?: number;
+  image_url?: string | null;
+  is_active?: boolean;
   category?: Category;
+  stock?: number;
+  price_sale?: number;
+  price_purchase?: number;
+  benefice_unitaire?: number;
 }
 
 export interface Sale {
-  id: string;
-  user_id: string;
-  total_amount: number;
-  payment_method: 'cash' | 'card' | 'transfer';
-  customer_name: string | null;
-  notes: string | null;
-  created_at: string;
+  id: string | number;
+  user_id?: string;
+  total_amount?: number;
+  payment_method?: "cash" | "card" | "transfer";
+  customer_name?: string | null;
+  notes?: string | null;
+  created_at?: string;
   user?: User;
   items?: SaleItem[];
+  quantity?: number;
+  total_price?: number;
+  drink?: Drink;
+  served_by?: User;
 }
 
 export interface SaleItem {
@@ -52,13 +64,16 @@ export interface SaleItem {
 
 export interface Expense {
   id: string;
-  user_id: string;
+  user_id?: string;
   category: string;
   amount: number;
-  description: string | null;
-  receipt_url: string | null;
-  created_at: string;
+  description?: string | null;
+  receipt_url?: string | null;
+  created_at?: string;
   user?: User;
+  motif?: string;
+  montant?: number;
+  date?: string;
 }
 
 export interface AuditLog {
@@ -95,7 +110,7 @@ export interface TopSellingDrink {
 
 export interface Activity {
   id: string;
-  type: 'sale' | 'expense' | 'inventory' | 'user';
+  type: "sale" | "expense" | "inventory" | "user";
   description: string;
   amount?: number;
   timestamp: string;

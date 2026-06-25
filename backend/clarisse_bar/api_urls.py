@@ -3,10 +3,10 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from apps.accounts.serializers import EmailTokenObtainPairSerializer
 
 urlpatterns = [
 
@@ -26,7 +26,7 @@ urlpatterns = [
 
     path(
         "auth/login/",
-        TokenObtainPairView.as_view(),
+        TokenObtainPairView.as_view(serializer_class=EmailTokenObtainPairSerializer),
         name="token_obtain_pair"
     ),
 

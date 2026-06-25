@@ -1,24 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { format, formatDistanceToNow } from 'date-fns';
-import { mockAuditLogs } from '@/lib/mock-data';
-import { AuditLog } from '@/lib/types';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { format, formatDistanceToNow } from "date-fns";
+import { AuditLog } from "@/types/types";
+import api from "@/lib/axios";
+import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 import {
   Search,
   Filter,
@@ -29,41 +30,82 @@ import {
   Eye,
   Shield,
   Clock,
-} from 'lucide-react';
+} from "lucide-react";
 
-const actionConfig: Record<string, { icon: typeof UserPlus; color: string; bg: string; label: string }> = {
-  CREATE: { icon: Plus, color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Created' },
-  UPDATE: { icon: Edit3, color: 'text-blue-400', bg: 'bg-blue-400/10', label: 'Updated' },
-  DELETE: { icon: Trash2, color: 'text-red-400', bg: 'bg-red-400/10', label: 'Deleted' },
-  VIEW: { icon: Eye, color: 'text-muted-foreground', bg: 'bg-secondary', label: 'Viewed' },
-  LOGIN: { icon: UserPlus, color: 'text-purple-400', bg: 'bg-purple-400/10', label: 'Login' },
+const actionConfig: Record<
+  string,
+  { icon: typeof UserPlus; color: string; bg: string; label: string }
+> = {
+  CREATE: {
+    icon: Plus,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    label: "Created",
+  },
+  UPDATE: {
+    icon: Edit3,
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+    label: "Updated",
+  },
+  DELETE: {
+    icon: Trash2,
+    color: "text-red-400",
+    bg: "bg-red-400/10",
+    label: "Deleted",
+  },
+  VIEW: {
+    icon: Eye,
+    color: "text-muted-foreground",
+    bg: "bg-secondary",
+    label: "Viewed",
+  },
+  LOGIN: {
+    icon: UserPlus,
+    color: "text-purple-400",
+    bg: "bg-purple-400/10",
+    label: "Login",
+  },
 };
 
 const entityTypeConfig: Record<string, string> = {
-  user: 'text-purple-400',
-  drink: 'text-amber-400',
-  sale: 'text-emerald-400',
-  expense: 'text-red-400',
-  category: 'text-blue-400',
+  user: "text-purple-400",
+  drink: "text-amber-400",
+  sale: "text-emerald-400",
+  expense: "text-red-400",
+  category: "text-blue-400",
 };
 
 export default function AuditLogsPage() {
-  const [search, setSearch] = useState('');
-  const [actionFilter, setActionFilter] = useState<string>('all');
-  const [entityFilter, setEntityFilter] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [entityFilter, setEntityFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const itemsPerPage = 15;
 
-  // Filter audit logs
-  const filteredLogs = mockAuditLogs.filter((log) => {
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        const response = await api.get<AuditLog[]>("/audit-logs/");
+        setAuditLogs(response.data || []);
+      } catch {
+        setAuditLogs([]);
+      }
+    };
+
+    loadLogs();
+  }, []);
+
+  const filteredLogs = auditLogs.filter((log) => {
+    const userName = log.user?.full_name?.toLowerCase() || "";
     const matchesSearch =
       log.action.toLowerCase().includes(search.toLowerCase()) ||
       log.entity_type.toLowerCase().includes(search.toLowerCase()) ||
-      log.user?.full_name.toLowerCase().includes(search.toLowerCase());
-    const matchesAction =
-      actionFilter === 'all' || log.action === actionFilter;
+      userName.includes(search.toLowerCase());
+    const matchesAction = actionFilter === "all" || log.action === actionFilter;
     const matchesEntity =
-      entityFilter === 'all' || log.entity_type === entityFilter;
+      entityFilter === "all" || log.entity_type === entityFilter;
     return matchesSearch && matchesAction && matchesEntity;
   });
 
@@ -71,18 +113,21 @@ export default function AuditLogsPage() {
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Group logs by date
-  const groupedLogs = paginatedLogs.reduce((groups, log) => {
-    const date = format(new Date(log.created_at), 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(log);
-    return groups;
-  }, {} as Record<string, AuditLog[]>);
+  const groupedLogs = paginatedLogs.reduce(
+    (groups, log) => {
+      const date = format(new Date(log.created_at), "yyyy-MM-dd");
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(log);
+      return groups;
+    },
+    {} as Record<string, AuditLog[]>,
+  );
 
   return (
     <DashboardLayout>
@@ -90,7 +135,9 @@ export default function AuditLogsPage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Audit Logs</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Audit Logs
+            </h1>
             <p className="text-muted-foreground mt-1">
               Track all system activities and changes
             </p>
@@ -145,7 +192,9 @@ export default function AuditLogsPage() {
         {/* Timeline */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-0">
-            <CardTitle className="text-foreground text-lg">Activity Timeline</CardTitle>
+            <CardTitle className="text-foreground text-lg">
+              Activity Timeline
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <ScrollArea className="h-[600px] pr-4">
@@ -157,7 +206,7 @@ export default function AuditLogsPage() {
                       <Clock className="w-4 h-4 text-gold" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">
-                      {format(new Date(date), 'EEEE, MMMM d, yyyy')}
+                      {format(new Date(date), "EEEE, MMMM d, yyyy")}
                     </span>
                     <Badge variant="secondary" className="bg-secondary/50">
                       {logs.length} events
@@ -167,11 +216,12 @@ export default function AuditLogsPage() {
                   {/* Timeline items */}
                   <div className="space-y-4 ml-4 border-l-2 border-border pl-6">
                     {logs.map((log, index) => {
-                      const ActionIcon = actionConfig[log.action]?.icon || Edit3;
+                      const ActionIcon =
+                        actionConfig[log.action]?.icon || Edit3;
                       const actionInfo = actionConfig[log.action] || {
                         icon: Edit3,
-                        color: 'text-muted-foreground',
-                        bg: 'bg-secondary',
+                        color: "text-muted-foreground",
+                        bg: "bg-secondary",
                         label: log.action,
                       };
 
@@ -179,15 +229,15 @@ export default function AuditLogsPage() {
                         <div
                           key={log.id}
                           className={cn(
-                            'relative',
-                            index !== logs.length - 1 && 'pb-4'
+                            "relative",
+                            index !== logs.length - 1 && "pb-4",
                           )}
                         >
                           {/* Timeline dot */}
                           <div
                             className={cn(
-                              'absolute -left-[30px] w-4 h-4 rounded-full border-2 border-background',
-                              actionInfo.bg
+                              "absolute -left-[30px] w-4 h-4 rounded-full border-2 border-background",
+                              actionInfo.bg,
                             )}
                           />
 
@@ -198,24 +248,32 @@ export default function AuditLogsPage() {
                                 {/* Action icon */}
                                 <div
                                   className={cn(
-                                    'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
-                                    actionInfo.bg
+                                    "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                    actionInfo.bg,
                                   )}
                                 >
-                                  <ActionIcon className={cn('w-5 h-5', actionInfo.color)} />
+                                  <ActionIcon
+                                    className={cn("w-5 h-5", actionInfo.color)}
+                                  />
                                 </div>
 
                                 <div>
                                   {/* Action details */}
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className={cn('font-medium', actionInfo.color)}>
+                                    <span
+                                      className={cn(
+                                        "font-medium",
+                                        actionInfo.color,
+                                      )}
+                                    >
                                       {actionInfo.label}
                                     </span>
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        'text-xs',
-                                        entityTypeConfig[log.entity_type] || 'text-muted-foreground'
+                                        "text-xs",
+                                        entityTypeConfig[log.entity_type] ||
+                                          "text-muted-foreground",
                                       )}
                                     >
                                       {log.entity_type}
@@ -226,41 +284,53 @@ export default function AuditLogsPage() {
                                   {log.user && (
                                     <div className="flex items-center gap-2 mt-2">
                                       <Avatar className="w-5 h-5">
-                                        <AvatarImage src={log.user.avatar_url || ''} />
+                                        <AvatarImage
+                                          src={log.user.avatar_url || ""}
+                                        />
                                         <AvatarFallback className="text-[8px] bg-gold/20 text-gold">
-                                          {log.user.full_name.split(' ').map(n => n[0]).join('')}
+                                          {(log.user?.full_name || "U")
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")
+                                            .slice(0, 2)}
                                         </AvatarFallback>
                                       </Avatar>
                                       <span className="text-sm text-muted-foreground">
-                                        {log.user.full_name}
+                                        {log.user?.full_name || "System"}
                                       </span>
                                     </div>
                                   )}
 
                                   {/* Additional details */}
-                                  {log.details && Object.keys(log.details).length > 0 && (
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                      {Object.entries(log.details).map(([key, value]) => (
-                                        <Badge
-                                          key={key}
-                                          variant="secondary"
-                                          className="bg-secondary/50 text-xs"
-                                        >
-                                          {key}: {String(value)}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  )}
+                                  {log.details &&
+                                    Object.keys(log.details).length > 0 && (
+                                      <div className="mt-3 flex flex-wrap gap-2">
+                                        {Object.entries(log.details).map(
+                                          ([key, value]) => (
+                                            <Badge
+                                              key={key}
+                                              variant="secondary"
+                                              className="bg-secondary/50 text-xs"
+                                            >
+                                              {key}: {String(value)}
+                                            </Badge>
+                                          ),
+                                        )}
+                                      </div>
+                                    )}
                                 </div>
                               </div>
 
                               {/* Time */}
                               <div className="text-right flex-shrink-0">
                                 <p className="text-xs text-muted-foreground">
-                                  {format(new Date(log.created_at), 'HH:mm:ss')}
+                                  {format(new Date(log.created_at), "HH:mm:ss")}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                                  {formatDistanceToNow(
+                                    new Date(log.created_at),
+                                    { addSuffix: true },
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -276,8 +346,8 @@ export default function AuditLogsPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of{' '}
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of{" "}
                 {filteredLogs.length} logs
               </p>
               <div className="flex gap-2">

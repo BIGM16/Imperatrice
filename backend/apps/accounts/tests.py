@@ -205,6 +205,31 @@ class PermissionsTest(TestCase):
         request.user = self.admin_user
         self.assertTrue(permission.has_permission(request, None))
 
+class JWTLoginAPITest(APITestCase):
+    """Tests d'intégration pour la connexion JWT par email"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="admin",
+            email="admin@imperatrice.com",
+            password="secret123",
+            is_staff=True,
+        )
+
+    def test_login_with_email_returns_tokens(self):
+        """Vérifier qu'un utilisateur peut se connecter avec son email"""
+        response = self.client.post(
+            "/api/v1/auth/login/",
+            {"email": "admin@imperatrice.com", "password": "secret123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+
 class UserIntegrationTest(APITestCase):
     """Tests d'intégration pour les utilisateurs"""
 

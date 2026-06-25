@@ -1,8 +1,18 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User } from "@/types/types";
+import {
+  getCurrentUser,
+  login as loginUser,
+  logoutClient,
+} from "@/services/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -18,31 +28,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored auth on mount
-    const storedUser = localStorage.getItem('imperatrice_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const initializeAuth = async () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      const accessToken = window.localStorage.getItem("access_token");
+      if (!accessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch {
+        logoutClient();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Demo login - accept any password for demo users
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser && password.length >= 4) {
-      setUser(foundUser);
-      localStorage.setItem('imperatrice_user', JSON.stringify(foundUser));
+    try {
+      await loginUser(email, password);
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
       return true;
+    } catch {
+      setUser(null);
+      logoutClient();
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('imperatrice_user');
+    logoutClient();
   };
 
   return (
@@ -55,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

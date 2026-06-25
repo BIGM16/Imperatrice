@@ -1,19 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   BarChart,
   Bar,
@@ -29,7 +42,7 @@ import {
   LineChart,
   Line,
   Legend,
-} from 'recharts';
+} from "recharts";
 import {
   Download,
   FileSpreadsheet,
@@ -39,18 +52,15 @@ import {
   Wine,
   Users,
   Clock,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  mockTopSellingDrinks,
-  salesByCategory,
-  salesBySeller,
-  salesByDayOfWeek,
-  monthlyRevenueData,
-} from '@/lib/mock-data';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
@@ -70,12 +80,47 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-const categoryColors = ['#9C6C29', '#46290C', '#B8923A', '#35220D', '#7C5520'];
+const categoryColors = ["#9C6C29", "#46290C", "#B8923A", "#35220D", "#7C5520"];
 
 export default function ReportsPage() {
-  const [dateRange, setDateRange] = useState('month');
+  const [dateRange, setDateRange] = useState("month");
+  const topSellingDrinks = [
+    { name: "Le Grand Bleu", quantity: 142, revenue: 18400 },
+    { name: "Rosé Étoilé", quantity: 118, revenue: 15200 },
+    { name: "Signature Spritz", quantity: 96, revenue: 12900 },
+    { name: "Mimosa Royale", quantity: 84, revenue: 11200 },
+  ];
+  const salesByCategory = [
+    { name: "Cocktails", value: 42 },
+    { name: "Wines", value: 28 },
+    { name: "Spirits", value: 18 },
+    { name: "Softs", value: 12 },
+  ];
+  const salesBySeller = [
+    { name: "Alice", value: 34 },
+    { name: "Bob", value: 29 },
+    { name: "Clara", value: 22 },
+    { name: "Dimitri", value: 15 },
+  ];
+  const salesByDayOfWeek = [
+    { name: "Mon", value: 24 },
+    { name: "Tue", value: 18 },
+    { name: "Wed", value: 31 },
+    { name: "Thu", value: 26 },
+    { name: "Fri", value: 39 },
+    { name: "Sat", value: 56 },
+    { name: "Sun", value: 44 },
+  ];
+  const monthlyRevenueData = [
+    { name: "Jan", value: 14000 },
+    { name: "Feb", value: 15500 },
+    { name: "Mar", value: 16800 },
+    { name: "Apr", value: 17200 },
+    { name: "May", value: 18600 },
+    { name: "Jun", value: 19800 },
+  ];
 
-  const handleExport = (type: 'csv' | 'pdf') => {
+  const handleExport = (type: "csv" | "pdf") => {
     toast.success(`Report exported as ${type.toUpperCase()}`);
   };
 
@@ -85,7 +130,9 @@ export default function ReportsPage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Reports & Analytics</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Reports & Analytics
+            </h1>
             <p className="text-muted-foreground mt-1">
               Comprehensive insights and performance metrics
             </p>
@@ -107,7 +154,7 @@ export default function ReportsPage() {
             <Button
               variant="outline"
               className="border-border"
-              onClick={() => handleExport('csv')}
+              onClick={() => handleExport("csv")}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               CSV
@@ -115,7 +162,7 @@ export default function ReportsPage() {
             <Button
               variant="outline"
               className="border-border"
-              onClick={() => handleExport('pdf')}
+              onClick={() => handleExport("pdf")}
             >
               <Download className="w-4 h-4 mr-2" />
               PDF
@@ -186,7 +233,9 @@ export default function ReportsPage() {
                   <Clock className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg. Transaction</p>
+                  <p className="text-sm text-muted-foreground">
+                    Avg. Transaction
+                  </p>
                   <p className="text-2xl font-bold text-foreground">€185</p>
                 </div>
               </div>
@@ -203,8 +252,12 @@ export default function ReportsPage() {
           {/* Sales by category */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Sales by Category</CardTitle>
-              <CardDescription>Distribution across drink categories</CardDescription>
+              <CardTitle className="text-foreground">
+                Sales by Category
+              </CardTitle>
+              <CardDescription>
+                Distribution across drink categories
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6">
@@ -221,15 +274,18 @@ export default function ReportsPage() {
                         dataKey="value"
                       >
                         {salesByCategory.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={categoryColors[index % categoryColors.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={categoryColors[index % categoryColors.length]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip
                         formatter={(value: number) => `${value}%`}
                         contentStyle={{
-                          backgroundColor: '#1a1a1a',
-                          border: '1px solid #35220D',
-                          borderRadius: '8px',
+                          backgroundColor: "#1a1a1a",
+                          border: "1px solid #35220D",
+                          borderRadius: "8px",
                         }}
                       />
                     </PieChart>
@@ -237,12 +293,17 @@ export default function ReportsPage() {
                 </div>
                 <div className="space-y-3">
                   {salesByCategory.map((category, index) => (
-                    <div key={category.name} className="flex items-center gap-2">
+                    <div
+                      key={category.name}
+                      className="flex items-center gap-2"
+                    >
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: categoryColors[index] }}
                       />
-                      <span className="text-sm text-foreground min-w-[80px]">{category.name}</span>
+                      <span className="text-sm text-foreground min-w-[80px]">
+                        {category.name}
+                      </span>
                       <span className="text-sm font-semibold text-gold ml-auto">
                         {category.value}%
                       </span>
@@ -256,13 +317,18 @@ export default function ReportsPage() {
           {/* Sales by day of week */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Sales by Day of Week</CardTitle>
+              <CardTitle className="text-foreground">
+                Sales by Day of Week
+              </CardTitle>
               <CardDescription>Weekly performance breakdown</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={salesByDayOfWeek} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart
+                    data={salesByDayOfWeek}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#35220D" />
                     <XAxis
                       dataKey="name"
@@ -279,7 +345,12 @@ export default function ReportsPage() {
                       tickFormatter={(value) => `€${value}`}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Revenue" fill="#9C6C29" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="value"
+                      name="Revenue"
+                      fill="#9C6C29"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -292,13 +363,18 @@ export default function ReportsPage() {
           {/* Revenue trend */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Monthly Revenue Trend</CardTitle>
+              <CardTitle className="text-foreground">
+                Monthly Revenue Trend
+              </CardTitle>
               <CardDescription>6-month revenue comparison</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart
+                    data={monthlyRevenueData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#35220D" />
                     <XAxis
                       dataKey="name"
@@ -321,8 +397,8 @@ export default function ReportsPage() {
                       name="Revenue"
                       stroke="#9C6C29"
                       strokeWidth={3}
-                      dot={{ fill: '#9C6C29', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, fill: '#B8923A' }}
+                      dot={{ fill: "#9C6C29", strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: "#B8923A" }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -333,7 +409,9 @@ export default function ReportsPage() {
           {/* Sales by seller */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Sales by Staff Member</CardTitle>
+              <CardTitle className="text-foreground">
+                Sales by Staff Member
+              </CardTitle>
               <CardDescription>Individual performance ranking</CardDescription>
             </CardHeader>
             <CardContent>
@@ -362,7 +440,12 @@ export default function ReportsPage() {
                       axisLine={false}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Revenue" fill="#9C6C29" radius={[0, 4, 4, 0]} />
+                    <Bar
+                      dataKey="value"
+                      name="Revenue"
+                      fill="#9C6C29"
+                      radius={[0, 4, 4, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -375,8 +458,12 @@ export default function ReportsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-foreground">Top Performing Drinks</CardTitle>
-                <CardDescription>Best sellers ranked by revenue</CardDescription>
+                <CardTitle className="text-foreground">
+                  Top Performing Drinks
+                </CardTitle>
+                <CardDescription>
+                  Best sellers ranked by revenue
+                </CardDescription>
               </div>
               <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-gold" />
@@ -387,34 +474,56 @@ export default function ReportsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium">Rank</TableHead>
-                  <TableHead className="text-muted-foreground font-medium">Drink</TableHead>
-                  <TableHead className="text-right text-muted-foreground font-medium">Units Sold</TableHead>
-                  <TableHead className="text-right text-muted-foreground font-medium">Revenue</TableHead>
-                  <TableHead className="text-right text-muted-foreground font-medium">Share</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">
+                    Rank
+                  </TableHead>
+                  <TableHead className="text-muted-foreground font-medium">
+                    Drink
+                  </TableHead>
+                  <TableHead className="text-right text-muted-foreground font-medium">
+                    Units Sold
+                  </TableHead>
+                  <TableHead className="text-right text-muted-foreground font-medium">
+                    Revenue
+                  </TableHead>
+                  <TableHead className="text-right text-muted-foreground font-medium">
+                    Share
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockTopSellingDrinks.map((drink, index) => {
-                  const totalRevenue = mockTopSellingDrinks.reduce((sum, d) => sum + d.revenue, 0);
-                  const share = ((drink.revenue / totalRevenue) * 100).toFixed(1);
+                {topSellingDrinks.map((drink, index) => {
+                  const totalRevenue = topSellingDrinks.reduce(
+                    (sum, d) => sum + d.revenue,
+                    0,
+                  );
+                  const share = ((drink.revenue / totalRevenue) * 100).toFixed(
+                    1,
+                  );
                   return (
-                    <TableRow key={drink.name} className="border-border hover:bg-secondary/30">
+                    <TableRow
+                      key={drink.name}
+                      className="border-border hover:bg-secondary/30"
+                    >
                       <TableCell>
-                        <div className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm',
-                          index === 0 && 'bg-gold text-pitch',
-                          index === 1 && 'bg-muted text-foreground',
-                          index === 2 && 'bg-amber-700/30 text-amber-400',
-                          index > 2 && 'bg-secondary text-muted-foreground'
-                        )}>
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                            index === 0 && "bg-gold text-pitch",
+                            index === 1 && "bg-muted text-foreground",
+                            index === 2 && "bg-amber-700/30 text-amber-400",
+                            index > 2 && "bg-secondary text-muted-foreground",
+                          )}
+                        >
                           {index + 1}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Wine className="w-5 h-5 text-muted-foreground" />
-                          <span className="font-medium text-foreground">{drink.name}</span>
+                          <span className="font-medium text-foreground">
+                            {drink.name}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -427,15 +536,15 @@ export default function ReportsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div
-                            className="h-2 w-20 rounded-full bg-secondary overflow-hidden"
-                          >
+                          <div className="h-2 w-20 rounded-full bg-secondary overflow-hidden">
                             <div
                               className="h-full bg-gold rounded-full"
                               style={{ width: `${share}%` }}
                             />
                           </div>
-                          <span className="text-sm text-muted-foreground">{share}%</span>
+                          <span className="text-sm text-muted-foreground">
+                            {share}%
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>

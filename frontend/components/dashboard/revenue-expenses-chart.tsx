@@ -1,8 +1,24 @@
-'use client';
+"use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps, Legend } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChartData } from '@/lib/types';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  TooltipProps,
+  Legend,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { ChartData } from "@/types/types";
 
 interface RevenueExpensesChartProps {
   data: ChartData[];
@@ -10,7 +26,11 @@ interface RevenueExpensesChartProps {
   description?: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
@@ -32,8 +52,8 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 
 export function RevenueExpensesChart({
   data,
-  title = 'Revenue vs Expenses',
-  description = 'Weekly comparison'
+  title = "Revenue vs Expenses",
+  description = "Weekly comparison",
 }: RevenueExpensesChartProps) {
   // Transform data to include expenses (simulated)
   const chartData = data.map((item, index) => ({
@@ -50,7 +70,10 @@ export function RevenueExpensesChart({
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#35220D" />
               <XAxis
                 dataKey="name"
@@ -67,8 +90,18 @@ export function RevenueExpensesChart({
                 tickFormatter={(value) => `€${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" name="Revenue" fill="#9C6C29" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="#46290C" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="value"
+                name="Revenue"
+                fill="#9C6C29"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="expenses"
+                name="Expenses"
+                fill="#46290C"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

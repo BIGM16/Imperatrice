@@ -1,14 +1,21 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
@@ -25,18 +32,18 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from '@/components/ui/drawer';
+} from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -48,34 +55,56 @@ import {
   User,
   ShoppingCart,
   X,
-} from 'lucide-react';
-import { mockSales, mockDrinks, mockUsers } from '@/lib/mock-data';
-import { Sale, Drink } from '@/lib/types';
-import { format } from 'date-fns';
-import { formatDistanceToNow } from 'date-fns';
+} from "lucide-react";
+import { Sale, Drink } from "@/types/types";
+import api from "@/lib/axios";
+import { useEffect } from "react";
+import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 const paymentMethodIcons = {
-  cash: { icon: Banknote, label: 'Cash', color: 'text-green-400' },
-  card: { icon: CreditCard, label: 'Card', color: 'text-blue-400' },
-  transfer: { icon: Smartphone, label: 'Transfer', color: 'text-purple-400' },
+  cash: { icon: Banknote, label: "Cash", color: "text-green-400" },
+  card: { icon: CreditCard, label: "Card", color: "text-blue-400" },
+  transfer: { icon: Smartphone, label: "Transfer", color: "text-purple-400" },
 };
 
 export default function SalesPage() {
-  const [search, setSearch] = useState('');
-  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showNewSale, setShowNewSale] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-  const [selectedDrinks, setSelectedDrinks] = useState<{ drink: Drink; quantity: number }[]>([]);
+  const [selectedDrinks, setSelectedDrinks] = useState<
+    { drink: Drink; quantity: number }[]
+  >([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [drinks, setDrinks] = useState<Drink[]>([]);
   const itemsPerPage = 10;
 
-  // Filter sales
-  const filteredSales = mockSales.filter((sale) => {
+  useEffect(() => {
+    const loadSalesData = async () => {
+      try {
+        const [salesResponse, drinksResponse] = await Promise.all([
+          api.get<Sale[]>("/sales/"),
+          api.get<Drink[]>("/inventory/"),
+        ]);
+        setSales(salesResponse.data || []);
+        setDrinks(drinksResponse.data || []);
+      } catch {
+        setSales([]);
+        setDrinks([]);
+      }
+    };
+
+    loadSalesData();
+  }, []);
+
+  const filteredSales = (Array.isArray(sales) ? sales : []).filter((sale) => {
     const matchesSearch =
       sale.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      sale.id.toLowerCase().includes(search.toLowerCase());
+      sale.id.toString().toLowerCase().includes(search.toLowerCase());
     const matchesPayment =
-      paymentFilter === 'all' || sale.payment_method === paymentFilter;
+      paymentFilter === "all" || sale.payment_method === paymentFilter;
     return matchesSearch && matchesPayment;
   });
 
@@ -83,7 +112,7 @@ export default function SalesPage() {
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
   const paginatedSales = filteredSales.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const handleAddDrink = (drink: Drink) => {
@@ -91,8 +120,8 @@ export default function SalesPage() {
     if (existing) {
       setSelectedDrinks(
         selectedDrinks.map((d) =>
-          d.drink.id === drink.id ? { ...d, quantity: d.quantity + 1 } : d
-        )
+          d.drink.id === drink.id ? { ...d, quantity: d.quantity + 1 } : d,
+        ),
       );
     } else {
       setSelectedDrinks([...selectedDrinks, { drink, quantity: 1 }]);
@@ -109,25 +138,25 @@ export default function SalesPage() {
     } else {
       setSelectedDrinks(
         selectedDrinks.map((d) =>
-          d.drink.id === drinkId ? { ...d, quantity } : d
-        )
+          d.drink.id === drinkId ? { ...d, quantity } : d,
+        ),
       );
     }
   };
 
   const calculateTotal = () => {
     return selectedDrinks.reduce(
-      (sum, item) => sum + item.drink.price * item.quantity,
-      0
+      (sum, item) => sum + (item.drink.price ?? item.drink.price_sale ?? 0) * item.quantity,
+      0,
     );
   };
 
   const handleCreateSale = () => {
     if (selectedDrinks.length === 0) {
-      toast.error('Please add at least one drink to the sale');
+      toast.error("Please add at least one drink to the sale");
       return;
     }
-    toast.success('Sale created successfully');
+    toast.success("Sale created successfully");
     setShowNewSale(false);
     setSelectedDrinks([]);
   };
@@ -138,7 +167,9 @@ export default function SalesPage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Sales Management</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Sales Management
+            </h1>
             <p className="text-muted-foreground mt-1">
               Manage and track all sales transactions
             </p>
@@ -152,7 +183,9 @@ export default function SalesPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-foreground">Create New Sale</DialogTitle>
+                <DialogTitle className="text-foreground">
+                  Create New Sale
+                </DialogTitle>
                 <DialogDescription>
                   Add drinks to the order and complete the transaction
                 </DialogDescription>
@@ -161,37 +194,46 @@ export default function SalesPage() {
               <div className="grid md:grid-cols-2 gap-6 py-4">
                 {/* Drink selection */}
                 <div className="space-y-4">
-                  <Label className="text-foreground font-medium">Select Drinks</Label>
+                  <Label className="text-foreground font-medium">
+                    Select Drinks
+                  </Label>
                   <ScrollArea className="h-[300px] pr-4">
                     <div className="space-y-2">
-                      {mockDrinks.filter(d => d.is_active).map((drink) => (
-                        <div
-                          key={drink.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border hover:border-gold/30 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground text-sm">{drink.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              €{drink.price.toFixed(2)} • {drink.category?.name}
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleAddDrink(drink)}
-                            className="text-gold hover:text-gold-light hover:bg-gold/10"
+                      {(Array.isArray(drinks) ? drinks : [])
+                        .filter((d) => d.is_active)
+                        .map((drink) => (
+                          <div
+                            key={drink.id}
+                            className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border hover:border-gold/30 transition-colors"
                           >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground text-sm">
+                                {drink.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)} •{" "}
+                                {drink.category?.name}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleAddDrink(drink)}
+                              className="text-gold hover:text-gold-light hover:bg-gold/10"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   </ScrollArea>
                 </div>
 
                 {/* Cart */}
                 <div className="space-y-4">
-                  <Label className="text-foreground font-medium">Order Summary</Label>
+                  <Label className="text-foreground font-medium">
+                    Order Summary
+                  </Label>
                   <ScrollArea className="h-[250px] pr-4">
                     {selectedDrinks.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -210,7 +252,7 @@ export default function SalesPage() {
                                 {item.drink.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                €{item.drink.price.toFixed(2)} x {item.quantity}
+                                €{(item.drink.price ?? item.drink.price_sale ?? 0).toFixed(2)} x {item.quantity}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -220,7 +262,10 @@ export default function SalesPage() {
                                   size="sm"
                                   className="h-7 w-7 p-0"
                                   onClick={() =>
-                                    handleUpdateQuantity(item.drink.id, item.quantity - 1)
+                                    handleUpdateQuantity(
+                                      item.drink.id,
+                                      item.quantity - 1,
+                                    )
                                   }
                                 >
                                   -
@@ -233,7 +278,10 @@ export default function SalesPage() {
                                   size="sm"
                                   className="h-7 w-7 p-0"
                                   onClick={() =>
-                                    handleUpdateQuantity(item.drink.id, item.quantity + 1)
+                                    handleUpdateQuantity(
+                                      item.drink.id,
+                                      item.quantity + 1,
+                                    )
                                   }
                                 >
                                   +
@@ -258,7 +306,9 @@ export default function SalesPage() {
 
                   <div className="flex items-center justify-between font-semibold">
                     <span className="text-foreground">Total</span>
-                    <span className="text-gold text-xl">€{calculateTotal().toFixed(2)}</span>
+                    <span className="text-gold text-xl">
+                      €{calculateTotal().toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -317,17 +367,30 @@ export default function SalesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-medium">Transaction</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Date</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Customer</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Payment</TableHead>
-                    <TableHead className="text-right text-muted-foreground font-medium">Amount</TableHead>
-                    <TableHead className="text-right text-muted-foreground font-medium">Actions</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Transaction
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Customer
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Payment
+                    </TableHead>
+                    <TableHead className="text-right text-muted-foreground font-medium">
+                      Amount
+                    </TableHead>
+                    <TableHead className="text-right text-muted-foreground font-medium">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedSales.map((sale) => {
-                    const PaymentInfo = paymentMethodIcons[sale.payment_method];
+                    const paymentMethod = (sale.payment_method ?? "cash") as keyof typeof paymentMethodIcons;
+                    const PaymentInfo = paymentMethodIcons[paymentMethod];
                     return (
                       <TableRow
                         key={sale.id}
@@ -340,15 +403,19 @@ export default function SalesPage() {
                               <ShoppingCart className="w-4 h-4 text-gold" />
                             </div>
                             <span className="font-mono text-sm text-muted-foreground">
-                              #{sale.id.split('-').pop()}
+                              #{String(sale.id).split("-").pop()}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <p className="text-foreground">{format(new Date(sale.created_at), 'MMM d, yyyy')}</p>
+                            <p className="text-foreground">
+                              {format(new Date(sale.created_at ?? new Date()), "MMM d, yyyy")}
+                            </p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(sale.created_at), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(sale.created_at ?? new Date()), {
+                                addSuffix: true,
+                              })}
                             </p>
                           </div>
                         </TableCell>
@@ -357,13 +424,20 @@ export default function SalesPage() {
                             <div className="flex items-center gap-2">
                               <Avatar className="w-6 h-6">
                                 <AvatarFallback className="text-[10px] bg-gold/20 text-gold">
-                                  {sale.customer_name.split(' ').map(n => n[0]).join('')}
+                                  {sale.customer_name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm text-foreground">{sale.customer_name}</span>
+                              <span className="text-sm text-foreground">
+                                {sale.customer_name}
+                              </span>
                             </div>
                           ) : (
-                            <span className="text-sm text-muted-foreground italic">Walk-in</span>
+                            <span className="text-sm text-muted-foreground italic">
+                              Walk-in
+                            </span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -371,13 +445,15 @@ export default function SalesPage() {
                             variant="secondary"
                             className="gap-1.5 bg-secondary/50"
                           >
-                            <PaymentInfo.icon className={`w-3 h-3 ${PaymentInfo.color}`} />
+                            <PaymentInfo.icon
+                              className={`w-3 h-3 ${PaymentInfo.color}`}
+                            />
                             {PaymentInfo.label}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="font-semibold text-gold">
-                            €{sale.total_amount.toLocaleString()}
+                            €{(sale.total_amount ?? sale.total_price ?? 0).toLocaleString()}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -403,8 +479,8 @@ export default function SalesPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                {Math.min(currentPage * itemsPerPage, filteredSales.length)} of{' '}
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredSales.length)} of{" "}
                 {filteredSales.length} sales
               </p>
               <div className="flex gap-2">
@@ -437,9 +513,11 @@ export default function SalesPage() {
           <DrawerContent className="bg-card border-border">
             <div className="mx-auto w-full max-w-lg">
               <DrawerHeader>
-                <DrawerTitle className="text-foreground">Sale Details</DrawerTitle>
+                <DrawerTitle className="text-foreground">
+                  Sale Details
+                </DrawerTitle>
                 <DrawerDescription>
-                  Transaction #{selectedSale?.id.split('-').pop()}
+                  Transaction #{String(selectedSale?.id ?? "").split("-").pop()}
                 </DrawerDescription>
               </DrawerHeader>
 
@@ -448,21 +526,29 @@ export default function SalesPage() {
                   {/* Summary */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-secondary/30 border border-border">
-                      <p className="text-xs text-muted-foreground mb-1">Date & Time</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Date & Time
+                      </p>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gold" />
                         <span className="text-sm font-medium text-foreground">
-                          {format(new Date(selectedSale.created_at), 'PPp')}
+                          {format(new Date(selectedSale.created_at ?? new Date()), "PPp")}
                         </span>
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-secondary/30 border border-border">
-                      <p className="text-xs text-muted-foreground mb-1">Staff Member</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Staff Member
+                      </p>
                       <div className="flex items-center gap-2">
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src={selectedSale.user?.avatar_url || ''} />
+                          <AvatarImage
+                            src={selectedSale.user?.avatar_url || ""}
+                          />
                           <AvatarFallback className="text-[10px] bg-gold/20 text-gold">
-                            {selectedSale.user?.full_name.split(' ').map(n => n[0]).join('')}
+                            {selectedSale.user?.full_name?.split(" ")
+                              .map((n) => n[0])
+                              .join("") || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium text-foreground">
@@ -474,7 +560,9 @@ export default function SalesPage() {
 
                   {selectedSale.customer_name && (
                     <div className="p-4 rounded-lg bg-secondary/30 border border-border">
-                      <p className="text-xs text-muted-foreground mb-1">Customer</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Customer
+                      </p>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gold" />
                         <span className="text-sm font-medium text-foreground">
@@ -488,19 +576,25 @@ export default function SalesPage() {
 
                   {/* Items */}
                   <div>
-                    <p className="text-sm font-medium text-foreground mb-3">Items</p>
+                    <p className="text-sm font-medium text-foreground mb-3">
+                      Items
+                    </p>
                     <div className="space-y-2">
-                      {mockDrinks.slice(0, 2).map((drink) => (
+                      {drinks.slice(0, 2).map((drink) => (
                         <div
                           key={drink.id}
                           className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border"
                         >
                           <div>
-                            <p className="text-sm font-medium text-foreground">{drink.name}</p>
-                            <p className="text-xs text-muted-foreground">Qty: 1</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {drink.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Qty: 1
+                            </p>
                           </div>
                           <span className="font-semibold text-gold">
-                            €{drink.price.toFixed(2)}
+                            €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
                           </span>
                         </div>
                       ))}
@@ -514,19 +608,25 @@ export default function SalesPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="text-foreground">
-                        €{selectedSale.total_amount.toFixed(2)}
+                        €{((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Payment Method</span>
+                      <span className="text-muted-foreground">
+                        Payment Method
+                      </span>
                       <Badge variant="secondary" className="bg-secondary/50">
-                        {paymentMethodIcons[selectedSale.payment_method].label}
+                        {selectedSale && ((selectedSale.payment_method ?? "cash") as keyof typeof paymentMethodIcons) in paymentMethodIcons
+                          ? paymentMethodIcons[(selectedSale.payment_method ?? "cash") as keyof typeof paymentMethodIcons].label
+                          : "Cash"}
                       </Badge>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-border">
-                      <span className="font-semibold text-foreground">Total</span>
+                      <span className="font-semibold text-foreground">
+                        Total
+                      </span>
                       <span className="font-bold text-xl text-gold">
-                        €{selectedSale.total_amount.toFixed(2)}
+                        €{((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -534,7 +634,9 @@ export default function SalesPage() {
                   {selectedSale.notes && (
                     <div className="p-3 rounded-lg bg-gold/10 border border-gold/20">
                       <p className="text-xs text-gold mb-1">Notes</p>
-                      <p className="text-sm text-foreground">{selectedSale.notes}</p>
+                      <p className="text-sm text-foreground">
+                        {selectedSale.notes}
+                      </p>
                     </div>
                   )}
                 </div>

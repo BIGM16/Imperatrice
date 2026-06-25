@@ -1,14 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -17,14 +30,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   PieChart,
   Pie,
@@ -32,9 +45,9 @@ import {
   ResponsiveContainer,
   Tooltip,
   TooltipProps,
-} from 'recharts';
-import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
-import { toast } from 'sonner';
+} from "recharts";
+import { format, subDays, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -52,18 +65,19 @@ import {
   Users,
   Megaphone,
   Home,
-} from 'lucide-react';
-import { mockExpenses, mockSales } from '@/lib/mock-data';
-import { Expense, ChartData } from '@/lib/types';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { Expense, ChartData, Sale } from "@/types/types";
+import api from "@/lib/axios";
+import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 const expenseCategories = [
-  { value: 'Inventory', icon: Package, color: '#9C6C29' },
-  { value: 'Utilities', icon: Home, color: '#46290C' },
-  { value: 'Staff', icon: Users, color: '#B8923A' },
-  { value: 'Maintenance', icon: Wrench, color: '#35220D' },
-  { value: 'Marketing', icon: Megaphone, color: '#7C5520' },
-  { value: 'Other', icon: FileText, color: '#666' },
+  { value: "Inventory", icon: Package, color: "#9C6C29" },
+  { value: "Utilities", icon: Home, color: "#46290C" },
+  { value: "Staff", icon: Users, color: "#B8923A" },
+  { value: "Maintenance", icon: Wrench, color: "#35220D" },
+  { value: "Marketing", icon: Megaphone, color: "#7C5520" },
+  { value: "Other", icon: FileText, color: "#666" },
 ];
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
@@ -81,54 +95,75 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
 };
 
 export default function FinancePage() {
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [sales, setSales] = useState<(Sale & { created_at?: string | null })[]>([]);
   const itemsPerPage = 8;
 
-  // Calculate totals
-  const totalRevenue = mockSales.reduce((sum, sale) => sum + sale.total_amount, 0);
-  const totalExpenses = mockExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  useEffect(() => {
+    const loadFinance = async () => {
+      try {
+        const [expensesResponse, salesResponse] = await Promise.all([
+          api.get<Expense[]>("/expenses/"),
+          api.get<Sale[]>("/sales/"),
+        ]);
+        setExpenses(expensesResponse.data || []);
+        setSales(salesResponse.data || []);
+      } catch {
+        setExpenses([]);
+        setSales([]);
+      }
+    };
+
+    loadFinance();
+  }, []);
+
+  const totalRevenue = sales.reduce((sum, sale) => sum + ((sale.total_amount ?? sale.total_price ?? 0) as number), 0);
+  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const netProfit = totalRevenue - totalExpenses;
 
   // Get expenses by category
   const getCategoryColor = (category: string) => {
     const cat = expenseCategories.find((c) => c.value === category);
-    return cat?.color || '#666';
+    return cat?.color || "#666";
   };
 
-  const expensesByCategory: ChartData[] = expenseCategories.map((cat) => ({
-    name: cat.value,
-    value: mockExpenses
-      .filter((e) => e.category === cat.value)
-      .reduce((sum, e) => sum + e.amount, 0),
-    color: cat.color,
-  })).filter((item) => item.value > 0);
+  const expensesByCategory: ChartData[] = expenseCategories
+    .map((cat) => ({
+      name: cat.value,
+      value: expenses
+        .filter((e) => e.category === cat.value)
+        .reduce((sum, e) => sum + (e.amount || 0), 0),
+      color: cat.color,
+    }))
+    .filter((item) => item.value > 0);
 
   // Filter expenses
   const filterByDate = (date: Date) => {
     const now = new Date();
     switch (dateFilter) {
-      case 'today':
+      case "today":
         return date.toDateString() === now.toDateString();
-      case 'week':
+      case "week":
         return date >= subDays(now, 7);
-      case 'month':
+      case "month":
         return date >= subDays(now, 30);
       default:
         return true;
     }
   };
 
-  const filteredExpenses = mockExpenses.filter((expense) => {
+  const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch =
       expense.description?.toLowerCase().includes(search.toLowerCase()) ||
       expense.category.toLowerCase().includes(search.toLowerCase());
     const matchesCategory =
-      categoryFilter === 'all' || expense.category === categoryFilter;
-    const matchesDate = filterByDate(new Date(expense.created_at));
+      categoryFilter === "all" || expense.category === categoryFilter;
+    const matchesDate = filterByDate(new Date(expense.created_at ?? Date.now()));
     return matchesSearch && matchesCategory && matchesDate;
   });
 
@@ -136,7 +171,7 @@ export default function FinancePage() {
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
   const paginatedExpenses = filteredExpenses.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const getCategoryIcon = (category: string) => {
@@ -150,7 +185,9 @@ export default function FinancePage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-foreground">Finance Management</h1>
+            <h1 className="text-3xl font-playfair font-bold text-foreground">
+              Finance Management
+            </h1>
             <p className="text-muted-foreground mt-1">
               Track expenses and view financial reports
             </p>
@@ -164,7 +201,9 @@ export default function FinancePage() {
             </DialogTrigger>
             <DialogContent className="max-w-md bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-foreground">Add New Expense</DialogTitle>
+                <DialogTitle className="text-foreground">
+                  Add New Expense
+                </DialogTitle>
                 <DialogDescription>
                   Record a new expense entry
                 </DialogDescription>
@@ -172,7 +211,9 @@ export default function FinancePage() {
 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-foreground">Category</Label>
+                  <Label htmlFor="category" className="text-foreground">
+                    Category
+                  </Label>
                   <Select>
                     <SelectTrigger className="bg-secondary/50 border-border">
                       <SelectValue placeholder="Select category" />
@@ -181,7 +222,10 @@ export default function FinancePage() {
                       {expenseCategories.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
                           <div className="flex items-center gap-2">
-                            <cat.icon className="w-4 h-4" style={{ color: cat.color }} />
+                            <cat.icon
+                              className="w-4 h-4"
+                              style={{ color: cat.color }}
+                            />
                             {cat.value}
                           </div>
                         </SelectItem>
@@ -190,7 +234,9 @@ export default function FinancePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount" className="text-foreground">Amount (€)</Label>
+                  <Label htmlFor="amount" className="text-foreground">
+                    Amount (€)
+                  </Label>
                   <Input
                     id="amount"
                     type="number"
@@ -200,16 +246,20 @@ export default function FinancePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date" className="text-foreground">Date</Label>
+                  <Label htmlFor="date" className="text-foreground">
+                    Date
+                  </Label>
                   <Input
                     id="date"
                     type="date"
-                    defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                    defaultValue={format(new Date(), "yyyy-MM-dd")}
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-foreground">Description</Label>
+                  <Label htmlFor="description" className="text-foreground">
+                    Description
+                  </Label>
                   <Textarea
                     id="description"
                     placeholder="Expense details..."
@@ -220,12 +270,15 @@ export default function FinancePage() {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowAddExpense(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddExpense(false)}
+                >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => {
-                    toast.success('Expense added successfully');
+                    toast.success("Expense added successfully");
                     setShowAddExpense(false);
                   }}
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
@@ -250,8 +303,12 @@ export default function FinancePage() {
                   +18.2%
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
-              <p className="text-3xl font-bold text-foreground">€{totalRevenue.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Total Revenue
+              </p>
+              <p className="text-3xl font-bold text-foreground">
+                €{totalRevenue.toLocaleString()}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">This month</p>
             </CardContent>
           </Card>
@@ -267,28 +324,45 @@ export default function FinancePage() {
                   +5.4%
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Total Expenses</p>
-              <p className="text-3xl font-bold text-foreground">€{totalExpenses.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Total Expenses
+              </p>
+              <p className="text-3xl font-bold text-foreground">
+                €{totalExpenses.toLocaleString()}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">This month</p>
             </CardContent>
           </Card>
 
-          <Card className={cn(
-            'bg-card border-border card-hover',
-            netProfit >= 0 ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-red-500'
-          )}>
+          <Card
+            className={cn(
+              "bg-card border-border card-hover",
+              netProfit >= 0
+                ? "border-l-4 border-l-emerald-500"
+                : "border-l-4 border-l-red-500",
+            )}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <div className={cn(
-                  'w-12 h-12 rounded-xl flex items-center justify-center',
-                  netProfit >= 0 ? 'bg-gold/10' : 'bg-red-500/10'
-                )}>
-                  <Wallet className={cn('w-6 h-6', netProfit >= 0 ? 'text-gold' : 'text-red-500')} />
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center",
+                    netProfit >= 0 ? "bg-gold/10" : "bg-red-500/10",
+                  )}
+                >
+                  <Wallet
+                    className={cn(
+                      "w-6 h-6",
+                      netProfit >= 0 ? "text-gold" : "text-red-500",
+                    )}
+                  />
                 </div>
-                <div className={cn(
-                  'flex items-center gap-1 text-sm font-medium',
-                  netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center gap-1 text-sm font-medium",
+                    netProfit >= 0 ? "text-emerald-500" : "text-red-500",
+                  )}
+                >
                   {netProfit >= 0 ? (
                     <>
                       <ArrowUpRight className="w-4 h-4" />
@@ -303,10 +377,12 @@ export default function FinancePage() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-1">Net Profit</p>
-              <p className={cn(
-                'text-3xl font-bold',
-                netProfit >= 0 ? 'text-gold' : 'text-red-500'
-              )}>
+              <p
+                className={cn(
+                  "text-3xl font-bold",
+                  netProfit >= 0 ? "text-gold" : "text-red-500",
+                )}
+              >
                 €{netProfit.toLocaleString()}
               </p>
               <p className="text-xs text-muted-foreground mt-1">This month</p>
@@ -319,8 +395,12 @@ export default function FinancePage() {
           {/* Expense by category pie chart */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Expenses by Category</CardTitle>
-              <CardDescription>Distribution of expenses this month</CardDescription>
+              <CardTitle className="text-foreground">
+                Expenses by Category
+              </CardTitle>
+              <CardDescription>
+                Distribution of expenses this month
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6">
@@ -346,12 +426,17 @@ export default function FinancePage() {
                 </div>
                 <div className="space-y-2">
                   {expensesByCategory.map((category) => (
-                    <div key={category.name} className="flex items-center gap-2">
+                    <div
+                      key={category.name}
+                      className="flex items-center gap-2"
+                    >
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: category.color }}
                       />
-                      <span className="text-sm text-foreground">{category.name}</span>
+                      <span className="text-sm text-foreground">
+                        {category.name}
+                      </span>
                       <span className="text-xs text-muted-foreground ml-auto">
                         €{category.value.toLocaleString()}
                       </span>
@@ -365,7 +450,9 @@ export default function FinancePage() {
           {/* Quick stats */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">Financial Overview</CardTitle>
+              <CardTitle className="text-foreground">
+                Financial Overview
+              </CardTitle>
               <CardDescription>Key financial metrics</CardDescription>
             </CardHeader>
             <CardContent>
@@ -373,27 +460,37 @@ export default function FinancePage() {
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <CreditCard className="w-4 h-4 text-gold" />
-                    <span className="text-sm text-muted-foreground">Card Sales</span>
+                    <span className="text-sm text-muted-foreground">
+                      Card Sales
+                    </span>
                   </div>
                   <p className="text-xl font-bold text-foreground">
                     €{(totalRevenue * 0.65).toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">65% of transactions</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    65% of transactions
+                  </p>
                 </div>
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="w-4 h-4 text-gold" />
-                    <span className="text-sm text-muted-foreground">Cash Sales</span>
+                    <span className="text-sm text-muted-foreground">
+                      Cash Sales
+                    </span>
                   </div>
                   <p className="text-xl font-bold text-foreground">
                     €{(totalRevenue * 0.28).toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">28% of transactions</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    28% of transactions
+                  </p>
                 </div>
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-4 h-4 text-gold" />
-                    <span className="text-sm text-muted-foreground">Avg. Transaction</span>
+                    <span className="text-sm text-muted-foreground">
+                      Avg. Transaction
+                    </span>
                   </div>
                   <p className="text-xl font-bold text-foreground">€156</p>
                   <p className="text-xs text-muted-foreground mt-1">Per sale</p>
@@ -401,12 +498,16 @@ export default function FinancePage() {
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-gold" />
-                    <span className="text-sm text-muted-foreground">This Month</span>
+                    <span className="text-sm text-muted-foreground">
+                      This Month
+                    </span>
                   </div>
                   <p className="text-xl font-bold text-foreground">
-                    {mockSales.filter(s => new Date(s.created_at) >= subDays(new Date(), 30)).length}
+                    {sales.filter((s) => new Date(s.created_at ?? Date.now()).getTime() >= subDays(new Date(), 30).getTime()).length}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Sales recorded</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sales recorded
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -462,11 +563,21 @@ export default function FinancePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-medium">Description</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Category</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Date</TableHead>
-                    <TableHead className="text-muted-foreground font-medium">Recorded By</TableHead>
-                    <TableHead className="text-right text-muted-foreground font-medium">Amount</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Description
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-muted-foreground font-medium">
+                      Recorded By
+                    </TableHead>
+                    <TableHead className="text-right text-muted-foreground font-medium">
+                      Amount
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -481,31 +592,42 @@ export default function FinancePage() {
                           <div className="flex items-center gap-3">
                             <div
                               className="w-10 h-10 rounded-lg flex items-center justify-center"
-                              style={{ backgroundColor: `${getCategoryColor(expense.category)}20` }}
+                              style={{
+                                backgroundColor: `${getCategoryColor(expense.category)}20`,
+                              }}
                             >
                               <CategoryIcon
                                 className="w-5 h-5"
-                                style={{ color: getCategoryColor(expense.category) }}
+                                style={{
+                                  color: getCategoryColor(expense.category),
+                                }}
                               />
                             </div>
                             <div>
                               <p className="font-medium text-foreground">
-                                {expense.description || `${expense.category} expense`}
+                                {expense.description ||
+                                  `${expense.category} expense`}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                #{expense.id.split('-')[0]}
+                                #{expense.id.split("-")[0]}
                               </p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className="bg-secondary/50">
+                          <Badge
+                            variant="secondary"
+                            className="bg-secondary/50"
+                          >
                             {expense.category}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <p className="text-sm text-foreground">
-                            {format(new Date(expense.created_at), 'MMM d, yyyy')}
+                            {format(
+                              new Date(expense.created_at ?? Date.now()),
+                              "MMM d, yyyy",
+                            )}
                           </p>
                         </TableCell>
                         <TableCell>
@@ -513,7 +635,9 @@ export default function FinancePage() {
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-6 h-6 rounded-full bg-cover bg-center"
-                                style={{ backgroundImage: `url(${expense.user.avatar_url})` }}
+                                style={{
+                                  backgroundImage: `url(${expense.user.avatar_url})`,
+                                }}
                               />
                               <span className="text-sm text-foreground">
                                 {expense.user.full_name}
@@ -536,9 +660,9 @@ export default function FinancePage() {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                {Math.min(currentPage * itemsPerPage, filteredExpenses.length)} of{' '}
-                {filteredExpenses.length} expenses
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredExpenses.length)}{" "}
+                of {filteredExpenses.length} expenses
               </p>
               <div className="flex gap-2">
                 <Button
