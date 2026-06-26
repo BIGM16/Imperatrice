@@ -1,40 +1,5 @@
-export interface User {
-  id: string | number;
-  email: string;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-  full_name?: string;
-  role?: "admin" | "manager" | "staff" | string;
-  avatar_url?: string | null;
-  is_active?: boolean;
-  is_staff?: boolean;
-  created_at?: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
-export interface Drink {
-  id: string;
-  name: string;
-  description?: string | null;
-  category_id?: string | null;
-  price?: number;
-  cost?: number;
-  stock_quantity?: number;
-  min_stock_level?: number;
-  image_url?: string | null;
-  is_active?: boolean;
-  category?: Category;
-  stock?: number;
-  price_sale?: number;
-  price_purchase?: number;
-  benefice_unitaire?: number;
-}
+import { User }  from "@/types/auth";
+import { Drink } from "./inventory";
 
 export interface Sale {
   id: string | number;
@@ -116,3 +81,5 @@ export interface Activity {
   timestamp: string;
   user?: User;
 }
+
+

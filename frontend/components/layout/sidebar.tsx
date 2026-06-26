@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -16,36 +16,41 @@ import {
   Wine,
   ChevronLeft,
   LogOut,
-} from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Sales', href: '/dashboard/sales', icon: ShoppingCart },
-  { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
-  { name: 'Finance', href: '/dashboard/finance', icon: DollarSign },
-  { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
-  { name: 'Audit Logs', href: '/dashboard/audit-logs', icon: FileText },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-];
+} from "@/components/ui/tooltip";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
+  const navigation = [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Sales", href: "/dashboard/sales", icon: ShoppingCart },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+
+    ...(user?.is_staff
+      ? [
+          { name: "Inventory", href: "/dashboard/inventory", icon: Package },
+          { name: "Finance", href: "/dashboard/finance", icon: DollarSign },
+          { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+          { name: "Audit Logs", href: "/dashboard/audit-logs", icon: FileText },
+        ]
+      : []),
+  ];
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col',
-          collapsed ? 'w-20' : 'w-64'
+          "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col",
+          collapsed ? "w-20" : "w-64",
         )}
       >
         {/* Logo */}
@@ -56,7 +61,9 @@ export function Sidebar() {
             </div>
             {!collapsed && (
               <div className="overflow-hidden">
-                <p className="font-playfair font-bold text-foreground truncate">Chez l&apos;Impératrice</p>
+                <p className="font-playfair font-bold text-foreground truncate">
+                  Chez l&apos;Impératrice
+                </p>
                 <p className="text-xs text-muted-foreground">Bar Management</p>
               </div>
             )}
@@ -66,7 +73,10 @@ export function Sidebar() {
             className="w-6 h-6 rounded-full bg-sidebar-accent flex items-center justify-center hover:bg-sidebar-accent/80 transition-colors"
           >
             <ChevronLeft
-              className={cn('w-4 h-4 text-muted-foreground transition-transform', collapsed && 'rotate-180')}
+              className={cn(
+                "w-4 h-4 text-muted-foreground transition-transform",
+                collapsed && "rotate-180",
+              )}
             />
           </button>
         </div>
@@ -75,7 +85,8 @@ export function Sidebar() {
         <nav className="flex-1 py-4 px-2 overflow-y-auto no-scrollbar">
           <ul className="space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <li key={item.name}>
                   <Tooltip>
@@ -83,23 +94,28 @@ export function Sidebar() {
                       <Link
                         href={item.href}
                         className={cn(
-                          'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all',
+                          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
                           isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-gold'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-gold"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
                         )}
                       >
                         <item.icon
                           className={cn(
-                            'w-5 h-5 flex-shrink-0',
-                            isActive ? 'text-gold' : 'text-muted-foreground'
+                            "w-5 h-5 flex-shrink-0",
+                            isActive ? "text-gold" : "text-muted-foreground",
                           )}
                         />
-                        {!collapsed && <span className="font-medium">{item.name}</span>}
+                        {!collapsed && (
+                          <span className="font-medium">{item.name}</span>
+                        )}
                       </Link>
                     </TooltipTrigger>
                     {collapsed && (
-                      <TooltipContent side="right" className="bg-card border-border">
+                      <TooltipContent
+                        side="right"
+                        className="bg-card border-border"
+                      >
                         {item.name}
                       </TooltipContent>
                     )}
@@ -112,17 +128,33 @@ export function Sidebar() {
 
         {/* User profile */}
         <div className="p-4 border-t border-sidebar-border">
-          <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
+          <div
+            className={cn(
+              "flex items-center gap-3",
+              collapsed && "justify-center",
+            )}
+          >
             <Avatar className="w-9 h-9 border-2 border-gold/30">
-              <AvatarImage src={user?.avatar_url || ''} alt={user?.full_name || ''} />
+              <AvatarImage
+                src={user?.avatar_url || ""}
+                alt={user?.full_name || ""}
+              />
               <AvatarFallback className="bg-gold/20 text-gold font-semibold">
-                {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                {user?.full_name
+                  ?.split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{user?.full_name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user?.full_name}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {user?.role}
+                </p>
               </div>
             )}
             {!collapsed && (
@@ -135,7 +167,7 @@ export function Sidebar() {
                     <LogOut className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Sign out</TooltipContent>
+                <TooltipContent>Déconnexion</TooltipContent>
               </Tooltip>
             )}
           </div>

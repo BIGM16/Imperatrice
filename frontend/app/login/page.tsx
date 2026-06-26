@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,15 +22,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        toast.success("Welcome back!");
-        router.push("/dashboard");
-      } else {
-        toast.error("Invalid credentials. Try admin@imperatrice.com");
-      }
-    } catch (error) {
-      toast.error("An error occurred. Please try again.");
+      await login({
+        email,
+        password,
+      });
+      toast.success("Bon retour !");
+      router.replace(
+        "/dashboard"
+      );
+    } catch (err:any) {
+      toast.error(
+        err?.response?.data?.detail ??
+        "Email ou mot de passe incorrect."
+      );
     } finally {
       setIsLoading(false);
     }

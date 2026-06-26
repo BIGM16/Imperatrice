@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
-import { Sidebar } from './sidebar';
-import { Header } from './header';
-import { Loader2, Menu, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Sidebar } from "./sidebar";
+import { Header } from "./header";
+import { Loader2, Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
+    if (!loading && !user) {
+      router.push("/login");
     }
-  }, [user, isLoading, router]);
+  }, [user, loading, router]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-gold" />
@@ -53,11 +53,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main content */}
-      <div className={cn('lg:transition-all duration-300', sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')}>
+      <div
+        className={cn(
+          "lg:transition-all duration-300",
+          sidebarCollapsed ? "lg:ml-20" : "lg:ml-64",
+        )}
+      >
         <Header onMenuClick={() => setShowMobileMenu(!showMobileMenu)} />
-        <main className="p-4 lg:p-6">
-          {children}
-        </main>
+        <main className="p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );
