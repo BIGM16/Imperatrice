@@ -163,7 +163,7 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredDrinks = drinks.filter((drink) => {
+  const filteredDrinks = (Array.isArray(drinks) ? drinks : []) .filter((drink) => {
     const matchesSearch = drink.name
       .toLowerCase()
       .includes(search.toLowerCase());
