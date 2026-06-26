@@ -67,7 +67,6 @@ import {
 } from "@/services/reports";
 import { useEffect } from "react";
 
-
 const CustomTooltip = ({
   active,
   payload,
@@ -99,9 +98,15 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // État des données API
-  const [topSellingDrinks, setTopSellingDrinks] = useState<{ name: string; quantity: number; revenue: number }[]>([]);
-  const [salesByDay, setSalesByDay] = useState<{ name: string; value: number }[]>([]);
-  const [salesBySeller, setSalesBySeller] = useState<{ name: string; value: number }[]>([]);
+  const [topSellingDrinks, setTopSellingDrinks] = useState<
+    { name: string; quantity: number; revenue: number }[]
+  >([]);
+  const [salesByDay, setSalesByDay] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [salesBySeller, setSalesBySeller] = useState<
+    { name: string; value: number }[]
+  >([]);
   const [summaryStats, setSummaryStats] = useState({
     totalRevenue: 0,
     salesCount: 0,
@@ -150,7 +155,6 @@ export default function ReportsPage() {
   const handleExport = (type: "csv" | "pdf") => {
     toast.success(`Report exported as ${type.toUpperCase()}`);
   };
-
 
   return (
     <DashboardLayout>
@@ -207,9 +211,13 @@ export default function ReportsPage() {
                   <TrendingUp className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Revenu du mois</p>
+                  <p className="text-sm text-muted-foreground">
+                    Revenu du mois
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {isLoading ? "..." : `${summaryStats.totalRevenue.toLocaleString()} FC`}
+                    {isLoading
+                      ? "..."
+                      : `${summaryStats.totalRevenue.toLocaleString()} FC`}
                   </p>
                 </div>
               </div>
@@ -227,7 +235,9 @@ export default function ReportsPage() {
                   <Wine className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Ventes du jour</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ventes du jour
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
                     {isLoading ? "..." : summaryStats.salesCount}
                   </p>
@@ -270,7 +280,9 @@ export default function ReportsPage() {
                     Profit net (mois)
                   </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {isLoading ? "..." : `${summaryStats.netProfit.toLocaleString()} FC`}
+                    {isLoading
+                      ? "..."
+                      : `${summaryStats.netProfit.toLocaleString()} FC`}
                   </p>
                 </div>
               </div>
@@ -352,9 +364,7 @@ export default function ReportsPage() {
           {/* Sales by day of week */}
           <Card className="bg-card border-border card-hover">
             <CardHeader>
-              <CardTitle className="text-foreground">
-                Ventes par jour
-              </CardTitle>
+              <CardTitle className="text-foreground">Ventes par jour</CardTitle>
               <CardDescription>Performance journalière</CardDescription>
             </CardHeader>
             <CardContent>
