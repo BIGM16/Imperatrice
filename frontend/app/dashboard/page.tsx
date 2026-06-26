@@ -98,7 +98,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Revenue Today"
-            value={`€${(stats?.revenueToday ?? 0).toLocaleString()}`}
+            value={`${(stats?.revenueToday ?? 0).toLocaleString()} FC`}
             description="from yesterday"
             icon={TrendingUp}
             trend={{ value: 12.5, isPositive: true }}
@@ -106,7 +106,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Expenses Today"
-            value={`€${(stats?.expensesToday ?? 0).toLocaleString()}`}
+            value={`${(stats?.expensesToday ?? 0).toLocaleString()} FC`}
             description="from yesterday"
             icon={TrendingDown}
             trend={{ value: 3.2, isPositive: false }}
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Net Profit"
-            value={`€${(stats?.netProfit ?? 0).toLocaleString()}`}
+            value={`${(stats?.netProfit ?? 0).toLocaleString()} FC`}
             description="today's margin"
             icon={DollarSign}
             trend={{ value: 8.1, isPositive: (stats?.netProfit ?? 0) > 0 }}

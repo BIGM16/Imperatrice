@@ -57,7 +57,9 @@ import {
   X,
 } from "lucide-react";
 import { Sale, Drink } from "@/types/types";
-import api from "@/lib/axios";
+import { getSales } from "@/services/sales";
+import { getDrinks } from "@/services/inventory";
+import { createSalesFromCart } from "@/services/sales";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import { formatDistanceToNow } from "date-fns";
@@ -84,12 +86,12 @@ export default function SalesPage() {
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [salesResponse, drinksResponse] = await Promise.all([
-          api.get<Sale[]>("/sales/"),
-          api.get<Drink[]>("/inventory/"),
+        const [salesData, drinksData] = await Promise.all([
+          getSales({ ordering: "-created_at" }),
+          getDrinks(),
         ]);
-        setSales(salesResponse.data || []);
-        setDrinks(drinksResponse.data || []);
+        setSales(salesData || []);
+        setDrinks(drinksData || []);
       } catch {
         setSales([]);
         setDrinks([]);
@@ -151,14 +153,22 @@ export default function SalesPage() {
     );
   };
 
-  const handleCreateSale = () => {
+  const handleCreateSale = async () => {
     if (selectedDrinks.length === 0) {
       toast.error("Please add at least one drink to the sale");
       return;
     }
-    toast.success("Sale created successfully");
-    setShowNewSale(false);
-    setSelectedDrinks([]);
+    try {
+      await createSalesFromCart(selectedDrinks);
+      toast.success("Vente créée avec succès");
+      setShowNewSale(false);
+      setSelectedDrinks([]);
+      // Recharger la liste des ventes
+      const salesData = await getSales({ ordering: "-created_at" });
+      setSales(salesData || []);
+    } catch {
+      toast.error("Erreur lors de la création de la vente");
+    }
   };
 
   return (
@@ -211,7 +221,7 @@ export default function SalesPage() {
                                 {drink.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)} •{" "}
+                                {(drink.price ?? drink.price_sale ?? 0).toLocaleString()} FC •{" "}
                                 {drink.category?.name}
                               </p>
                             </div>
@@ -252,7 +262,7 @@ export default function SalesPage() {
                                 {item.drink.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                €{(item.drink.price ?? item.drink.price_sale ?? 0).toFixed(2)} x {item.quantity}
+                                {(item.drink.price ?? item.drink.price_sale ?? 0).toLocaleString()} FC x {item.quantity}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -307,7 +317,7 @@ export default function SalesPage() {
                   <div className="flex items-center justify-between font-semibold">
                     <span className="text-foreground">Total</span>
                     <span className="text-gold text-xl">
-                      €{calculateTotal().toFixed(2)}
+                      {calculateTotal().toLocaleString()} FC
                     </span>
                   </div>
                 </div>
@@ -453,7 +463,7 @@ export default function SalesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="font-semibold text-gold">
-                            €{(sale.total_amount ?? sale.total_price ?? 0).toLocaleString()}
+                            {(sale.total_amount ?? sale.total_price ?? 0).toLocaleString()} FC
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -594,7 +604,7 @@ export default function SalesPage() {
                             </p>
                           </div>
                           <span className="font-semibold text-gold">
-                            €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
+                            {(drink.price ?? drink.price_sale ?? 0).toLocaleString()} FC
                           </span>
                         </div>
                       ))}
@@ -608,7 +618,7 @@ export default function SalesPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="text-foreground">
-                        €{((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toFixed(2)}
+                        {((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toLocaleString()} FC
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -626,7 +636,7 @@ export default function SalesPage() {
                         Total
                       </span>
                       <span className="font-bold text-xl text-gold">
-                        €{((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toFixed(2)}
+                        {((selectedSale.total_amount ?? selectedSale.total_price ?? 0) as number).toLocaleString()} FC
                       </span>
                     </div>
                   </div>

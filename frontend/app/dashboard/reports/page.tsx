@@ -52,9 +52,21 @@ import {
   Wine,
   Users,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import {
+  getDashboardStats,
+  getTopDrinks,
+  getSalesByDay,
+  getSalesBySeller,
+  salesByDayToChartData,
+  topDrinksToChartData,
+  salesBySellerToChartData,
+} from "@/services/reports";
+import { useEffect } from "react";
+
 
 const CustomTooltip = ({
   active,
@@ -71,7 +83,7 @@ const CustomTooltip = ({
               className="inline-block w-3 h-3 rounded-full mr-2"
               style={{ backgroundColor: entry.color as string }}
             />
-            {entry.name}: €{entry.value?.toLocaleString()}
+            {entry.name}: {entry.value?.toLocaleString()} FC
           </p>
         ))}
       </div>
@@ -84,45 +96,61 @@ const categoryColors = ["#9C6C29", "#46290C", "#B8923A", "#35220D", "#7C5520"];
 
 export default function ReportsPage() {
   const [dateRange, setDateRange] = useState("month");
-  const topSellingDrinks = [
-    { name: "Le Grand Bleu", quantity: 142, revenue: 18400 },
-    { name: "Rosé Étoilé", quantity: 118, revenue: 15200 },
-    { name: "Signature Spritz", quantity: 96, revenue: 12900 },
-    { name: "Mimosa Royale", quantity: 84, revenue: 11200 },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+
+  // État des données API
+  const [topSellingDrinks, setTopSellingDrinks] = useState<{ name: string; quantity: number; revenue: number }[]>([]);
+  const [salesByDay, setSalesByDay] = useState<{ name: string; value: number }[]>([]);
+  const [salesBySeller, setSalesBySeller] = useState<{ name: string; value: number }[]>([]);
+  const [summaryStats, setSummaryStats] = useState({
+    totalRevenue: 0,
+    salesCount: 0,
+    lowStockCount: 0,
+    netProfit: 0,
+  });
+
+  // Données statiques (pas d'endpoint dédié pour le moment)
   const salesByCategory = [
     { name: "Cocktails", value: 42 },
-    { name: "Wines", value: 28 },
-    { name: "Spirits", value: 18 },
+    { name: "Vins", value: 28 },
+    { name: "Spiritueux", value: 18 },
     { name: "Softs", value: 12 },
   ];
-  const salesBySeller = [
-    { name: "Alice", value: 34 },
-    { name: "Bob", value: 29 },
-    { name: "Clara", value: 22 },
-    { name: "Dimitri", value: 15 },
-  ];
-  const salesByDayOfWeek = [
-    { name: "Mon", value: 24 },
-    { name: "Tue", value: 18 },
-    { name: "Wed", value: 31 },
-    { name: "Thu", value: 26 },
-    { name: "Fri", value: 39 },
-    { name: "Sat", value: 56 },
-    { name: "Sun", value: 44 },
-  ];
-  const monthlyRevenueData = [
-    { name: "Jan", value: 14000 },
-    { name: "Feb", value: 15500 },
-    { name: "Mar", value: 16800 },
-    { name: "Apr", value: 17200 },
-    { name: "May", value: 18600 },
-    { name: "Jun", value: 19800 },
-  ];
+
+  useEffect(() => {
+    const loadReports = async () => {
+      setIsLoading(true);
+      try {
+        const [stats, topDrinks, byDay, bySeller] = await Promise.all([
+          getDashboardStats(),
+          getTopDrinks({ limit: 10 }),
+          getSalesByDay(),
+          getSalesBySeller(),
+        ]);
+
+        setSummaryStats({
+          totalRevenue: stats.totalSalesMonth,
+          salesCount: stats.salesCount,
+          lowStockCount: stats.lowStockCount,
+          netProfit: stats.netProfitMonth,
+        });
+
+        setTopSellingDrinks(topDrinksToChartData(topDrinks));
+        setSalesByDay(salesByDayToChartData(byDay).slice(-7));
+        setSalesBySeller(salesBySellerToChartData(bySeller));
+      } catch {
+        toast.error("Erreur lors du chargement des rapports");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadReports();
+  }, [dateRange]);
 
   const handleExport = (type: "csv" | "pdf") => {
     toast.success(`Report exported as ${type.toUpperCase()}`);
   };
+
 
   return (
     <DashboardLayout>
@@ -179,13 +207,15 @@ export default function ReportsPage() {
                   <TrendingUp className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold text-foreground">€165,200</p>
+                  <p className="text-sm text-muted-foreground">Revenu du mois</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {isLoading ? "..." : `${summaryStats.totalRevenue.toLocaleString()} FC`}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 text-emerald-500 text-sm">
                 <TrendingUp className="w-3 h-3" />
-                +12.5% from last period
+                Données du mois en cours
               </div>
             </CardContent>
           </Card>
@@ -197,13 +227,15 @@ export default function ReportsPage() {
                   <Wine className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Drinks Sold</p>
-                  <p className="text-2xl font-bold text-foreground">2,847</p>
+                  <p className="text-sm text-muted-foreground">Ventes du jour</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {isLoading ? "..." : summaryStats.salesCount}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 text-emerald-500 text-sm">
                 <TrendingUp className="w-3 h-3" />
-                +8.3% from last period
+                Transactions aujourd'hui
               </div>
             </CardContent>
           </Card>
@@ -215,13 +247,14 @@ export default function ReportsPage() {
                   <Users className="w-5 h-5 text-gold" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Transactions</p>
-                  <p className="text-2xl font-bold text-foreground">892</p>
+                  <p className="text-sm text-muted-foreground">Stock bas</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {isLoading ? "..." : summaryStats.lowStockCount}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-emerald-500 text-sm">
-                <TrendingUp className="w-3 h-3" />
-                +15.7% from last period
+              <div className="flex items-center gap-1 text-amber-500 text-sm">
+                Articles en stock critique
               </div>
             </CardContent>
           </Card>
@@ -234,14 +267,16 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    Avg. Transaction
+                    Profit net (mois)
                   </p>
-                  <p className="text-2xl font-bold text-foreground">€185</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {isLoading ? "..." : `${summaryStats.netProfit.toLocaleString()} FC`}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 text-emerald-500 text-sm">
                 <TrendingUp className="w-3 h-3" />
-                +5.2% from last period
+                Revenus - Dépenses
               </div>
             </CardContent>
           </Card>
@@ -318,15 +353,15 @@ export default function ReportsPage() {
           <Card className="bg-card border-border card-hover">
             <CardHeader>
               <CardTitle className="text-foreground">
-                Sales by Day of Week
+                Ventes par jour
               </CardTitle>
-              <CardDescription>Weekly performance breakdown</CardDescription>
+              <CardDescription>Performance journalière</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={salesByDayOfWeek}
+                    data={salesByDay}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#35220D" />
@@ -410,9 +445,9 @@ export default function ReportsPage() {
           <Card className="bg-card border-border card-hover">
             <CardHeader>
               <CardTitle className="text-foreground">
-                Sales by Staff Member
+                Ventes par vendeur
               </CardTitle>
-              <CardDescription>Individual performance ranking</CardDescription>
+              <CardDescription>Classement individuel</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[220px] w-full">

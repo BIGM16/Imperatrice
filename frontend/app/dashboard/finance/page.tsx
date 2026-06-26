@@ -67,8 +67,9 @@ import {
   Home,
 } from "lucide-react";
 import { Expense, ChartData, Sale } from "@/types/types";
-import api from "@/lib/axios";
-import { useEffect } from "react";
+import { getDepenses, createDepense, depenseToExpense } from "@/services/finance";
+import { getSales } from "@/services/sales";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const expenseCategories = [
@@ -86,7 +87,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{payload[0].name}</p>
         <p className="text-sm text-gold font-semibold">
-          €{payload[0].value?.toLocaleString()}
+          {payload[0].value?.toLocaleString()} FC
         </p>
       </div>
     );
@@ -102,25 +103,49 @@ export default function FinancePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [sales, setSales] = useState<(Sale & { created_at?: string | null })[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const itemsPerPage = 8;
 
-  useEffect(() => {
-    const loadFinance = async () => {
-      try {
-        const [expensesResponse, salesResponse] = await Promise.all([
-          api.get<Expense[]>("/expenses/"),
-          api.get<Sale[]>("/sales/"),
-        ]);
-        setExpenses(expensesResponse.data || []);
-        setSales(salesResponse.data || []);
-      } catch {
-        setExpenses([]);
-        setSales([]);
-      }
-    };
+  // Refs pour le formulaire d'ajout de dépense
+  const motifRef = useRef<HTMLInputElement>(null);
+  const montantRef = useRef<HTMLInputElement>(null);
 
+  const loadFinance = async () => {
+    try {
+      const [depenses, salesData] = await Promise.all([
+        getDepenses(),
+        getSales({ ordering: "-created_at" }),
+      ]);
+      setExpenses(depenses.map(depenseToExpense));
+      setSales(salesData);
+    } catch {
+      setExpenses([]);
+      setSales([]);
+    }
+  };
+
+  useEffect(() => {
     loadFinance();
   }, []);
+
+  const handleAddExpense = async () => {
+    const motif = motifRef.current?.value?.trim();
+    const montant = parseFloat(montantRef.current?.value || "0");
+    if (!motif) { toast.error("Le motif est requis"); return; }
+    if (!montant || montant <= 0) { toast.error("Montant invalide"); return; }
+    setIsSubmitting(true);
+    try {
+      await createDepense({ motif, montant });
+      toast.success("Dépense enregistrée avec succès");
+      setShowAddExpense(false);
+      await loadFinance();
+    } catch {
+      toast.error("Erreur lors de l'ajout de la dépense");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   const totalRevenue = sales.reduce((sum, sale) => sum + ((sale.total_amount ?? sale.total_price ?? 0) as number), 0);
   const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
@@ -235,13 +260,14 @@ export default function FinancePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="amount" className="text-foreground">
-                    Amount (€)
+                    Montant (FC)
                   </Label>
                   <Input
                     id="amount"
+                    ref={montantRef}
                     type="number"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder="0"
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
@@ -258,13 +284,13 @@ export default function FinancePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-foreground">
-                    Description
+                    Motif de la dépense
                   </Label>
-                  <Textarea
+                  <Input
                     id="description"
-                    placeholder="Expense details..."
-                    className="bg-secondary/50 border-border focus:border-gold resize-none"
-                    rows={3}
+                    ref={motifRef}
+                    placeholder="Ex: Achat stock, salaire..."
+                    className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
               </div>
@@ -277,13 +303,11 @@ export default function FinancePage() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => {
-                    toast.success("Expense added successfully");
-                    setShowAddExpense(false);
-                  }}
+                  onClick={handleAddExpense}
+                  disabled={isSubmitting}
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
                 >
-                  Save Expense
+                  {isSubmitting ? "Enregistrement..." : "Save Expense"}
                 </Button>
               </DialogFooter>
             </DialogContent>

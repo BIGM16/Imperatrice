@@ -44,8 +44,8 @@ import {
 } from "lucide-react";
 import { Drink } from "@/types/types";
 import { cn } from "@/lib/utils";
-import api from "@/lib/axios";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { getDrinks, getCategories, createDrink, updateDrink, updateDrinkStock } from "@/services/inventory";
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -57,24 +57,94 @@ export default function InventoryPage() {
   const [updatingStock, setUpdatingStock] = useState<Drink | null>(null);
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addCategory, setAddCategory] = useState<string>("");
+
+  // Refs pour les champs de formulaire
+  const addNameRef = useRef<HTMLInputElement>(null);
+  const addPriceRef = useRef<HTMLInputElement>(null);
+  const addCostRef = useRef<HTMLInputElement>(null);
+  const addStockRef = useRef<HTMLInputElement>(null);
+  const editNameRef = useRef<HTMLInputElement>(null);
+  const editPriceRef = useRef<HTMLInputElement>(null);
+  const editCostRef = useRef<HTMLInputElement>(null);
+  const newStockRef = useRef<HTMLInputElement>(null);
+
+  const loadInventory = async () => {
+    try {
+      const [drinksData, categoriesData] = await Promise.all([
+        getDrinks(),
+        getCategories(),
+      ]);
+      setDrinks(drinksData || []);
+      setCategories(
+        categoriesData.map((cat) => ({
+          id: String(cat.id),
+          name: cat.name,
+        }))
+      );
+    } catch {
+      setDrinks([]);
+      setCategories([]);
+    }
+  };
 
   useEffect(() => {
-    const loadInventory = async () => {
-      try {
-        const [drinksResponse, categoriesResponse] = await Promise.all([
-          api.get<Drink[]>("/inventory/"),
-          api.get<{ id: string; name: string }[]>("/inventory/categories/"),
-        ]);
-        setDrinks(drinksResponse.data || []);
-        setCategories(categoriesResponse.data || []);
-      } catch {
-        setDrinks([]);
-        setCategories([]);
-      }
-    };
-
     loadInventory();
   }, []);
+
+  const handleAddDrink = async () => {
+    const name = addNameRef.current?.value?.trim();
+    const price_sale = parseFloat(addPriceRef.current?.value || "0");
+    const price_purchase = parseFloat(addCostRef.current?.value || "0");
+    const stock = parseInt(addStockRef.current?.value || "0");
+    if (!name) { toast.error("Le nom est requis"); return; }
+    setIsSubmitting(true);
+    try {
+      await createDrink({ name, price_sale, price_purchase, stock, category_id: addCategory || undefined });
+      toast.success("Boisson ajoutée avec succès");
+      setShowAddDrink(false);
+      await loadInventory();
+    } catch {
+      toast.error("Erreur lors de l'ajout de la boisson");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditDrink = async () => {
+    if (!editingDrink) return;
+    const name = editNameRef.current?.value?.trim();
+    const price_sale = parseFloat(editPriceRef.current?.value || "0");
+    const price_purchase = parseFloat(editCostRef.current?.value || "0");
+    setIsSubmitting(true);
+    try {
+      await updateDrink(editingDrink.id, { name, price_sale, price_purchase });
+      toast.success("Boisson modifiée avec succès");
+      setEditingDrink(null);
+      await loadInventory();
+    } catch {
+      toast.error("Erreur lors de la modification");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateStock = async () => {
+    if (!updatingStock) return;
+    const newQty = parseInt(newStockRef.current?.value || "0");
+    setIsSubmitting(true);
+    try {
+      await updateDrinkStock(updatingStock.id, newQty, "set");
+      toast.success("Stock mis à jour");
+      setUpdatingStock(null);
+      await loadInventory();
+    } catch {
+      toast.error("Erreur lors de la mise à jour du stock");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredDrinks = drinks.filter((drink) => {
     const matchesSearch = drink.name
@@ -165,6 +235,7 @@ export default function InventoryPage() {
                   </Label>
                   <Input
                     id="name"
+                    ref={addNameRef}
                     placeholder="Drink name"
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
@@ -173,7 +244,7 @@ export default function InventoryPage() {
                   <Label htmlFor="category" className="text-foreground">
                     Category
                   </Label>
-                  <Select>
+                  <Select onValueChange={setAddCategory}>
                     <SelectTrigger className="bg-secondary/50 border-border">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -189,10 +260,11 @@ export default function InventoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price" className="text-foreground">
-                      Price (€)
+                      Price (FC)
                     </Label>
                     <Input
                       id="price"
+                      ref={addPriceRef}
                       type="number"
                       step="0.01"
                       placeholder="0.00"
@@ -201,10 +273,11 @@ export default function InventoryPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cost" className="text-foreground">
-                      Cost (€)
+                      Cost (FC)
                     </Label>
                     <Input
                       id="cost"
+                      ref={addCostRef}
                       type="number"
                       step="0.01"
                       placeholder="0.00"
@@ -219,6 +292,7 @@ export default function InventoryPage() {
                     </Label>
                     <Input
                       id="stock"
+                      ref={addStockRef}
                       type="number"
                       placeholder="0"
                       className="bg-secondary/50 border-border focus:border-gold"
@@ -257,13 +331,11 @@ export default function InventoryPage() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={() => {
-                    toast.success("Drink added successfully");
-                    setShowAddDrink(false);
-                  }}
+                  onClick={handleAddDrink}
+                  disabled={isSubmitting}
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
                 >
-                  Add Drink
+                  {isSubmitting ? "Ajout..." : "Add Drink"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -443,7 +515,7 @@ export default function InventoryPage() {
                           Price
                         </span>
                         <span className="font-semibold text-gold">
-                          €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
+                          {(drink.price ?? drink.price_sale ?? 0).toLocaleString()} FC
                         </span>
                       </div>
 
@@ -527,7 +599,7 @@ export default function InventoryPage() {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-gold">
-                            €{(drink.price ?? drink.price_sale ?? 0).toFixed(2)}
+                            {(drink.price ?? drink.price_sale ?? 0).toLocaleString()} FC
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Stock: {drink.stock_quantity ?? drink.stock ?? 0}
@@ -634,109 +706,91 @@ export default function InventoryPage() {
                   Remove 10
                 </Button>
               </div>
-            </div>
+                   <DialogFooter>
+                <Button variant="outline" onClick={() => setUpdatingStock(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateStock}
+                  disabled={isSubmitting}
+                  className="bg-gold hover:bg-gold-light text-pitch font-semibold"
+                >
+                  {isSubmitting ? "Mise à jour..." : "Update Stock"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUpdatingStock(null)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  toast.success("Stock updated successfully");
-                  setUpdatingStock(null);
-                }}
-                className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-              >
-                Update Stock
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Edit drink dialog */}
+          <Dialog
+            open={!!editingDrink}
+            onOpenChange={(open) => !open && setEditingDrink(null)}
+          >
+            <DialogContent className="max-w-md bg-card border-border">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Edit Drink</DialogTitle>
+                <DialogDescription>Update drink details</DialogDescription>
+              </DialogHeader>
 
-        {/* Edit drink dialog */}
-        <Dialog
-          open={!!editingDrink}
-          onOpenChange={(open) => !open && setEditingDrink(null)}
-        >
-          <DialogContent className="max-w-md bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Edit Drink</DialogTitle>
-              <DialogDescription>Update drink details</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name" className="text-foreground">
-                  Name
-                </Label>
-                <Input
-                  id="edit-name"
-                  defaultValue={editingDrink?.name}
-                  className="bg-secondary/50 border-border focus:border-gold"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-price" className="text-foreground">
-                    Price (€)
+                  <Label htmlFor="edit-name" className="text-foreground">
+                    Name
                   </Label>
                   <Input
-                    id="edit-price"
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingDrink?.price}
+                    id="edit-name"
+                    ref={editNameRef}
+                    defaultValue={editingDrink?.name}
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-cost" className="text-foreground">
-                    Cost (€)
-                  </Label>
-                  <Input
-                    id="edit-cost"
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingDrink?.cost}
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-price" className="text-foreground">
+                      Price (FC)
+                    </Label>
+                    <Input
+                      id="edit-price"
+                      ref={editPriceRef}
+                      type="number"
+                      step="0.01"
+                      defaultValue={editingDrink?.price_sale ?? editingDrink?.price}
+                      className="bg-secondary/50 border-border focus:border-gold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-cost" className="text-foreground">
+                      Cost (FC)
+                    </Label>
+                    <Input
+                      id="edit-cost"
+                      ref={editCostRef}
+                      type="number"
+                      step="0.01"
+                      defaultValue={editingDrink?.price_purchase ?? editingDrink?.cost}
+                      className="bg-secondary/50 border-border focus:border-gold"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description" className="text-foreground">
-                  Description
-                </Label>
-                <Textarea
-                  id="edit-description"
-                  defaultValue={editingDrink?.description || ""}
-                  className="bg-secondary/50 border-border focus:border-gold resize-none"
-                  rows={3}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="active" className="text-foreground">
-                  Active
-                </Label>
-                <Switch id="active" defaultChecked={editingDrink?.is_active} />
-              </div>
-            </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingDrink(null)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  toast.success("Drink updated successfully");
-                  setEditingDrink(null);
-                }}
-                className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-              >
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </DashboardLayout>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingDrink(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleEditDrink}
+                  disabled={isSubmitting}
+                  className="bg-gold hover:bg-gold-light text-pitch font-semibold"
+                >
+                  {isSubmitting ? "Sauvegarde..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </DashboardLayout>
+    );
+  }boardLayout>
   );
 }

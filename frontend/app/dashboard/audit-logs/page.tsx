@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
 import { AuditLog } from "@/types/types";
-import api from "@/lib/axios";
+import { getAuditLogs } from "@/services/audit";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -87,8 +87,8 @@ export default function AuditLogsPage() {
   useEffect(() => {
     const loadLogs = async () => {
       try {
-        const response = await api.get<AuditLog[]>("/audit-logs/");
-        setAuditLogs(response.data || []);
+        const data = await getAuditLogs();
+        setAuditLogs(data || []);
       } catch {
         setAuditLogs([]);
       }

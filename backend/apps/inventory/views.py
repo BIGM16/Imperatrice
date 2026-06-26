@@ -11,9 +11,10 @@ from rest_framework.filters import (
     OrderingFilter
 )
 
-from .models import Drink
+from .models import Drink, Category
 from .serializers import (
-    DrinkSerializer
+    DrinkSerializer,
+    CategorySerializer,
 )
 
 from rest_framework.decorators import (
@@ -116,6 +117,13 @@ class DrinkViewSet(
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAdminOrReadOnly]
+
 
 
 

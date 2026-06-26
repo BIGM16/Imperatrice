@@ -1,17 +1,26 @@
 from rest_framework import serializers
+from .models import Drink, Category
 
-from .models import Drink
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ["id", "name", "description"]
 
 
-class DrinkSerializer(
-    serializers.ModelSerializer
-):
-
+class DrinkSerializer(serializers.ModelSerializer):
     benefice_unitaire = serializers.SerializerMethodField()
+    category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source="category",
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = Drink
-
         fields = [
             "id",
             "name",
@@ -19,10 +28,11 @@ class DrinkSerializer(
             "price_sale",
             "stock",
             "benefice_unitaire",
+            "category",
+            "category_id",
+            "volume",
+            "image_url",
         ]
 
-    def get_benefice_unitaire(
-        self,
-        obj
-    ):
+    def get_benefice_unitaire(self, obj):
         return obj.benefice_unitaire()
