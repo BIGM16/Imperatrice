@@ -56,10 +56,12 @@ import {
   ShoppingCart,
   X,
 } from "lucide-react";
-import { Sale, Drink } from "@/types/types";
-import { getSales } from "@/services/sales";
-import { getDrinks } from "@/services/inventory";
-import { createSalesFromCart } from "@/services/sales";
+import { Sale } from "@/types/sales";
+import { Drink } from "@/types/inventory";
+import saleService from "@/services/sales";
+// import { getSales } from "@/services/sales";
+import inventoryService from "@/services/inventory";
+// import { createSalesFromCart } from "@/services/sales";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import { formatDistanceToNow } from "date-fns";
@@ -87,8 +89,8 @@ export default function SalesPage() {
     const loadSalesData = async () => {
       try {
         const [salesData, drinksData] = await Promise.all([
-          getSales({ ordering: "-created_at" }),
-          getDrinks(),
+          saleService.getSales({ ordering: "-created_at" }),
+          inventoryService.getDrinks(),
         ]);
         setSales(salesData || []);
         setDrinks(drinksData || []);
@@ -159,12 +161,12 @@ export default function SalesPage() {
       return;
     }
     try {
-      await createSalesFromCart(selectedDrinks);
+      await saleService.createSalesFromCart(selectedDrinks);
       toast.success("Vente créée avec succès");
       setShowNewSale(false);
       setSelectedDrinks([]);
       // Recharger la liste des ventes
-      const salesData = await getSales({ ordering: "-created_at" });
+      const salesData = await saleService.getSales({ ordering: "-created_at" });
       setSales(salesData || []);
     } catch {
       toast.error("Erreur lors de la création de la vente");

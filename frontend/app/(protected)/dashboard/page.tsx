@@ -12,8 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { getDashboardStats, getDashboardSalesTrend, getDashboardTopSellers, getDashboardActivity } from '@/services/dashboard';
-import type { Activity, ChartData, DashboardStats, TopSellingDrink } from '@/types/types';
+import dashboardService from '@/services/dashboard';
+import type { Activity, ChartData, DashboardStats, TopSellingDrink } from '@/types/dashboard';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,10 +33,10 @@ export default function DashboardPage() {
     const loadDashboard = async () => {
       try {
         const [dashboardStats, salesTrend, topSellersData, activityData] = await Promise.all([
-          getDashboardStats(),
-          getDashboardSalesTrend(),
-          getDashboardTopSellers(),
-          getDashboardActivity(),
+          dashboardService.getDashboardStats(),
+          dashboardService.getDashboardSalesTrend(),
+          dashboardService.getDashboardTopSellers(),
+          dashboardService.getDashboardActivity(),
         ]);
 
         setStats(dashboardStats);

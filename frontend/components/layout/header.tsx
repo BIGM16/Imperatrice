@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from './sidebar';
-import { useAuth } from '@/contexts/auth-context';
+// import { Sidebar } from './sidebar';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

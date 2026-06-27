@@ -6,18 +6,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!loading) {
       if (user) {
         router.push('/dashboard');
       } else {
         router.push('/login');
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, loading, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

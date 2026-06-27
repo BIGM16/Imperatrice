@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 
-import * as AuthService from "@/services/auth";
+import AuthService from "@/services/auth";
 
 import { LoginCredentials, User } from "@/types/auth";
 

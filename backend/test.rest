@@ -3,13 +3,13 @@ POST http://127.0.0.1:8000/api/v1/auth/login/
 Content-Type: application/json
 
 {
-    "username": "Jonathan",
+    "email": "joanthanmuangala@gmail.com",
     "password": "Kadanga2003"
 }
 
 ###
-GET http://127.0.0.1:8000/127.0.0.1:8000/api/v1/me/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgyNDc2NjMxLCJpYXQiOjE3ODI0NzQ4MzIsImp0aSI6IjU5YTU5YmRjMmY1OTQ0OWQ5NTlhNDM0ZTEwYzM5M2Q2IiwidXNlcl9pZCI6IjEifQ.5UP8Hb-lg16OdIG2zz5uuO31ACEm7onvW-DHuwYZTRg
+GET http://127.0.0.1:8000/api/v1/auth/me/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgyNTc5ODY5LCJpYXQiOjE3ODI1NzgwNzAsImp0aSI6ImI5Yzc2NzQ0ZjhiZjRkMmJhZDA5NzYwMTA5ZmU0MzdjIiwidXNlcl9pZCI6IjEifQ.tCuk3LbSNtEp-hAnrjCzirWX4KWAvACPg_n2ARsy7DM
 
 ###
 

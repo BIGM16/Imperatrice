@@ -15,7 +15,7 @@ class AuthService {
   }
 
   async logout() {
-    localStorage.removeItem("acces_token");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
 
     return Promise.resolve();

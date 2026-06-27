@@ -42,16 +42,10 @@ import {
   Grid3X3,
   List,
 } from "lucide-react";
-import { Drink } from "@/types/types";
+import { Drink } from "@/types/inventory";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
-import {
-  getDrinks,
-  getCategories,
-  createDrink,
-  updateDrink,
-  updateDrinkStock,
-} from "@/services/inventory";
+import inventoryService from "@/services/inventory";
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -81,8 +75,8 @@ export default function InventoryPage() {
   const loadInventory = async () => {
     try {
       const [drinksData, categoriesData] = await Promise.all([
-        getDrinks(),
-        getCategories(),
+        inventoryService.getDrinks(),
+        inventoryService.getCategories(),
       ]);
       setDrinks(drinksData || []);
       setCategories(
@@ -112,7 +106,7 @@ export default function InventoryPage() {
     }
     setIsSubmitting(true);
     try {
-      await createDrink({
+      await inventoryService.createDrink({
         name,
         price_sale,
         price_purchase,
@@ -136,7 +130,7 @@ export default function InventoryPage() {
     const price_purchase = parseFloat(editCostRef.current?.value || "0");
     setIsSubmitting(true);
     try {
-      await updateDrink(editingDrink.id, { name, price_sale, price_purchase });
+      await inventoryService.updateDrink(editingDrink.id, { name, price_sale, price_purchase });
       toast.success("Boisson modifiée avec succès");
       setEditingDrink(null);
       await loadInventory();
@@ -152,7 +146,7 @@ export default function InventoryPage() {
     const newQty = parseInt(newStockRef.current?.value || "0");
     setIsSubmitting(true);
     try {
-      await updateDrinkStock(updatingStock.id, newQty, "set");
+      await inventoryService.updateDrinkStock(updatingStock.id, newQty, "set");
       toast.success("Stock mis à jour");
       setUpdatingStock(null);
       await loadInventory();
