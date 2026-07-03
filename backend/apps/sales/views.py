@@ -1,6 +1,7 @@
 from rest_framework.viewsets import (
     ModelViewSet
 )
+from rest_framework.decorators import action
 
 from django_filters.rest_framework import (
     DjangoFilterBackend
@@ -23,7 +24,8 @@ from .services import (
 
 from .serializers import (
     SaleCreateSerializer,
-    SaleSerializer
+    SaleSerializer,
+    BulkSaleCreateSerializer,
 )
 
 from .models import (
@@ -123,3 +125,24 @@ class SaleViewSet(
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @action(detail=False, methods=["post"], url_path="bulk")
+    def bulk_create(self, request, *args, **kwargs):
+        """POST /sales/bulk/ — crée plusieurs ventes en une seule transaction."""
+        serializer = BulkSaleCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            sales = SaleService.create_bulk_sale(
+                items=serializer.validated_data["items"],
+                seller=request.user,
+            )
+            return Response(
+                SaleSerializer(sales, many=True).data,
+                status=status.HTTP_201_CREATED,
+            )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

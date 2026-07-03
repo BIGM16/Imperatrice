@@ -15,6 +15,7 @@ export interface Sale {
   total_price?: number;
   drink?: Drink;
   served_by?: User;
+  seller_name?: string | null;
 }
 
 export interface SaleItem {

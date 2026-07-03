@@ -12,6 +12,7 @@ export interface Expense {
   motif?: string;
   montant?: number;
   date?: string;
+  responsable_nom?: string | null;
 }
 
 export interface Personne {
@@ -25,6 +26,7 @@ export interface Depense {
   montant: number;
   date: string;
   responsable?: number | null;
+  responsable_nom?: string | null;
   responsible_name?: string;
 }
 

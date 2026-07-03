@@ -34,6 +34,24 @@ class SaleCreateSerializer(
         return data
 
 
+class BulkSaleItemSerializer(serializers.Serializer):
+    """Un article dans une vente groupée."""
+    drink_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=1)
+
+
+class BulkSaleCreateSerializer(serializers.Serializer):
+    """Payload pour créer une vente avec plusieurs articles en une seule requête."""
+    items = BulkSaleItemSerializer(many=True)
+
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "La liste des articles ne peut pas être vide."
+            )
+        return value
+
+
 from .models import Sale
 
 

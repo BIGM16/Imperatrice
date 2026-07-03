@@ -43,12 +43,13 @@ class financeService {
     return {
       id: String(d.id),
       category: "Dépense",
-      amount: d.montant,
+      amount: Number(d.montant),
       description: d.motif,
       created_at: d.date,
       motif: d.motif,
-      montant: d.montant,
+      montant: Number(d.montant),
       date: d.date,
+      responsable_nom: d.responsable_nom ?? null,
     };
   }
 }

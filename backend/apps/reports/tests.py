@@ -9,11 +9,15 @@ from django.utils import timezone
 from apps.inventory.models import Category, Drink
 from apps.sales.models import Sale
 from apps.finance.models import Depense
-from .service import DashboardService, FinanceReportService, SalesReportService
-from .serializers import (
-   DashboardStatistiquesSerializer, 
+from apps.reports.service import DashboardService, FinanceReportService, SalesReportService
+from apps.reports.serializers import (
+    DashboardStatistiquesSerializer, 
     RapportFinancierSerializer, 
-    TopBoissonSerializer
+    TopBoissonSerializer,
+    DashboardStatsRawSerializer,
+    SalesByDaySerializer,
+    SalesBySellerSerializer,
+    TopDrinkSerializer,
 )
 
 
@@ -380,32 +384,42 @@ class ReportsViewsTest(APITestCase):
             password="adminpass123",
             is_staff=True
         )
-        self.url_dashboard = '/api/v1/dashboard/'  # À adapter selon ta configuration
-        self.url_finance = '/api/v1/finance-report/'
+        self.url_dashboard = '/api/v1/dashboard/'
+        self.url_stats = '/api/v1/stats/'
         self.url_top_drinks = '/api/v1/top-drinks/'
+        self.url_sales_by_day = '/api/v1/sales/by-day/'
+        self.url_sales_by_seller = '/api/v1/sales/by-seller/'
 
     def test_dashboard_view_accessible(self):
         """Vérifier que le dashboard est accessible"""
-        # À adapter si le endpoint existe
-        # self.client.force_authenticate(user=self.admin_user)
-        # response = self.client.get(self.url_dashboard)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.url_dashboard)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_finance_report_view_with_date_params(self):
-        """Vérifier le rapport financier avec les paramètres de date"""
-        # À adapter si le endpoint existe
-        # self.client.force_authenticate(user=self.admin_user)
-        # response = self.client.get(self.url_finance, {
-        #     'start_date': '2024-01-01',
-        #     'end_date': '2024-01-31'
-        # })
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_stats_view_accessible(self):
+        """Vérifier que les stats sont accessibles et renvoient les clés en anglais"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.url_stats)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Vérifier la présence des clés attendues par le frontend
+        self.assertIn("sales_today", response.data)
+        self.assertIn("total_sales", response.data)
+        self.assertIn("low_stock_drinks", response.data)
 
-    def test_top_drinks_view_with_date_params(self):
-        """Vérifier la vue top drinks avec les paramètres de date"""
-        # À adapter si le endpoint existe
-        # response = self.client.get(self.url_top_drinks, {
-        #     'start_date': '2024-01-01',
-        #     'end_date': '2024-01-31'
-        # })
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_top_drinks_view_accessible(self):
+        """Vérifier la vue top drinks"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.url_top_drinks)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_sales_by_day_view_accessible(self):
+        """Vérifier la vue de vente par jour"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.url_sales_by_day)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_sales_by_seller_view_accessible(self):
+        """Vérifier la vue de vente par vendeur"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.url_sales_by_seller)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

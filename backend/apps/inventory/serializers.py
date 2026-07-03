@@ -27,6 +27,7 @@ class BoissonSerializer(serializers.ModelSerializer):
             "price_purchase",
             "price_sale",
             "stock",
+            "min_stock",
             "benefice_unitaire",
             "categorie",
             "categorie_id",

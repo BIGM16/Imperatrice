@@ -40,7 +40,7 @@ urlpatterns = [
     path("inventory/", include("apps.inventory.urls")),
     path("", include("apps.sales.urls")),
     path("auth/", include("apps.accounts.urls")),
-    path("", include("apps.reports.urls")),
+    path("reports/", include("apps.reports.urls")),
     path("", include("apps.common.urls")),
     path("", include("apps.finance.urls")),
 

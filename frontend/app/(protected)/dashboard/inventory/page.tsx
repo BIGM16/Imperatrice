@@ -70,6 +70,7 @@ export default function InventoryPage() {
   const editNameRef = useRef<HTMLInputElement>(null);
   const editPriceRef = useRef<HTMLInputElement>(null);
   const editCostRef = useRef<HTMLInputElement>(null);
+  const editMinStockRef = useRef<HTMLInputElement>(null);
   const newStockRef = useRef<HTMLInputElement>(null);
 
   const loadInventory = async () => {
@@ -100,6 +101,7 @@ export default function InventoryPage() {
     const price_sale = parseFloat(addPriceRef.current?.value || "0");
     const price_purchase = parseFloat(addCostRef.current?.value || "0");
     const stock = parseInt(addStockRef.current?.value || "0");
+    const min_stock = parseInt(newStockRef.current?.value || "0");
     if (!name) {
       toast.error("Le nom est requis");
       return;
@@ -111,6 +113,7 @@ export default function InventoryPage() {
         price_sale,
         price_purchase,
         stock,
+        min_stock,
         category_id: addCategory || undefined,
       });
       toast.success("Boisson ajoutée avec succès");
@@ -128,9 +131,15 @@ export default function InventoryPage() {
     const name = editNameRef.current?.value?.trim();
     const price_sale = parseFloat(editPriceRef.current?.value || "0");
     const price_purchase = parseFloat(editCostRef.current?.value || "0");
+    const min_stock = parseInt(editMinStockRef.current?.value || "0");
     setIsSubmitting(true);
     try {
-      await inventoryService.updateDrink(editingDrink.id, { name, price_sale, price_purchase });
+      await inventoryService.updateDrink(editingDrink.id, {
+        name,
+        price_sale,
+        price_purchase,
+        min_stock,
+      });
       toast.success("Boisson modifiée avec succès");
       setEditingDrink(null);
       await loadInventory();
@@ -157,27 +166,29 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredDrinks = (Array.isArray(drinks) ? drinks : []) .filter((drink) => {
-    const matchesSearch = drink.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" || drink.category_id === categoryFilter;
-    const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
-    const minStockLevel = drink.min_stock_level ?? 0;
-    const matchesStock =
-      stockFilter === "all" ||
-      (stockFilter === "low" &&
-        stockQuantity > 0 &&
-        stockQuantity <= minStockLevel) ||
-      (stockFilter === "out" && stockQuantity === 0) ||
-      (stockFilter === "ok" && stockQuantity > minStockLevel);
-    return matchesSearch && matchesCategory && matchesStock;
-  });
+  const filteredDrinks = (Array.isArray(drinks) ? drinks : []).filter(
+    (drink) => {
+      const matchesSearch = drink.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "all" || drink.category_id === categoryFilter;
+      const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
+      const minStockLevel = drink.min_stock ?? 0;
+      const matchesStock =
+        stockFilter === "all" ||
+        (stockFilter === "low" &&
+          stockQuantity > 0 &&
+          stockQuantity <= minStockLevel) ||
+        (stockFilter === "out" && stockQuantity === 0) ||
+        (stockFilter === "ok" && stockQuantity > minStockLevel);
+      return matchesSearch && matchesCategory && matchesStock;
+    },
+  );
 
   const getStockStatus = (drink: Drink) => {
     const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
-    const minStockLevel = drink.min_stock_level ?? 0;
+    const minStockLevel = drink.min_stock ?? 0;
     if (stockQuantity === 0) {
       return {
         label: "Out of Stock",
@@ -204,7 +215,7 @@ export default function InventoryPage() {
 
   const getStockPercentage = (drink: Drink) => {
     const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
-    const minStockLevel = drink.min_stock_level ?? 0;
+    const minStockLevel = drink.min_stock ?? 0;
     const maxStock = Math.max(minStockLevel * 3, 50);
     return Math.min(100, (stockQuantity / maxStock) * 100);
   };
@@ -242,7 +253,7 @@ export default function InventoryPage() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-foreground">
-                    Name
+                    Nom
                   </Label>
                   <Input
                     id="name"
@@ -253,7 +264,7 @@ export default function InventoryPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-foreground">
-                    Category
+                    Categorie
                   </Label>
                   <Select onValueChange={setAddCategory}>
                     <SelectTrigger className="bg-secondary/50 border-border">
@@ -271,7 +282,7 @@ export default function InventoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price" className="text-foreground">
-                      Price (FC)
+                      Prix de vente (FC)
                     </Label>
                     <Input
                       id="price"
@@ -284,7 +295,7 @@ export default function InventoryPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cost" className="text-foreground">
-                      Cost (FC)
+                      Prix d&apos;achat (FC)
                     </Label>
                     <Input
                       id="cost"
@@ -299,7 +310,7 @@ export default function InventoryPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="stock" className="text-foreground">
-                      Initial Stock
+                      Stock initial
                     </Label>
                     <Input
                       id="stock"
@@ -311,11 +322,12 @@ export default function InventoryPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="min-stock" className="text-foreground">
-                      Min Stock Level
+                      Stock minimum
                     </Label>
                     <Input
-                      id="min-stock"
+                      id="min_stock"
                       type="number"
+                      ref={newStockRef}
                       placeholder="10"
                       className="bg-secondary/50 border-border focus:border-gold"
                     />
@@ -374,12 +386,12 @@ export default function InventoryPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">In Stock</p>
+                  <p className="text-sm text-muted-foreground">En Stock</p>
                   <p className="text-2xl font-bold text-emerald-500">
                     {
                       drinks.filter((d) => {
                         const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
-                        const minStockLevel = d.min_stock_level ?? 0;
+                        const minStockLevel = d.min_stock ?? 0;
                         return stockQuantity > minStockLevel;
                       }).length
                     }
@@ -400,7 +412,7 @@ export default function InventoryPage() {
                     {
                       drinks.filter((d) => {
                         const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
-                        const minStockLevel = d.min_stock_level ?? 0;
+                        const minStockLevel = d.min_stock ?? 0;
                         return (
                           stockQuantity > 0 && stockQuantity <= minStockLevel
                         );
@@ -418,7 +430,7 @@ export default function InventoryPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Out of Stock</p>
+                  <p className="text-sm text-muted-foreground">Stock vidé</p>
                   <p className="text-2xl font-bold text-red-500">
                     {
                       drinks.filter(
@@ -529,7 +541,7 @@ export default function InventoryPage() {
                       {/* Price row */}
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
-                          Price
+                          Prix
                         </span>
                         <span className="font-semibold text-gold">
                           {(
@@ -554,7 +566,7 @@ export default function InventoryPage() {
                             className={cn(
                               "h-full rounded-full transition-all",
                               (drink.stock_quantity ?? drink.stock ?? 0) <=
-                                (drink.min_stock_level ?? 0)
+                                (drink.min_stock ?? 0)
                                 ? (drink.stock_quantity ?? drink.stock ?? 0) ===
                                   0
                                   ? "bg-red-500"
@@ -565,7 +577,7 @@ export default function InventoryPage() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Min: {drink.min_stock_level ?? 0} units
+                          Min: {drink.min_stock ?? 0} units
                         </p>
                       </div>
 
@@ -687,7 +699,7 @@ export default function InventoryPage() {
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Min Level</p>
                   <p className="text-lg font-semibold text-muted-foreground">
-                    {updatingStock?.min_stock_level ?? 0}
+                    {updatingStock?.min_stock ?? 0}
                   </p>
                 </div>
               </div>
@@ -774,14 +786,18 @@ export default function InventoryPage() {
         >
           <DialogContent className="max-w-md bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Edit Drink</DialogTitle>
-              <DialogDescription>Update drink details</DialogDescription>
+              <DialogTitle className="text-foreground">
+                Modifier boisson
+              </DialogTitle>
+              <DialogDescription>
+                Mettre à jour les détails de la boisson
+              </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name" className="text-foreground">
-                  Name
+                  Nom
                 </Label>
                 <Input
                   id="edit-name"
@@ -793,7 +809,7 @@ export default function InventoryPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-price" className="text-foreground">
-                    Price (FC)
+                    Prix de vente (FC)
                   </Label>
                   <Input
                     id="edit-price"
@@ -808,7 +824,7 @@ export default function InventoryPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-cost" className="text-foreground">
-                    Cost (FC)
+                    Prix d&apos;achat (FC)
                   </Label>
                   <Input
                     id="edit-cost"
@@ -817,6 +833,21 @@ export default function InventoryPage() {
                     step="0.01"
                     defaultValue={
                       editingDrink?.price_purchase ?? editingDrink?.cost
+                    }
+                    className="bg-secondary/50 border-border focus:border-gold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-min-stock" className="text-foreground">
+                    Stock minimal (FC)
+                  </Label>
+                  <Input
+                    id="edit-min-stock"
+                    ref={editMinStockRef}
+                    type="number"
+                    step="0.01"
+                    defaultValue={
+                      editingDrink?.min_stock ?? 0
                     }
                     className="bg-secondary/50 border-border focus:border-gold"
                   />

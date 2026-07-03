@@ -35,6 +35,12 @@ class Drink(TimeStampedModel):
         validators=[MinValueValidator(0)]
     )
 
+    min_stock = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+
+
     price_sale = models.DecimalField(
         max_digits=10, 
         decimal_places=2,

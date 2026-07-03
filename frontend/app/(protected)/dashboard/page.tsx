@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </div>
           <Link href="/dashboard/sales">
             <Button className="bg-gold hover:bg-gold-light text-pitch font-semibold">
-              New Sale
+              Nouv. Vente
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
@@ -88,14 +88,14 @@ export default function DashboardPage() {
         {stats.lowStockCount > 0 && !isLoading && (
           <Alert className="bg-amber-500/10 border-amber-500/30">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <AlertTitle className="text-amber-500">Low Stock Alert</AlertTitle>
+            <AlertTitle className="text-amber-500">Faible stock Alerte</AlertTitle>
             <AlertDescription className="text-muted-foreground">
-              {stats.lowStockCount} items are running low on stock.{" "}
+              {stats.lowStockCount} boissons sont en rupture de stock.{" "}
               <Link
                 href="/dashboard/inventory"
                 className="text-gold hover:underline"
               >
-                View inventory
+                Voir l&apos;inventaire
               </Link>
             </AlertDescription>
           </Alert>
@@ -104,17 +104,17 @@ export default function DashboardPage() {
         {/* Stats cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Revenue Today"
+            title="Revenue du Jour"
             value={`${(stats?.revenueToday ?? 0).toLocaleString()} FC`}
-            description="from yesterday"
+            description="marge du jour"
             icon={TrendingUp}
             trend={{ value: 12.5, isPositive: true }}
             isLoading={isLoading}
           />
           <StatCard
-            title="Expenses Today"
+            title="Expenses du Jour"
             value={`${(stats?.expensesToday ?? 0).toLocaleString()} FC`}
-            description="from yesterday"
+            description="fr"
             icon={TrendingDown}
             trend={{ value: 3.2, isPositive: false }}
             isLoading={isLoading}
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           <StatCard
             title="Net Profit"
             value={`${(stats?.netProfit ?? 0).toLocaleString()} FC`}
-            description="today's margin"
+            description="marge du jour"
             icon={DollarSign}
             trend={{ value: 8.1, isPositive: (stats?.netProfit ?? 0) > 0 }}
             isLoading={isLoading}

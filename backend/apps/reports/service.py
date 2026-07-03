@@ -19,11 +19,11 @@ class DashboardService:
         ventes_mois = Sale.objects.filter(created_at__date__range=(debut_mois, fin_mois))
         depenses_mois = Depense.objects.filter(date__range=(debut_mois, fin_mois))
 
-        chiffre_affaires_aujourd_hui = ventes_aujourd_hui.aggregate(total=Sum("total_price"))["total"] or 0
-        depenses_aujourd_hui_total = depenses_aujourd_hui.aggregate(total=Sum("montant"))["total"] or 0
-        chiffre_affaires_mensuel = ventes_mois.aggregate(total=Sum("total_price"))["total"] or 0
-        depenses_mensuelles = depenses_mois.aggregate(total=Sum("montant"))["total"] or 0
-        total_boissons_vendues = ventes_mois.aggregate(total=Sum("quantity"))["total"] or 0
+        chiffre_affaires_aujourd_hui = float(ventes_aujourd_hui.aggregate(total=Sum("total_price"))["total"] or 0)
+        depenses_aujourd_hui_total = float(depenses_aujourd_hui.aggregate(total=Sum("montant"))["total"] or 0)
+        chiffre_affaires_mensuel = float(ventes_mois.aggregate(total=Sum("total_price"))["total"] or 0)
+        depenses_mensuelles = float(depenses_mois.aggregate(total=Sum("montant"))["total"] or 0)
+        total_boissons_vendues = int(ventes_mois.aggregate(total=Sum("quantity"))["total"] or 0)
 
         return {
             "chiffre_affaires_aujourd_hui": float(chiffre_affaires_aujourd_hui),
@@ -60,13 +60,13 @@ class DashboardService:
 class FinanceReportService:
     @staticmethod
     def get_finance_report(start_date, end_date):
-        ventes = Sale.objects.filter(created_at__date__range=(start_date, end_date)).aggregate(total_sales=Sum("total_price"))["total_sales"] or 0
-        depenses = Depense.objects.filter(date__range=(start_date, end_date)).aggregate(total_expenses=Sum("montant"))["total_expenses"] or 0
+        ventes = float(Sale.objects.filter(created_at__date__range=(start_date, end_date)).aggregate(total_sales=Sum("total_price"))["total_sales"] or 0)
+        depenses = float(Depense.objects.filter(date__range=(start_date, end_date)).aggregate(total_expenses=Sum("montant"))["total_expenses"] or 0)
 
         return {
-            "chiffre_affaires": float(ventes),
-            "depenses": float(depenses),
-            "benefice_net": float(ventes - depenses),
+            "chiffre_affaires": ventes,
+            "depenses": depenses,
+            "benefice_net": ventes - depenses,
         }
 
 

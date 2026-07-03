@@ -26,15 +26,14 @@ class saleService {
   async createSalesFromCart(
     items: { drink: Drink; quantity: number }[],
   ): Promise<Sale[]> {
-    const results = await Promise.all(
-      items.map((item) =>
-        this.createSale({
-          drink_id: item.drink.id,
-          quantity: item.quantity,
-        }),
-      ),
-    );
-    return results;
+    const payload = {
+      items: items.map((item) => ({
+        drink_id: item.drink.id,
+        quantity: item.quantity,
+      })),
+    };
+    const response = await api.post<Sale[]>("/sales/bulk/", payload);
+    return Array.isArray(response.data) ? response.data : [];
   }
 
   async deleteSale(id: string | number): Promise<void> {

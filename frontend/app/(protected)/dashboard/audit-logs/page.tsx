@@ -281,19 +281,21 @@ export default function AuditLogsPage() {
                                             "text-muted-foreground",
                                         )}
                                       >
-                                        {log.entity_type}
+                                        {log.object_id}
                                       </Badge>
                                     </div>
 
                                     {/* User info */}
-                                    {log.user && (
+                                    {log.utilisateur && (
                                       <div className="flex items-center gap-2 mt-2">
                                         <Avatar className="w-5 h-5">
                                           <AvatarImage
-                                            src={log.user.avatar_url || ""}
+                                            src={
+                                              log.utilisateur.avatar_url || ""
+                                            }
                                           />
                                           <AvatarFallback className="text-[8px] bg-gold/20 text-gold">
-                                            {(log.user?.full_name || "U")
+                                            {(log.utilisateur || "U")
                                               .split(" ")
                                               .map((n) => n[0])
                                               .join("")
@@ -301,28 +303,20 @@ export default function AuditLogsPage() {
                                           </AvatarFallback>
                                         </Avatar>
                                         <span className="text-sm text-muted-foreground">
-                                          {log.user?.full_name || "System"}
+                                          {log.utilisateur || "System"}
                                         </span>
                                       </div>
                                     )}
 
                                     {/* Additional details */}
-                                    {log.details &&
-                                      Object.keys(log.details).length > 0 && (
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                          {Object.entries(log.details).map(
-                                            ([key, value]) => (
-                                              <Badge
-                                                key={key}
-                                                variant="secondary"
-                                                className="bg-secondary/50 text-xs"
-                                              >
-                                                {key}: {String(value)}
-                                              </Badge>
-                                            ),
-                                          )}
-                                        </div>
-                                      )}
+                                    {log.description && (
+                                      <div className="mt-3 flex flex-wrap gap-2 text-sm text-foreground">
+                                        {/* 💡 On affiche directement la description puisqu'elle contient déjà le texte */}
+                                        {typeof log.description === "object"
+                                          ? JSON.stringify(log.description) // Au cas où c'est un vrai objet par erreur
+                                          : log.description}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 

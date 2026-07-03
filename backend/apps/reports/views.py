@@ -2,13 +2,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .service import DashboardService, FinanceReportService, SalesReportService, SalesByDayService, SalesBySellerService
-from .serializers import (
+from apps.reports.service import DashboardService, FinanceReportService, SalesReportService, SalesByDayService, SalesBySellerService
+from apps.reports.serializers import (
     TableauDeBordSerializer,
     RapportFinancierSerializer,
     TopBoissonSerializer,
     VenteParJourSerializer,
     VenteParVendeurSerializer,
+    DashboardStatsRawSerializer,
+    SalesByDaySerializer,
+    SalesBySellerSerializer,
+    TopDrinkSerializer,
 )
 
 
@@ -18,6 +22,15 @@ class TableauDeBordView(APIView):
     def get(self, request):
         payload = DashboardService.get_dashboard_payload()
         serializer = TableauDeBordSerializer(payload)
+        return Response(serializer.data)
+
+
+class StatistiquesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        stats = DashboardService.get_dashboard_stats()
+        serializer = DashboardStatsRawSerializer(stats)
         return Response(serializer.data)
 
 
@@ -41,7 +54,7 @@ class TopBoissonsView(APIView):
         limit = int(request.query_params.get("limit", 10))
 
         top_drinks_data = SalesReportService.top_drinks(start_date, end_date, limit)
-        serializer = TopBoissonSerializer(top_drinks_data, many=True)
+        serializer = TopDrinkSerializer(top_drinks_data, many=True)
 
         return Response(serializer.data)
 
@@ -51,7 +64,7 @@ class VentesParJourView(APIView):
 
     def get(self, request):
         sales_by_day_data = SalesByDayService.sales_by_day()
-        serializer = VenteParJourSerializer(sales_by_day_data, many=True)
+        serializer = SalesByDaySerializer(sales_by_day_data, many=True)
         return Response(serializer.data)
 
 
@@ -60,5 +73,5 @@ class VentesParVendeurView(APIView):
 
     def get(self, request):
         sales_by_seller_data = SalesBySellerService.sales_by_seller()
-        serializer = VenteParVendeurSerializer(sales_by_seller_data, many=True)
+        serializer = SalesBySellerSerializer(sales_by_seller_data, many=True)
         return Response(serializer.data)

@@ -22,7 +22,7 @@ class dashboardService {
           depenses_mensuelles?: number;
           benefice_net_mensuel?: number;
         };
-      }>("/dashboard/");
+      }>("/reports/dashboard/");
 
       const stats = response.data?.statistiques;
       return {
@@ -98,8 +98,11 @@ class dashboardService {
     }
   }
 
+  
+
+
   async getDashboard() {
-    const response = await api.get("/dashboard/");
+    const response = await api.get("/reports/dashboard/");
     return response.data;
   }
 }
@@ -114,6 +117,7 @@ export const getDashboardTopSellers = () =>
   dashboardServiceInstance.getDashboardTopSellers();
 export const getDashboardActivity = () =>
   dashboardServiceInstance.getDashboardActivity();
+
 export const getDashboard = () => dashboardServiceInstance.getDashboard();
 
 export default dashboardServiceInstance;

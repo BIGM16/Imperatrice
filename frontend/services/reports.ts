@@ -11,17 +11,17 @@ import {
 class reportsService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      const response = await api.get<DashboardStatsRaw>("/stats/");
+      const response = await api.get<DashboardStatsRaw>("/reports/stats/");
       const d = response.data;
       return {
-        revenueToday: d.sales_today ?? d.total_today_sales ?? 0,
-        expensesToday: d.expenses_today ?? d.total_today_expenses ?? 0,
-        netProfit: d.today_net_profit ?? 0,
-        salesCount: d.sales_count ?? 0,
-        lowStockCount: d.low_stock_drinks ?? 0,
-        totalSalesMonth: d.total_sales ?? 0,
-        totalExpensesMonth: d.total_expenses ?? 0,
-        netProfitMonth: d.net_profit ?? 0,
+        revenueToday: d.chiffre_affaires_aujourd_hui ?? d.sales_today ?? d.total_today_sales ?? 0,
+        expensesToday: d.depenses_aujourd_hui ?? d.expenses_today ?? d.total_today_expenses ?? 0,
+        netProfit: d.benefice_net_aujourd_hui ?? d.today_net_profit ?? 0,
+        salesCount: d.nombre_ventes_aujourd_hui ?? d.sales_count ?? 0,
+        lowStockCount: d.boissons_en_faible_stock ?? d.low_stock_drinks ?? 0,
+        totalSalesMonth: d.chiffre_affaires_mensuel ?? d.total_sales ?? 0,
+        totalExpensesMonth: d.depenses_mensuelles ?? d.total_expenses ?? 0,
+        netProfitMonth: d.benefice_net_mensuel ?? d.net_profit ?? 0,
       };
     } catch {
       return {
@@ -42,7 +42,7 @@ class reportsService {
     endDate: string,
   ): Promise<FinanceReport> {
     try {
-      const response = await api.get<FinanceReport>("/finance/", {
+      const response = await api.get<FinanceReport>("/reports/finance/", {
         params: { start_date: startDate, end_date: endDate },
       });
       return response.data;
@@ -57,7 +57,7 @@ class reportsService {
     limit?: number;
   }): Promise<TopDrink[]> {
     try {
-      const response = await api.get<TopDrink[]>("/top-drinks/", {
+      const response = await api.get<TopDrink[]>("/reports/top-drinks/", {
         params: {
           start_date: params?.startDate,
           end_date: params?.endDate,
@@ -72,7 +72,7 @@ class reportsService {
 
   async getSalesByDay(): Promise<SalesByDay[]> {
     try {
-      const response = await api.get<SalesByDay[]>("/sales/by-day/");
+      const response = await api.get<SalesByDay[]>("/reports/sales/by-day/");
       return Array.isArray(response.data) ? response.data : [];
     } catch {
       return [];
@@ -81,7 +81,7 @@ class reportsService {
 
   async getSalesBySeller(): Promise<SalesBySeller[]> {
     try {
-      const response = await api.get<SalesBySeller[]>("/sales/by-seller/");
+      const response = await api.get<SalesBySeller[]>("/reports/sales/by-seller/");
       return Array.isArray(response.data) ? response.data : [];
     } catch {
       return [];

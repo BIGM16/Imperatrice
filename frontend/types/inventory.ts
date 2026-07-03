@@ -12,7 +12,7 @@ export interface Drink {
   price?: number;
   cost?: number;
   stock_quantity?: number;
-  min_stock_level?: number;
+  min_stock?: number;
   image_url?: string | null;
   is_active?: boolean;
   category?: Category;

@@ -12,6 +12,16 @@ export interface DashboardStatsRaw {
   today_net_profit: number;
   total_today_sales: number;
   total_today_expenses: number;
+  chiffre_affaires_mensuel: number;
+  depenses_mensuelles: number;
+  benefice_net_mensuel: number;
+  total_boissons_vendues: number;
+  chiffre_affaires_aujourd_hui: number;
+  depenses_aujourd_hui: number;
+  benefice_net_aujourd_hui: number;
+  total_boissons_vendues_aujourd_hui: number;
+  nombre_ventes_aujourd_hui: number;
+  boissons_en_faible_stock: number;
 }
 
 /** Forme normalisée utilisée par la page Dashboard */
