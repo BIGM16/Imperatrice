@@ -18,7 +18,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ChartData } from "@/types/types";
+import { ChartData } from "@/types/dashboard";
 
 interface RevenueExpensesChartProps {
   data: ChartData[];

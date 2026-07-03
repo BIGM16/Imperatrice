@@ -13,8 +13,8 @@ from rest_framework.filters import (
 
 from .models import Drink, Category
 from .serializers import (
-    DrinkSerializer,
-    CategorySerializer,
+    BoissonSerializer,
+    CategorieSerializer,
 )
 
 from rest_framework.decorators import (
@@ -42,7 +42,7 @@ class DrinkViewSet(
 
     queryset = Drink.objects.all()
 
-    serializer_class = DrinkSerializer
+    serializer_class = BoissonSerializer
 
     permission_classes = [
         IsAdminOrReadOnly
@@ -79,49 +79,37 @@ class DrinkViewSet(
         pk=None
     ):
 
-        action_type = request.data.get(
-            "action"
-        )
+        action_type = request.data.get("action")
 
-        quantity = int(
-            request.data.get(
-                "quantity",
-                1
+        if action_type not in {"add", "remove"}:
+            return Response(
+                {"success": False, "message": "Action invalide."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        )
 
         try:
+            quantity = int(request.data.get("quantity", 1))
+            if quantity <= 0:
+                raise ValueError("La quantité doit être supérieure à 0.")
 
-            drink = (
-                InventoryService
-                .update_stock(
+            drink = InventoryService.update_stock(
                 drink_id=pk,
                 quantity=quantity,
-                action=action_type
+                action=action_type,
             )
-        )
 
+            return Response({"success": True, "new_stock": drink.stock})
+
+        except (ValueError, TypeError) as e:
             return Response(
-                {
-                    "success": True,
-                    "new_stock": drink.stock
-                }
-            )
-
-        except ValueError as e:
-
-            return Response(
-                {
-                    "success": False,
-                    "message": str(e)
-                },
-                status=status.HTTP_400_BAD_REQUEST
+                {"success": False, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
-class CategoryViewSet(ModelViewSet):
+class CategorieViewSet(ModelViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = CategorieSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 

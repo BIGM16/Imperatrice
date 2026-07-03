@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 
 from .models import Depense, Personne
-from .serializers import DepenseSerializer, PersonSerializer
+from .serializers import DepenseSerializer, PersonneSerializer
 
 
 class PersonneModelTest(TestCase):
@@ -167,7 +167,7 @@ class PersonSerializerTest(TestCase):
     def test_serialize_personne(self):
         """Vérifier la sérialisation d'une personne"""
         personne = Personne.objects.create(name="Alice")
-        serializer = PersonSerializer(personne)
+        serializer = PersonneSerializer(personne)
         data = serializer.data
         
         self.assertEqual(data['id'], personne.id)
@@ -178,7 +178,7 @@ class PersonSerializerTest(TestCase):
         data = {
             'name': 'Bob'
         }
-        serializer = PersonSerializer(data=data)
+        serializer = PersonneSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         personne = serializer.save()
         
@@ -189,7 +189,7 @@ class PersonSerializerTest(TestCase):
         data = {
             'name': 'InvalidName123'
         }
-        serializer = PersonSerializer(data=data)
+        serializer = PersonneSerializer(data=data)
         # Selon la configuration, cela peut ou non échouer au niveau du serializer
 
 

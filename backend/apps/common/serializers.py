@@ -1,11 +1,10 @@
 from rest_framework import serializers
-
 from .models import AuditLog
 
-class AuditLogSerializer(serializers.ModelSerializer):
 
-    username = serializers.CharField(source="user.username", read_only=True)
+class JournalisationSerializer(serializers.ModelSerializer):
+    utilisateur = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = AuditLog
-        fields = "__all__"
+        fields = ["id", "utilisateur", "action", "model_name", "object_id", "description", "created_at", "updated_at"]

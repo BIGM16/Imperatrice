@@ -39,7 +39,7 @@ class financeService {
     return response.data;
   }
 
-  async depenseToExpense(d: Depense): Expense {
+  async depenseToExpense(d: Depense): Promise<Expense> {
     return {
       id: String(d.id),
       category: "Dépense",
@@ -53,4 +53,21 @@ class financeService {
   }
 }
 
-export default new financeService();
+const financeServiceInstance = new financeService();
+
+export const getDepenses = () => financeServiceInstance.getDepenses();
+export const createDepense = (payload: CreateDepensePayload) =>
+  financeServiceInstance.createDepense(payload);
+export const updateDepense = (
+  id: number,
+  payload: Partial<CreateDepensePayload>,
+) => financeServiceInstance.updateDepense(id, payload);
+export const deleteDepense = (id: number) =>
+  financeServiceInstance.deleteDepense(id);
+export const getPersonnes = () => financeServiceInstance.getPersonnes();
+export const createPersonne = (name: string) =>
+  financeServiceInstance.createPersonne(name);
+export const depenseToExpense = (d: Depense) =>
+  financeServiceInstance.depenseToExpense(d);
+
+export default financeServiceInstance;

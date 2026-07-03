@@ -1,16 +1,17 @@
 from django.urls import path
 from .views import (
-    DashboardView, 
-    FinanceReportView, 
-    TopDrinksView,
-    SalesByDayView,
-    SalesBySellerView
+    TableauDeBordView,
+    RapportFinancierView,
+    TopBoissonsView,
+    VentesParJourView,
+    VentesParVendeurView,
 )
 
 urlpatterns = [
-    path('stats/', DashboardView.as_view(), name='dashboard-stats'),
-    path('finance/', FinanceReportView.as_view(), name='finance-report'),
-    path('top-drinks/', TopDrinksView.as_view(), name='top-drinks'),
-    path('sales/by-day/', SalesByDayView.as_view(), name='sales-by-day'),
-    path('sales/by-seller/', SalesBySellerView.as_view(), name='sales-by-seller'),
+    path("dashboard/", TableauDeBordView.as_view(), name="tableau-de-bord"),
+    path("dashboard/statistiques/", TableauDeBordView.as_view(), name="tableau-de-bord-statistiques"),
+    path("finance/", RapportFinancierView.as_view(), name="rapport-financier"),
+    path("top-boissons/", TopBoissonsView.as_view(), name="top-boissons"),
+    path("ventes/par-jour/", VentesParJourView.as_view(), name="ventes-par-jour"),
+    path("ventes/par-vendeur/", VentesParVendeurView.as_view(), name="ventes-par-vendeur"),
 ]

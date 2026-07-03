@@ -2,21 +2,21 @@ from rest_framework import serializers
 from .models import Drink, Category
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorieSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name", "description"]
 
 
-class DrinkSerializer(serializers.ModelSerializer):
+class BoissonSerializer(serializers.ModelSerializer):
     benefice_unitaire = serializers.SerializerMethodField()
-    category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(
+    categorie = CategorieSerializer(read_only=True)
+    categorie_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source="category",
         write_only=True,
         required=False,
-        allow_null=True
+        allow_null=True,
     )
 
     class Meta:
@@ -28,8 +28,8 @@ class DrinkSerializer(serializers.ModelSerializer):
             "price_sale",
             "stock",
             "benefice_unitaire",
-            "category",
-            "category_id",
+            "categorie",
+            "categorie_id",
             "volume",
             "image_url",
         ]

@@ -48,4 +48,20 @@ class saleService {
     return Array.isArray(response.data) ? response.data : [];
   }
 }
-export default new saleService();
+
+const saleServiceInstance = new saleService();
+
+export const getSales = (params?: SaleListParams) =>
+  saleServiceInstance.getSales(params);
+export const getSale = (id: string | number) => saleServiceInstance.getSale(id);
+export const createSale = (payload: CreateSalePayload) =>
+  saleServiceInstance.createSale(payload);
+export const createSalesFromCart = (
+  items: { drink: Drink; quantity: number }[],
+) => saleServiceInstance.createSalesFromCart(items);
+export const deleteSale = (id: string | number) =>
+  saleServiceInstance.deleteSale(id);
+export const getRecentSales = (limit = 10) =>
+  saleServiceInstance.getRecentSales(limit);
+
+export default saleServiceInstance;

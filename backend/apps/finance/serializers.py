@@ -1,28 +1,16 @@
 from rest_framework import serializers
-from .models import (
-    Personne,
-    Depense
-)
+from .models import Personne, Depense
 
-class PersonSerializer(
-    serializers.ModelSerializer
-):
 
+class PersonneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Personne
-        fields = "__all__"
+        fields = ["id", "name"]
 
 
-class DepenseSerializer(
-    serializers.ModelSerializer
-):
-
-    responsible_name = serializers.CharField(
-        source="responsable.name",
-        read_only=True
-    )
+class DepenseSerializer(serializers.ModelSerializer):
+    responsable_nom = serializers.CharField(source="responsable.name", read_only=True)
 
     class Meta:
         model = Depense
-
-        fields = "__all__"
+        fields = ["id", "motif", "montant", "date", "responsable", "responsable_nom"]

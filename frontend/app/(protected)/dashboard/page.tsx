@@ -38,6 +38,13 @@ export default function DashboardPage() {
           dashboardService.getDashboardTopSellers(),
           dashboardService.getDashboardActivity(),
         ]);
+        const dashboard = await dashboardService.getDashboard();
+        dashboard.stats;
+        dashboard.finance;
+        dashboard.top_drinks;
+        dashboard.sales_by_day;
+        dashboard.sales_by_seller;
+        dashboard.recent_sales;
 
         setStats(dashboardStats);
         setSalesTrendData(salesTrend);

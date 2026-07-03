@@ -1,5 +1,5 @@
 import api from "../lib/axios";
-import type { AuditLog } from "@/types/types";
+import type { AuditLog } from "@/types/audit";
 
 export interface AuditLogListParams {
   action?: string;
@@ -18,7 +18,7 @@ export interface AuditLogListParams {
  * Le backend expose cet endpoint via apps.common.
  */
 export async function getAuditLogs(
-  params?: AuditLogListParams
+  params?: AuditLogListParams,
 ): Promise<AuditLog[]> {
   try {
     const response = await api.get<AuditLog[]>("/audit-logs/", { params });

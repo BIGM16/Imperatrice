@@ -10,23 +10,45 @@ import reportsService from "@/services/reports";
 
 class dashboardService {
   async getDashboardStats(): Promise<DashboardStats> {
-    const stats = await this.getDashboardStats();
-    return {
-      revenueToday: stats.revenueToday,
-      expensesToday: stats.expensesToday,
-      netProfit: stats.netProfit,
-      salesCount: stats.salesCount,
-      lowStockCount: stats.lowStockCount,
-    };
+    try {
+      const response = await api.get<{
+        statistiques?: {
+          chiffre_affaires_aujourd_hui?: number;
+          depenses_aujourd_hui?: number;
+          benefice_net_aujourd_hui?: number;
+          nombre_ventes_aujourd_hui?: number;
+          boissons_en_faible_stock?: number;
+          chiffre_affaires_mensuel?: number;
+          depenses_mensuelles?: number;
+          benefice_net_mensuel?: number;
+        };
+      }>("/dashboard/");
+
+      const stats = response.data?.statistiques;
+      return {
+        revenueToday: stats?.chiffre_affaires_aujourd_hui ?? 0,
+        expensesToday: stats?.depenses_aujourd_hui ?? 0,
+        netProfit: stats?.benefice_net_aujourd_hui ?? 0,
+        salesCount: stats?.nombre_ventes_aujourd_hui ?? 0,
+        lowStockCount: stats?.boissons_en_faible_stock ?? 0,
+      };
+    } catch {
+      return {
+        revenueToday: 0,
+        expensesToday: 0,
+        netProfit: 0,
+        salesCount: 0,
+        lowStockCount: 0,
+      };
+    }
   }
 
   async getDashboardSalesTrend(): Promise<ChartData[]> {
     try {
       const data = await reportsService.getSalesByDay();
-      const Xdata = await reportsService.salesByDayToChartData(data);
-      return Xdata.map((d) => ({
-        name: d.name,
-        value: d.value,
+      return data.map((d) => ({
+        name: d.day,
+        value: d.total_sales,
       }));
     } catch {
       return [];
@@ -75,6 +97,23 @@ class dashboardService {
       return [];
     }
   }
+
+  async getDashboard() {
+    const response = await api.get("/dashboard/");
+    return response.data;
+  }
 }
 
-export default new dashboardService();
+const dashboardServiceInstance = new dashboardService();
+
+export const getDashboardStats = () =>
+  dashboardServiceInstance.getDashboardStats();
+export const getDashboardSalesTrend = () =>
+  dashboardServiceInstance.getDashboardSalesTrend();
+export const getDashboardTopSellers = () =>
+  dashboardServiceInstance.getDashboardTopSellers();
+export const getDashboardActivity = () =>
+  dashboardServiceInstance.getDashboardActivity();
+export const getDashboard = () => dashboardServiceInstance.getDashboard();
+
+export default dashboardServiceInstance;

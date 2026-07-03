@@ -56,16 +56,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  getDashboardStats,
-  getTopDrinks,
-  getSalesByDay,
-  getSalesBySeller,
-  salesByDayToChartData,
-  topDrinksToChartData,
-  salesBySellerToChartData,
-} from "@/services/reports";
+import reportService from "@/services/reports";
 import { useEffect } from "react";
+import { TopDrink, SalesBySeller, SalesByDay } from "@/types/reports";
 
 const CustomTooltip = ({
   active,
@@ -114,6 +107,15 @@ export default function ReportsPage() {
     netProfit: 0,
   });
 
+  const monthlyRevenueData = [
+    { name: "Jan", value: 320000 },
+    { name: "Feb", value: 280000 },
+    { name: "Mar", value: 360000 },
+    { name: "Apr", value: 410000 },
+    { name: "May", value: 390000 },
+    { name: "Jun", value: 450000 },
+  ];
+
   // Données statiques (pas d'endpoint dédié pour le moment)
   const salesByCategory = [
     { name: "Cocktails", value: 42 },
@@ -127,10 +129,10 @@ export default function ReportsPage() {
       setIsLoading(true);
       try {
         const [stats, topDrinks, byDay, bySeller] = await Promise.all([
-          getDashboardStats(),
-          getTopDrinks({ limit: 10 }),
-          getSalesByDay(),
-          getSalesBySeller(),
+          reportService.getDashboardStats(),
+          reportService.getTopDrinks({ limit: 10 }),
+          reportService.getSalesByDay(),
+          reportService.getSalesBySeller(),
         ]);
 
         setSummaryStats({
@@ -245,7 +247,7 @@ export default function ReportsPage() {
               </div>
               <div className="flex items-center gap-1 text-emerald-500 text-sm">
                 <TrendingUp className="w-3 h-3" />
-                Transactions aujourd'hui
+                Transactions aujourd_hui
               </div>
             </CardContent>
           </Card>
@@ -603,3 +605,19 @@ export default function ReportsPage() {
     </DashboardLayout>
   );
 }
+function setTopSellingDrinks(arg0: any) {
+  throw new Error("Function not implemented.");
+}
+
+function topDrinksToChartData(topDrinks: TopDrink[]): import("react").SetStateAction<{ name: string; quantity: number; revenue: number; }[]> {
+  throw new Error("Function not implemented.");
+}
+
+function salesByDayToChartData(byDay: SalesByDay[]) {
+  throw new Error("Function not implemented.");
+}
+
+function salesBySellerToChartData(bySeller: SalesBySeller[]): import("react").SetStateAction<{ name: string; value: number; }[]> {
+  throw new Error("Function not implemented.");
+}
+

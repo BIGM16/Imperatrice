@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
-import { AuditLog } from "@/types/types";
+import { AuditLog } from "@/types/audit";
 import { getAuditLogs } from "@/services/audit";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";

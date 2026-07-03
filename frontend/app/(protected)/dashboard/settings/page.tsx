@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import {

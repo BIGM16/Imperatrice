@@ -1,11 +1,6 @@
-from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
-from .models import (
-    Depense, Personne
-)
-from .serializers import (
-    DepenseSerializer, PersonSerializer
-)
+from .models import Depense, Personne
+from .serializers import DepenseSerializer, PersonneSerializer
 
 from apps.accounts.permissions import (
     IsAdminUserCustom
@@ -32,8 +27,6 @@ class DepenseViewSet(
         DepenseSerializer
     )
 
-class PersonneViewSet(
-    ModelViewSet
-):
+class PersonneViewSet(ModelViewSet):
     queryset = Personne.objects.all()
-    serializer_class = PersonSerializer
+    serializer_class = PersonneSerializer

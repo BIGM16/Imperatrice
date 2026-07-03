@@ -11,10 +11,36 @@ from apps.sales.models import Sale
 from apps.finance.models import Depense
 from .service import DashboardService, FinanceReportService, SalesReportService
 from .serializers import (
-    DashboardSerializer, 
-    FinanceReportSerializer, 
-    TopDrinksSerializer
+   DashboardStatistiquesSerializer, 
+    RapportFinancierSerializer, 
+    TopBoissonSerializer
 )
+
+
+class DashboardPayloadServiceTest(TestCase):
+    """Tests pour le payload structuré du dashboard."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="dashboard-user",
+            password="pass123",
+            is_staff=True,
+        )
+        self.category = Category.objects.create(name="Boissons")
+        self.drink = Drink.objects.create(
+            name="Coca-Cola",
+            category=self.category,
+            price_purchase=Decimal("200.00"),
+            price_sale=Decimal("500.00"),
+            stock=10,
+        )
+
+    def test_get_dashboard_payload_contains_structured_sections(self):
+        payload = DashboardService.get_dashboard_payload()
+        self.assertIn("statistiques", payload)
+        self.assertIn("ventes_par_jour", payload)
+        self.assertIn("top_boissons", payload)
+        self.assertIn("ventes_recentes", payload)
 
 
 class DashboardServiceTest(TestCase):
@@ -44,14 +70,15 @@ class DashboardServiceTest(TestCase):
         """Vérifier que les champs requis sont présents"""
         stats = DashboardService.get_dashboard_stats()
         required_fields = [
-            'total_sales',
-            'total_expenses',
-            'net_profit',
-            'sales_count',
-            'low_stock_drinks',
-            'today_net_profit',
-            'total_today_sales',
-            'total_today_expenses'
+            'chiffre_affaires_aujourd_hui',
+            'depenses_aujourd_hui',
+            'benefice_net_aujourd_hui',
+            'nombre_ventes_aujourd_hui',
+            'boissons_en_faible_stock',
+            'chiffre_affaires_mensuel',
+            'depenses_mensuelles',
+            'benefice_net_mensuel',
+            'total_boissons_vendues',
         ]
         for field in required_fields:
             self.assertIn(field, stats)
@@ -69,7 +96,7 @@ class DashboardServiceTest(TestCase):
         
         stats = DashboardService.get_dashboard_stats()
         # Vérifier que les totaux sont calculés correctement
-        self.assertGreater(stats['total_today_sales'], 0)
+        self.assertGreater(stats['chiffre_affaires_aujourd_hui'], 0)
 
     def test_dashboard_low_stock_drinks(self):
         """Vérifier le calcul des boissons en faible stock"""
@@ -83,15 +110,14 @@ class DashboardServiceTest(TestCase):
         )
         
         stats = DashboardService.get_dashboard_stats()
-        self.assertGreater(stats['low_stock_drinks'], 0)
+        self.assertGreater(stats['boissons_en_faible_stock'], 0)
 
     def test_dashboard_net_profit_calculation(self):
         """Vérifier le calcul du profit net"""
         stats = DashboardService.get_dashboard_stats()
         
-        # net_profit = total_sales - total_expenses
-        expected_profit = stats['total_sales'] - stats['total_expenses']
-        self.assertEqual(stats['net_profit'], expected_profit)
+        expected_profit = stats['chiffre_affaires_mensuel'] - stats['depenses_mensuelles']
+        self.assertEqual(stats['benefice_net_mensuel'], expected_profit)
 
 
 class FinanceReportServiceTest(TestCase):
@@ -124,7 +150,7 @@ class FinanceReportServiceTest(TestCase):
         end_date = date.today()
         report = FinanceReportService.get_finance_report(start_date, end_date)
         
-        required_fields = ['total_sales', 'total_expenses', 'net_profit']
+        required_fields = ['chiffre_affaires', 'depenses', 'benefice_net']
         for field in required_fields:
             self.assertIn(field, report)
 
@@ -143,7 +169,7 @@ class FinanceReportServiceTest(TestCase):
         )
         
         report = FinanceReportService.get_finance_report(start_date, end_date)
-        self.assertGreater(report['total_sales'], 0)
+        self.assertGreater(report['chiffre_affaires'], 0)
 
     def test_finance_report_with_expenses(self):
         """Vérifier le rapport avec des dépenses"""
@@ -157,7 +183,7 @@ class FinanceReportServiceTest(TestCase):
         )
         
         report = FinanceReportService.get_finance_report(start_date, end_date)
-        self.assertGreater(report['total_expenses'], 0)
+        self.assertGreater(report['depenses'], 0)
 
     def test_finance_report_date_range(self):
         """Vérifier que le rapport filtre par plage de dates"""
@@ -178,7 +204,7 @@ class FinanceReportServiceTest(TestCase):
         tomorrow = today + timedelta(days=1)
         report_tomorrow = FinanceReportService.get_finance_report(tomorrow, tomorrow)
         
-        self.assertGreater(report_today['total_sales'], 0)
+        self.assertGreater(report_today['chiffre_affaires'], 0)
 
 
 class SalesReportServiceTest(TestCase):
@@ -241,8 +267,8 @@ class SalesReportServiceTest(TestCase):
         if len(top_drinks) >= 2:
             # Le premier devrait avoir plus de ventes
             self.assertGreaterEqual(
-                top_drinks[0]['total_sold'],
-                top_drinks[1]['total_sold']
+                top_drinks[0]['quantite_vendue'],
+                top_drinks[1]['quantite_vendue']
             )
 
     def test_top_drinks_includes_drink_name(self):
@@ -260,7 +286,7 @@ class SalesReportServiceTest(TestCase):
         top_drinks = list(SalesReportService.top_drinks(start_date, end_date))
         
         if len(top_drinks) > 0:
-            self.assertIn('drink_name', top_drinks[0])
+            self.assertIn('nom_boisson', top_drinks[0])
 
     def test_top_drinks_limit_to_5(self):
         """Vérifier que le service retourne au maximum 5 boissons"""
@@ -293,54 +319,55 @@ class DashboardSerializerTest(TestCase):
     def test_serialize_dashboard_data(self):
         """Vérifier la sérialisation des données du dashboard"""
         data = {
-            'total_sales': 10000,
-            'total_expenses': 3000,
-            'net_profit': 7000,
-            'sales_count': 50,
-            'low_stock_drinks': 2,
-            'today_net_profit': 1000,
-            'total_today_sales': 5000,
-            'total_today_expenses': 1000,
-            'today_sales': [],
-            'today_expenses': []
+            'chiffre_affaires_aujourd_hui': 10000,
+            'depenses_aujourd_hui': 3000,
+            'benefice_net_aujourd_hui': 7000,
+            'nombre_ventes_aujourd_hui': 50,
+            'boissons_en_faible_stock': 2,
+            'chiffre_affaires_mensuel': 5000,
+            'depenses_mensuelles': 1000,
+            'benefice_net_mensuel': 4000,
+            'total_boissons_vendues': 120,
         }
-        serializer = DashboardSerializer(data)
-        self.assertEqual(serializer.data['total_sales'], 10000)
+        serializer = DashboardStatistiquesSerializer(data)
+        self.assertEqual(serializer.data['chiffre_affaires_aujourd_hui'], 10000)
 
 
-class FinanceReportSerializerTest(TestCase):
-    """Tests pour le serializer FinanceReportSerializer"""
+class RapportFinancierSerializerTest(TestCase):
+    """Tests pour le serializer RapportFinancierSerializer"""
 
     def test_serialize_finance_report(self):
         """Vérifier la sérialisation du rapport financier"""
         data = {
-            'total_sales': 15000,
-            'total_expenses': 5000,
-            'net_profit': 10000
+            'chiffre_affaires': 15000,
+            'depenses': 5000,
+            'benefice_net': 10000
         }
-        serializer = FinanceReportSerializer(data)
-        self.assertEqual(serializer.data['total_sales'], 15000)
-        self.assertEqual(serializer.data['net_profit'], 10000)
+        serializer = RapportFinancierSerializer(data)
+        self.assertEqual(serializer.data['chiffre_affaires'], 15000)
+        self.assertEqual(serializer.data['benefice_net'], 10000)
 
 
-class TopDrinksSerializerTest(TestCase):
-    """Tests pour le serializer TopDrinksSerializer"""
+class TopBoissonSerializerTest(TestCase):
+    """Tests pour le serializer TopBoissonSerializer"""
 
     def test_serialize_top_drinks(self):
         """Vérifier la sérialisation des top boissons"""
         data = [
             {
-                'drink_name': 'Coca-Cola',
-                'total_sold': 50
+                'nom_boisson': 'Coca-Cola',
+                'quantite_vendue': 50,
+                'chiffre_affaires': 25000,
             },
             {
-                'drink_name': 'Sprite',
-                'total_sold': 30
+                'nom_boisson': 'Sprite',
+                'quantite_vendue': 30,
+                'chiffre_affaires': 15000,
             }
         ]
-        serializer = TopDrinksSerializer(data, many=True)
+        serializer = TopBoissonSerializer(data, many=True)
         self.assertEqual(len(serializer.data), 2)
-        self.assertEqual(serializer.data[0]['drink_name'], 'Coca-Cola')
+        self.assertEqual(serializer.data[0]['nom_boisson'], 'Coca-Cola')
 
 
 class ReportsViewsTest(APITestCase):

@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TopSellingDrink } from "@/types/types";
+import { TopSellingDrink } from "@/types/dashboard";
 import { Wine, TrendingUp } from "lucide-react";
 
 interface TopSellersTableProps {

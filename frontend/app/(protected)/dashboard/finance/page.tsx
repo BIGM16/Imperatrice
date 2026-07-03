@@ -66,7 +66,9 @@ import {
   Megaphone,
   Home,
 } from "lucide-react";
-import { Expense, ChartData, Sale } from "@/types/types";
+import { Sale } from "@/types/sales";
+import { Expense } from "@/types/finance";
+import { ChartData } from "@/types/dashboard";
 import {
   getDepenses,
   createDepense,
@@ -203,8 +205,11 @@ export default function FinancePage() {
 
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch =
-      expense.description?.toLowerCase().includes(search.toLowerCase()) ||
-      expense.category.toLowerCase().includes(search.toLowerCase());
+      (expense.description ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      (expense.category ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      false;
     const matchesCategory =
       categoryFilter === "all" || expense.category === categoryFilter;
     const matchesDate = filterByDate(

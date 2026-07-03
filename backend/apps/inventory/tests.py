@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from decimal import Decimal
 
 from .models import Category, Ingredient, Drink, DrinkIngredient
-from .serializers import DrinkSerializer
+from .serializers import BoissonSerializer
 from .services import InventoryService
 
 
@@ -237,7 +237,7 @@ class DrinkSerializerTest(TestCase):
 
     def test_serialize_drink(self):
         """Vérifier la sérialisation d'une boisson"""
-        serializer = DrinkSerializer(self.drink)
+        serializer = BoissonSerializer(self.drink)
         data = serializer.data
         
         self.assertEqual(data['id'], self.drink.id)
@@ -248,7 +248,7 @@ class DrinkSerializerTest(TestCase):
 
     def test_serializer_includes_benefice_unitaire(self):
         """Vérifier que le serializer inclut le bénéfice unitaire"""
-        serializer = DrinkSerializer(self.drink)
+        serializer = BoissonSerializer(self.drink)
         data = serializer.data
         
         expected_benefice = float(Decimal("300.00"))

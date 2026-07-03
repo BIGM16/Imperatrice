@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from .views import DrinkViewSet, CategoryViewSet
+from .views import DrinkViewSet, CategorieViewSet
 
 router = DefaultRouter()
 
@@ -12,8 +12,8 @@ router.register(
 
 router.register(
     r"categories",
-    CategoryViewSet,
-    basename="category"
+    CategorieViewSet,
+    basename="categorie"
 )
 
 urlpatterns = router.urls
