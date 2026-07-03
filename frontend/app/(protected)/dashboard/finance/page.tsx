@@ -671,7 +671,7 @@ export default function FinancePage() {
                                     `${expense.category} expense`}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  #{expense.id.split("-")[0]}
+                                  #{expense.id}
                                 </p>
                               </div>
                             </div>
@@ -709,7 +709,8 @@ export default function FinancePage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <span className="font-semibold text-red-400">
-                              -€{expense.amount.toLocaleString()}
+                              {/* 💡 On s'assure qu'il y a un nombre (ou 0 par défaut) avant d'appeler toLocaleString */}
+                              -€{(expense?.amount ?? 0).toLocaleString()}
                             </span>
                           </TableCell>
                         </TableRow>
