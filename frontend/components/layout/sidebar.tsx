@@ -32,15 +32,15 @@ export function Sidebar() {
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Sales", href: "/dashboard/sales", icon: ShoppingCart },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+    { name: "Ventes", href: "/dashboard/sales", icon: ShoppingCart },
+    { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
 
     ...(user?.is_staff
       ? [
-          { name: "Inventory", href: "/dashboard/inventory", icon: Package },
-          { name: "Finance", href: "/dashboard/finance", icon: DollarSign },
-          { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-          { name: "Audit Logs", href: "/dashboard/audit-logs", icon: FileText },
+          { name: "Inventaire", href: "/dashboard/inventory", icon: Package },
+          { name: "Finances", href: "/dashboard/finance", icon: DollarSign },
+          { name: "Rapports", href: "/dashboard/reports", icon: BarChart3 },
+          { name: "Journal de bord", href: "/dashboard/audit-logs", icon: FileText },
         ]
       : []),
   ];
@@ -64,7 +64,7 @@ export function Sidebar() {
                 <p className="font-playfair font-bold text-foreground truncate">
                   Chez l&apos;Impératrice
                 </p>
-                <p className="text-xs text-muted-foreground">Bar Management</p>
+                <p className="text-xs text-muted-foreground">Gestion de Bar</p>
               </div>
             )}
           </Link>

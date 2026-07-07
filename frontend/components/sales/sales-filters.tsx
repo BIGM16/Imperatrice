@@ -32,7 +32,7 @@ export function SalesFilters({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search by customer or transaction ID..."
+              placeholder="Rechercher par client ou ID de transaction..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
@@ -40,13 +40,15 @@ export function SalesFilters({
           </div>
           <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
             <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
-              <SelectValue placeholder="Payment method" />
+              <SelectValue placeholder="Moyen de paiement" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
-              <SelectItem value="all">All Methods</SelectItem>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="card">Card</SelectItem>
-              <SelectItem value="transfer">Transfer</SelectItem>
+              <SelectItem value="all">Tous les moyens</SelectItem>
+              <SelectItem value="cash">Espèces</SelectItem>
+              <SelectItem value="card">Carte</SelectItem>
+              <SelectItem value="orange_money">Orange money</SelectItem>
+              <SelectItem value="mtn_money">Mtn money</SelectItem>
+              <SelectItem value="afrimall">Afrimall</SelectItem>
             </SelectContent>
           </Select>
         </div>

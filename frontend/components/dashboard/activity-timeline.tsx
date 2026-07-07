@@ -51,8 +51,8 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-foreground">Recent Activity</CardTitle>
-            <CardDescription>Latest actions and events</CardDescription>
+            <CardTitle className="text-foreground"> Activités récentes</CardTitle>
+            <CardDescription>Dernières actions et événements</CardDescription>
           </div>
           <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
             <Clock className="w-5 h-5 text-gold" />
@@ -112,7 +112,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     {activity.amount && (
                       <span className="font-semibold text-foreground">
-                        €{activity.amount.toLocaleString()}
+                        F.C.{activity.amount.toLocaleString()}
                       </span>
                     )}
                     {activity.user && (

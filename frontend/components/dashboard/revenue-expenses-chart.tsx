@@ -41,7 +41,7 @@ const CustomTooltip = ({
               className="inline-block w-3 h-3 rounded-full mr-2"
               style={{ backgroundColor: entry.color }}
             />
-            {entry.name}: €{entry.value?.toLocaleString()}
+            {entry.name}: F.C.{entry.value?.toLocaleString()}
           </p>
         ))}
       </div>
@@ -52,8 +52,8 @@ const CustomTooltip = ({
 
 export function RevenueExpensesChart({
   data,
-  title = "Revenue vs Expenses",
-  description = "Weekly comparison",
+  title = "Revenue vs Depenses",
+  description = "Comparaison hebdomadaire",
 }: RevenueExpensesChartProps) {
   // Transform data to include expenses (simulated)
   const chartData = data.map((item, index) => ({

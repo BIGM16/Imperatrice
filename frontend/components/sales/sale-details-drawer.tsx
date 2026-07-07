@@ -43,7 +43,7 @@ export function SaleDetailsDrawer({
       <DrawerContent className="bg-card border-border">
         <div className="mx-auto w-full max-w-lg">
           <DrawerHeader>
-            <DrawerTitle className="text-foreground">Sale Details</DrawerTitle>
+            <DrawerTitle className="text-foreground">Détails de la vente</DrawerTitle>
             <DrawerDescription>
               Transaction #
               {String(sale?.id ?? "")
@@ -58,7 +58,7 @@ export function SaleDetailsDrawer({
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Date & Time
+                    Date & Heure
                   </p>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gold" />
@@ -69,7 +69,7 @@ export function SaleDetailsDrawer({
                 </div>
                 <div className="p-4 rounded-lg bg-secondary/30 border border-border">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Staff Member
+                    Employée
                   </p>
                   <div className="flex items-center gap-2">
                     <Avatar className="w-6 h-6">
@@ -108,7 +108,7 @@ export function SaleDetailsDrawer({
               {/* Items */}
               <div>
                 <p className="text-sm font-medium text-foreground mb-3">
-                  Items
+                  Articles
                 </p>
                 <div className="space-y-2">
                   {drinks.slice(0, 2).map((drink) => (
@@ -120,7 +120,7 @@ export function SaleDetailsDrawer({
                         <p className="text-sm font-medium text-foreground">
                           {drink.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">Qty: 1</p>
+                        <p className="text-xs text-muted-foreground">Qté: 1</p>
                       </div>
                       <span className="font-semibold text-gold">
                         {(
@@ -140,7 +140,7 @@ export function SaleDetailsDrawer({
               {/* Totals */}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">Sous-total</span>
                   <span className="text-foreground">
                     {(
                       (sale.total_amount ?? sale.total_price ?? 0) as number
@@ -149,7 +149,7 @@ export function SaleDetailsDrawer({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Payment Method</span>
+                  <span className="text-muted-foreground">Moyen de paiement</span>
                   <Badge variant="secondary" className="bg-secondary/50">
                     {(() => {
                       const paymentMethod = (sale.payment_method ??

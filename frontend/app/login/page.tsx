@@ -71,7 +71,7 @@ export default function LoginPage() {
               Chez l&apos;Impératrice
             </h1>
             <p className="text-muted-foreground text-sm">
-              Premium Bar Management System
+              Système de gestion de bar premium
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="text-sm font-medium text-foreground"
               >
-                Email Address
+                Email
               </Label>
               <Input
                 id="email"
@@ -100,13 +100,13 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="text-sm font-medium text-foreground"
               >
-                Password
+                Mot de passe
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Entrer votre mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 bg-secondary/50 border-border focus:border-gold focus:ring-gold/30 pr-12"
@@ -132,13 +132,13 @@ export default function LoginPage() {
                   type="checkbox"
                   className="w-4 h-4 rounded border-border bg-secondary/50 checked:bg-gold checked:border-gold focus:ring-gold/30"
                 />
-                Remember me
+                Se souvenir de moi
               </label>
               <button
                 type="button"
                 className="text-gold hover:text-gold-light transition-colors"
               >
-                Forgot password?
+                Oublié le mot de passe ?
               </button>
             </div>
 
@@ -150,10 +150,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Signing in...
+                  Connexion...
                 </>
               ) : (
-                "Sign In"
+                "Se connecter"
               )}
             </Button>
           </form>
@@ -162,13 +162,13 @@ export default function LoginPage() {
           <div className="px-8 pb-8">
             <div className="bg-gold/10 border border-gold/20 rounded-lg p-4 text-center">
               <p className="text-xs text-muted-foreground mb-1">
-                Backend access
+                Accès aux données
               </p>
               <p className="text-sm text-foreground font-medium">
-                Use your Django account credentials
+                Utilisez vos identifiants de compte
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Email or username supported
+                Email ou nom d'utilisateur supporté
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-muted-foreground text-xs mt-6">
-          © 2024 Chez l&apos;Impératrice. All rights reserved.
+          © 2026 Chez l&apos;Impératrice. Tous droits réservés.
         </p>
       </div>
     </div>

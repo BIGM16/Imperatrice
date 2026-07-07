@@ -63,10 +63,10 @@ export function FinancialOverviewCharts({
       <Card className="bg-card border-border card-hover">
         <CardHeader>
           <CardTitle className="text-foreground">
-            Expenses by Category
+            Dépenses par catégorie
           </CardTitle>
           <CardDescription>
-            Distribution of expenses this month
+            Répartition des dépenses ce mois-ci
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,7 +105,7 @@ export function FinancialOverviewCharts({
                     {category.name}
                   </span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    €{category.value.toLocaleString()}
+                    F.C.{category.value.toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -118,9 +118,9 @@ export function FinancialOverviewCharts({
       <Card className="bg-card border-border card-hover">
         <CardHeader>
           <CardTitle className="text-foreground">
-            Financial Overview
+            Aperçu financier
           </CardTitle>
-          <CardDescription>Key financial metrics</CardDescription>
+          <CardDescription>Indicateurs financiers clés</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -128,47 +128,47 @@ export function FinancialOverviewCharts({
               <div className="flex items-center gap-2 mb-2">
                 <CreditCard className="w-4 h-4 text-gold" />
                 <span className="text-sm text-muted-foreground">
-                  Card Sales
+                  Vente par carte
                 </span>
               </div>
               <p className="text-xl font-bold text-foreground">
-                €{(totalRevenue * 0.65).toLocaleString()}
+                F.C.{(totalRevenue * 0.65).toLocaleString()}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                65% of transactions
+                65% des transactions
               </p>
             </div>
             <div className="p-4 rounded-lg bg-secondary/30 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-4 h-4 text-gold" />
                 <span className="text-sm text-muted-foreground">
-                  Cash Sales
+                  Vente en espèce
                 </span>
               </div>
               <p className="text-xl font-bold text-foreground">
-                €{(totalRevenue * 0.28).toLocaleString()}
+                F.C.{(totalRevenue * 0.28).toLocaleString()}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                28% of transactions
+                28% des transactions
               </p>
             </div>
             <div className="p-4 rounded-lg bg-secondary/30 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-4 h-4 text-gold" />
                 <span className="text-sm text-muted-foreground">
-                  Avg. Transaction
+                  Transaction moyenne
                 </span>
               </div>
-              <p className="text-xl font-bold text-foreground">€156</p>
+              <p className="text-xl font-bold text-foreground">F.C.156</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Per sale
+                Par vente
               </p>
             </div>
             <div className="p-4 rounded-lg bg-secondary/30 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-gold" />
                 <span className="text-sm text-muted-foreground">
-                  This Month
+                  Ce mois
                 </span>
               </div>
               <p className="text-xl font-bold text-foreground">
@@ -181,7 +181,7 @@ export function FinancialOverviewCharts({
                 }
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Sales recorded
+                Ventes enregistrées
               </p>
             </div>
           </div>

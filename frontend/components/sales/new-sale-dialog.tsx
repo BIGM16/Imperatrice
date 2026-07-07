@@ -75,7 +75,7 @@ export function NewSaleDialog({
 
   const handleCreateSale = async () => {
     if (selectedDrinks.length === 0) {
-      toast.error("Please add at least one drink to the sale");
+      toast.error("Veillez ajouter au moins une boisson à la vente");
       return;
     }
     try {
@@ -94,21 +94,21 @@ export function NewSaleDialog({
       <DialogTrigger asChild>
         <Button className="bg-gold hover:bg-gold-light text-pitch font-semibold">
           <Plus className="w-4 h-4 mr-2" />
-          New Sale
+          Nouvelle vente
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Create New Sale</DialogTitle>
+          <DialogTitle className="text-foreground">Nouvelle vente</DialogTitle>
           <DialogDescription>
-            Add drinks to the order and complete the transaction
+            Ajoutez des boissons à la commande et finalisez la transaction
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid md:grid-cols-2 gap-6 py-4">
           {/* Drink selection */}
           <div className="space-y-4">
-            <Label className="text-foreground font-medium">Select Drinks</Label>
+            <Label className="text-foreground font-medium">Selectionnez les boissons</Label>
             <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-2">
                 {(Array.isArray(drinks) ? drinks : []).map((drink) => (
@@ -130,7 +130,7 @@ export function NewSaleDialog({
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {(drink.stock ?? 0).toLocaleString()}{" "}
-                        {drink.stock === 1 ? "bouteille" : "bouteilles"} in stock
+                        {drink.stock === 1 ? "bouteille" : "bouteilles"} en stock
                       </p>
                     </div>
                     <Button
@@ -149,12 +149,12 @@ export function NewSaleDialog({
 
           {/* Cart */}
           <div className="space-y-4">
-            <Label className="text-foreground font-medium">Order Summary</Label>
+            <Label className="text-foreground font-medium">Résumé de la commande</Label>
             <ScrollArea className="h-[250px] pr-4">
               {selectedDrinks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                   <ShoppingCart className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">No drinks added yet</p>
+                  <p className="text-sm">Aucune boisson ajoutée</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -236,13 +236,13 @@ export function NewSaleDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Annuler
           </Button>
           <Button
             onClick={handleCreateSale}
             className="bg-gold hover:bg-gold-light text-pitch font-semibold"
           >
-            Complete Sale
+            Finaliser la vente
           </Button>
         </DialogFooter>
       </DialogContent>

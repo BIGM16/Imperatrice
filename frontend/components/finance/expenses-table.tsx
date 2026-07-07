@@ -89,7 +89,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
   return (
     <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-foreground">Expense History</CardTitle>
+        <CardTitle className="text-foreground">Historique des dépenses</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Filters */}
@@ -98,7 +98,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search expenses..."
+              placeholder="Rechercher une dépense..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
@@ -109,10 +109,10 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
             onValueChange={setCategoryFilter}
           >
             <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder="Catégorie" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">Toutes les catégories</SelectItem>
               {expenseCategories.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
                   {cat.value}
@@ -122,13 +122,13 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
           </Select>
           <Select value={dateFilter} onValueChange={setDateFilter}>
             <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
-              <SelectValue placeholder="Date range" />
+              <SelectValue placeholder="Période" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="all">Toutes les périodes</SelectItem>
+              <SelectItem value="today">Aujourd'hui</SelectItem>
+              <SelectItem value="week">Cette semaine</SelectItem>
+              <SelectItem value="month">Ce mois-ci</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -142,16 +142,16 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
                   Description
                 </TableHead>
                 <TableHead className="text-muted-foreground font-medium">
-                  Category
+                  Catégorie
                 </TableHead>
                 <TableHead className="text-muted-foreground font-medium">
                   Date
                 </TableHead>
                 <TableHead className="text-muted-foreground font-medium">
-                  Recorded By
+                  Enregistré par
                 </TableHead>
                 <TableHead className="text-right text-muted-foreground font-medium">
-                  Amount
+                  Montant
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -181,7 +181,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
                         <div>
                           <p className="font-medium text-foreground">
                             {expense.motif || expense.description ||
-                              `${expense.category} expense`}
+                              `${expense.category} dépense`}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             #{expense.id}
@@ -191,7 +191,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="bg-secondary/50">
-                        {expense.category || "Uncategorized"}
+                        {expense.category || "Non-catégorisé"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -233,12 +233,12 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredExpenses.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
+            Affichage de {filteredExpenses.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} à{" "}
             {Math.min(
               currentPage * itemsPerPage,
               filteredExpenses.length,
             )}{" "}
-            of {filteredExpenses.length} expenses
+            de {filteredExpenses.length} dépenses
           </p>
           <div className="flex gap-2">
             <Button
@@ -247,7 +247,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
               disabled={currentPage === 1 || filteredExpenses.length === 0}
               onClick={() => setCurrentPage(currentPage - 1)}
             >
-              Previous
+              Précédent
             </Button>
             <Button
               variant="outline"
@@ -255,7 +255,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(currentPage + 1)}
             >
-              Next
+              Suivant
             </Button>
           </div>
         </div>

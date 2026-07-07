@@ -227,26 +227,26 @@ export default function InventoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-playfair font-bold text-foreground">
-              Inventory Management
+              Gestion des stocks
             </h1>
             <p className="text-muted-foreground mt-1">
-              Manage drinks and track stock levels
+              Gérer les boissons et suivre les niveaux de stock
             </p>
           </div>
           <Dialog open={showAddDrink} onOpenChange={setShowAddDrink}>
             <DialogTrigger asChild>
               <Button className="bg-gold hover:bg-gold-light text-pitch font-semibold">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Drink
+                Ajouter une boisson
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md bg-card border-border">
               <DialogHeader>
                 <DialogTitle className="text-foreground">
-                  Add New Drink
+                  Nouvelle boisson
                 </DialogTitle>
                 <DialogDescription>
-                  Enter the details for the new drink
+                  Entrer les détails de la nouvelle boisson
                 </DialogDescription>
               </DialogHeader>
 
@@ -351,14 +351,14 @@ export default function InventoryPage() {
                   variant="outline"
                   onClick={() => setShowAddDrink(false)}
                 >
-                  Cancel
+                  Annuler
                 </Button>
                 <Button
                   onClick={handleAddDrink}
                   disabled={isSubmitting}
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
                 >
-                  {isSubmitting ? "Ajout..." : "Add Drink"}
+                  {isSubmitting ? "Ajout..." : "Ajouter boisson"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -371,7 +371,9 @@ export default function InventoryPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Items</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Articles
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
                     {drinks.length}
                   </p>
@@ -407,7 +409,7 @@ export default function InventoryPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Low Stock</p>
+                  <p className="text-sm text-muted-foreground">Stock Faible</p>
                   <p className="text-2xl font-bold text-amber-500">
                     {
                       drinks.filter((d) => {
@@ -455,7 +457,7 @@ export default function InventoryPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search drinks..."
+                  placeholder="Recherche boisson..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10 bg-secondary/50 border-border focus:border-gold"
@@ -466,7 +468,7 @@ export default function InventoryPage() {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">Toutes les categories</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -479,10 +481,10 @@ export default function InventoryPage() {
                   <SelectValue placeholder="Stock status" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="ok">In Stock</SelectItem>
-                  <SelectItem value="low">Low Stock</SelectItem>
-                  <SelectItem value="out">Out of Stock</SelectItem>
+                  <SelectItem value="all">Tous Status</SelectItem>
+                  <SelectItem value="ok">En Stock</SelectItem>
+                  <SelectItem value="low">Stock Faible</SelectItem>
+                  <SelectItem value="out">Stock vide</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex gap-1">
@@ -558,7 +560,8 @@ export default function InventoryPage() {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Stock</span>
                           <span className="font-medium text-foreground">
-                            {drink.stock_quantity ?? drink.stock ?? 0} units
+                            {drink.stock_quantity ?? drink.stock ?? 0}{" "}
+                            bouteilles
                           </span>
                         </div>
                         <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
@@ -577,7 +580,7 @@ export default function InventoryPage() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Min: {drink.min_stock ?? 0} units
+                          Min: {drink.min_stock ?? 0} bouteilles
                         </p>
                       </div>
 
@@ -589,7 +592,7 @@ export default function InventoryPage() {
                           className="flex-1 border-border hover:border-gold/30"
                           onClick={() => setUpdatingStock(drink)}
                         >
-                          Update Stock
+                          Mis à jour Stock
                         </Button>
                         <Button
                           variant="ghost"
@@ -652,7 +655,7 @@ export default function InventoryPage() {
                             size="sm"
                             onClick={() => setUpdatingStock(drink)}
                           >
-                            Update
+                            Mis à jour
                           </Button>
                           <Button
                             variant="ghost"
@@ -679,7 +682,7 @@ export default function InventoryPage() {
           <DialogContent className="max-w-md bg-card border-border">
             <DialogHeader>
               <DialogTitle className="text-foreground">
-                Update Stock
+                Mettre à jour le stock
               </DialogTitle>
               <DialogDescription>{updatingStock?.name}</DialogDescription>
             </DialogHeader>
@@ -687,7 +690,7 @@ export default function InventoryPage() {
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border">
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Current Stock</p>
+                  <p className="text-xs text-muted-foreground">Stock courant</p>
                   <p className="text-2xl font-bold text-foreground">
                     {updatingStock
                       ? (updatingStock.stock_quantity ??
@@ -697,7 +700,7 @@ export default function InventoryPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Min Level</p>
+                  <p className="text-xs text-muted-foreground">Stock min</p>
                   <p className="text-lg font-semibold text-muted-foreground">
                     {updatingStock?.min_stock ?? 0}
                   </p>
@@ -706,7 +709,7 @@ export default function InventoryPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="new-stock" className="text-foreground">
-                  New Stock Quantity
+                  Nouveau Stock
                 </Label>
                 <Input
                   id="new-stock"
@@ -739,7 +742,7 @@ export default function InventoryPage() {
                   }}
                 >
                   <ArrowUp className="w-4 h-4 mr-2" />
-                  Add 10
+                  Ajout 10
                 </Button>
                 <Button
                   variant="outline"
@@ -759,21 +762,21 @@ export default function InventoryPage() {
                   }}
                 >
                   <ArrowDown className="w-4 h-4 mr-2" />
-                  Remove 10
+                  Retrancher 10
                 </Button>
               </div>
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setUpdatingStock(null)}>
-                Cancel
+                Annuler
               </Button>
               <Button
                 onClick={handleUpdateStock}
                 disabled={isSubmitting}
                 className="bg-gold hover:bg-gold-light text-pitch font-semibold"
               >
-                {isSubmitting ? "Mise à jour..." : "Update Stock"}
+                {isSubmitting ? "Mise à jour..." : "Mettre à jour"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -839,16 +842,14 @@ export default function InventoryPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-min-stock" className="text-foreground">
-                    Stock minimal (FC)
+                    Stock minimal
                   </Label>
                   <Input
                     id="edit-min-stock"
                     ref={editMinStockRef}
                     type="number"
                     step="0.01"
-                    defaultValue={
-                      editingDrink?.min_stock ?? 0
-                    }
+                    defaultValue={editingDrink?.min_stock ?? 0}
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
@@ -857,14 +858,14 @@ export default function InventoryPage() {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingDrink(null)}>
-                Cancel
+                Annuler
               </Button>
               <Button
                 onClick={handleEditDrink}
                 disabled={isSubmitting}
                 className="bg-gold hover:bg-gold-light text-pitch font-semibold"
               >
-                {isSubmitting ? "Sauvegarde..." : "Save Changes"}
+                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
               </Button>
             </DialogFooter>
           </DialogContent>

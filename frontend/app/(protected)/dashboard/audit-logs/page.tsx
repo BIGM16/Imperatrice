@@ -138,15 +138,15 @@ export default function AuditLogsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-playfair font-bold text-foreground">
-                Audit Logs
+                Journal d&apos;activités
               </h1>
               <p className="text-muted-foreground mt-1">
-                Track all system activities and changes
+                Suivre toutes les activités et modifications du système
               </p>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Shield className="w-4 h-4" />
-              <span>{filteredLogs.length} log entries</span>
+              <span>{filteredLogs.length} entrées de journal</span>
             </div>
           </div>
 
@@ -158,7 +158,7 @@ export default function AuditLogsPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="search"
-                    placeholder="Search logs by action, entity, or user..."
+                    placeholder="Rechercher par action, entité ou utilisateur..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-10 bg-secondary/50 border-border focus:border-gold"
@@ -166,25 +166,25 @@ export default function AuditLogsPage() {
                 </div>
                 <Select value={actionFilter} onValueChange={setActionFilter}>
                   <SelectTrigger className="w-full sm:w-[160px] bg-secondary/50 border-border">
-                    <SelectValue placeholder="Action type" />
+                    <SelectValue placeholder="Type d&apos;action" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="all">All Actions</SelectItem>
-                    <SelectItem value="CREATE">Create</SelectItem>
-                    <SelectItem value="UPDATE">Update</SelectItem>
-                    <SelectItem value="DELETE">Delete</SelectItem>
+                    <SelectItem value="all">Toutes les actions</SelectItem>
+                    <SelectItem value="CREATE">Créer</SelectItem>
+                    <SelectItem value="UPDATE">Mettre à jour</SelectItem>
+                    <SelectItem value="DELETE">Supprimer</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={entityFilter} onValueChange={setEntityFilter}>
                   <SelectTrigger className="w-full sm:w-[160px] bg-secondary/50 border-border">
-                    <SelectValue placeholder="Entity type" />
+                    <SelectValue placeholder="Type d'entité" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="all">All Entities</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="drink">Drink</SelectItem>
-                    <SelectItem value="sale">Sale</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="all">Toutes les entités</SelectItem>
+                    <SelectItem value="user">Utilisateur</SelectItem>
+                    <SelectItem value="drink">Boisson</SelectItem>
+                    <SelectItem value="sale">Vente</SelectItem>
+                    <SelectItem value="expense">Dépense</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -195,7 +195,7 @@ export default function AuditLogsPage() {
           <Card className="bg-card border-border">
             <CardHeader className="pb-0">
               <CardTitle className="text-foreground text-lg">
-                Activity Timeline
+                Journal d&apos;activité
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -211,7 +211,7 @@ export default function AuditLogsPage() {
                         {format(new Date(date), "EEEE, MMMM d, yyyy")}
                       </span>
                       <Badge variant="secondary" className="bg-secondary/50">
-                        {logs.length} events
+                        {logs.length} événements
                       </Badge>
                     </div>
 
@@ -348,9 +348,9 @@ export default function AuditLogsPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of{" "}
-                  {filteredLogs.length} logs
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
+                  {Math.min(currentPage * itemsPerPage, filteredLogs.length)} sur{" "}
+                  {filteredLogs.length} entrées
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -359,7 +359,7 @@ export default function AuditLogsPage() {
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(currentPage - 1)}
                   >
-                    Previous
+                    Précédent
                   </Button>
                   <Button
                     variant="outline"
@@ -367,7 +367,7 @@ export default function AuditLogsPage() {
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(currentPage + 1)}
                   >
-                    Next
+                    Suivant
                   </Button>
                 </div>
               </div>

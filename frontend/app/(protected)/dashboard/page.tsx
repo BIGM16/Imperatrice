@@ -72,8 +72,7 @@ export default function DashboardPage() {
               Dashboard
             </h1>
             <p className="text-muted-foreground mt-1">
-              Welcome back! Here&apos;s what&apos;s happening at Chez
-              l&apos;Impératrice today.
+              Bon retour! Voici ce qui se passe chez l&apos;Impératrice aujourd&apos;hui.
             </p>
           </div>
           <Link href="/dashboard/sales">
@@ -128,7 +127,7 @@ export default function DashboardPage() {
             isLoading={isLoading}
           />
           <StatCard
-            title="Sales Count"
+            title="Ventes d'aujourd'hui"
             value={(stats?.salesCount ?? 0).toString()}
             description="transactions"
             icon={ShoppingCart}

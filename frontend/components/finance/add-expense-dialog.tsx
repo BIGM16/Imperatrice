@@ -89,16 +89,16 @@ export function AddExpenseDialog({
       <DialogTrigger asChild>
         <Button className="bg-gold hover:bg-gold-light text-pitch font-semibold">
           <Plus className="w-4 h-4 mr-2" />
-          Add Expense
+          Ajouter une dépense
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            Add New Expense
+            Ajouter une dépense
           </DialogTitle>
           <DialogDescription>
-            Record a new expense entry
+            Enregistrer une nouvelle dépense
           </DialogDescription>
         </DialogHeader>
 
@@ -179,14 +179,14 @@ export function AddExpenseDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            Annuler
           </Button>
           <Button
             onClick={handleAddExpense}
             disabled={isSubmitting}
             className="bg-gold hover:bg-gold-light text-pitch font-semibold"
           >
-            {isSubmitting ? "Enregistrement..." : "Save Expense"}
+            {isSubmitting ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </DialogFooter>
       </DialogContent>

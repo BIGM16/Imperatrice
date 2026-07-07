@@ -86,10 +86,10 @@ export default function SettingsPage() {
         {/* Page header */}
         <div>
           <h1 className="text-3xl font-playfair font-bold text-foreground">
-            Settings
+            Paramètres
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage your account and application preferences
+            Gérer vos préférences de compte et d&apos;application
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default function SettingsPage() {
               className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
             >
               <User className="w-4 h-4 mr-2" />
-              Profile
+              Profil
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
@@ -114,14 +114,14 @@ export default function SettingsPage() {
               className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
             >
               <Shield className="w-4 h-4 mr-2" />
-              Security
+              Sécurité
             </TabsTrigger>
             <TabsTrigger
               value="appearance"
               className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
             >
               <Palette className="w-4 h-4 mr-2" />
-              Appearance
+              Apparence
             </TabsTrigger>
           </TabsList>
 
@@ -130,10 +130,10 @@ export default function SettingsPage() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">
-                  Profile Information
+                  Information sur le profil
                 </CardTitle>
                 <CardDescription>
-                  Update your personal information
+                  Mettre à jour vos informations personnelles
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      {user?.full_name || user?.email || "User"}
+                      {user?.full_name || user?.email || "Utilisateur"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {user?.email}
@@ -173,7 +173,7 @@ export default function SettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-foreground">
-                      First Name
+                      Prénom
                     </Label>
                     <Input
                       id="firstName"
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-foreground">
-                      Last Name
+                      Nom
                     </Label>
                     <Input
                       id="lastName"
@@ -197,7 +197,7 @@ export default function SettingsPage() {
                       className="text-foreground flex items-center gap-2"
                     >
                       <Mail className="w-4 h-4" />
-                      Email Address
+                      Adresse email
                     </Label>
                     <Input
                       id="email"
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-foreground">
-                      Phone Number
+                      Numéro de téléphone
                     </Label>
                     <Input
                       id="phone"
@@ -225,7 +225,7 @@ export default function SettingsPage() {
                   </Label>
                   <Textarea
                     id="bio"
-                    placeholder="A brief description about yourself..."
+                    placeholder="Une brève description de vous..."
                     className="bg-secondary/50 border-border focus:border-gold resize-none"
                     rows={4}
                   />
@@ -236,7 +236,7 @@ export default function SettingsPage() {
                   onClick={() => toast.success("Profile updated successfully")}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  Enregistrer les modifications
                 </Button>
               </CardContent>
             </Card>
@@ -244,9 +244,9 @@ export default function SettingsPage() {
             {/* Team Members */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-foreground">Team Members</CardTitle>
+                <CardTitle className="text-foreground">Membres de l&apos;équipe</CardTitle>
                 <CardDescription>
-                  Manage your team&apos;s access and roles
+                  Gérer l&apos;accès et les rôles de votre équipe
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -314,10 +314,10 @@ export default function SettingsPage() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">
-                  Notification Preferences
+                  Préférences de notification
                 </CardTitle>
                 <CardDescription>
-                  Customize how you receive notifications
+                  Personnaliser la façon dont vous recevez les notifications
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -325,10 +325,10 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-foreground">
-                        Email Notifications
+                        Notifications par email
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Receive updates via email
+                        Recevoir des mises à jour par email
                       </p>
                     </div>
                     <Switch
@@ -344,10 +344,10 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-foreground">
-                        Push Notifications
+                        Notifications Push
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Receive in-app notifications
+                        Recevoir des notifications dans l&apos;application
                       </p>
                     </div>
                     <Switch
@@ -363,10 +363,10 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-foreground">
-                        Low Stock Alerts
+                        Alerte de stock bas
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Get notified when items are low on stock
+                        Être notifié lorsque les stocks sont bas
                       </p>
                     </div>
                     <Switch
@@ -385,10 +385,10 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-foreground">
-                        New Sales Notifications
+                        Notifications de nouvelles ventes
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Get notified for each new sale
+                        Être notifié pour chaque nouvelle vente
                       </p>
                     </div>
                     <Switch
@@ -407,10 +407,10 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-foreground">
-                        Daily Report Summary
+                        Résumé du rapport quotidien
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Receive daily summary reports
+                        Recevoir les résumés des rapports quotidiens
                       </p>
                     </div>
                     <Switch
@@ -433,9 +433,9 @@ export default function SettingsPage() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">
-                  Change Password
+                  Changer le mot de passe
                 </CardTitle>
-                <CardDescription>Update your account password</CardDescription>
+                <CardDescription>Mettre à jour le mot de passe de votre compte</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                     className="text-foreground flex items-center gap-2"
                   >
                     <Lock className="w-4 h-4" />
-                    Current Password
+                    Mot de passe actuel
                   </Label>
                   <Input
                     id="currentPassword"
@@ -454,7 +454,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newPassword" className="text-foreground">
-                    New Password
+                    Nouveau mot de passe
                   </Label>
                   <Input
                     id="newPassword"
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-foreground">
-                    Confirm New Password
+                    Confirmer le nouveau mot de passe
                   </Label>
                   <Input
                     id="confirmPassword"
@@ -474,9 +474,9 @@ export default function SettingsPage() {
                 </div>
                 <Button
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-                  onClick={() => toast.success("Password updated successfully")}
+                  onClick={() => toast.success("Mot de passe mis à jour avec succès")}
                 >
-                  Update Password
+                  Mettre à jour le mot de passe
                 </Button>
               </CardContent>
             </Card>
@@ -484,38 +484,37 @@ export default function SettingsPage() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">
-                  Two-Factor Authentication
+                  Authentification à deux facteurs
                 </CardTitle>
                 <CardDescription>
-                  Add an extra layer of security
+                  Ajouter une couche de sécurité supplémentaire
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Two-factor authentication adds an additional layer of security
-                  to your account by requiring more than just a password to sign
-                  in.
+                  L&apos;authentification à deux facteurs ajoute une couche de sécurité supplémentaire
+                  à votre compte en exigeant plus qu&apos;un mot de passe pour vous connecter.
                 </p>
                 <Button variant="outline" className="border-border">
                   <Shield className="w-4 h-4 mr-2" />
-                  Enable 2FA
+                  Activer l&apos;authentification à deux facteurs
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="bg-red-500/10 border-red-500/30">
               <CardHeader>
-                <CardTitle className="text-red-400">Danger Zone</CardTitle>
-                <CardDescription>Irreversible actions</CardDescription>
+                <CardTitle className="text-red-400">Zone de danger</CardTitle>
+                <CardDescription>Actions irréversibles</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
                   variant="destructive"
                   onClick={() =>
-                    toast.error("This action requires confirmation")
+                    toast.error("Cette action nécessite confirmation")
                   }
                 >
-                  Delete Account
+                  Supprimer le compte
                 </Button>
               </CardContent>
             </Card>
@@ -526,30 +525,30 @@ export default function SettingsPage() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">
-                  Theme Settings
+                  Paramètres d'apparence
                 </CardTitle>
                 <CardDescription>
-                  Customize the application appearance
+                  Personnaliser l'apparence de l'application
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
                   <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center">
                     <div className="w-12 h-12 mx-auto rounded-lg bg-pitch mb-2" />
-                    <p className="text-sm font-medium text-foreground">Dark</p>
-                    <p className="text-xs text-muted-foreground">Default</p>
+                    <p className="text-sm font-medium text-foreground">Sombre</p>
+                    <p className="text-xs text-muted-foreground">Par défaut</p>
                   </button>
                   <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center opacity-50 cursor-not-allowed">
                     <div className="w-12 h-12 mx-auto rounded-lg bg-white mb-2" />
-                    <p className="text-sm font-medium text-foreground">Light</p>
-                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                    <p className="text-sm font-medium text-foreground">Clair</p>
+                    <p className="text-xs text-muted-foreground">Bientôt disponible</p>
                   </button>
                   <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center opacity-50 cursor-not-allowed">
                     <div className="w-12 h-12 mx-auto rounded-lg bg-gradient-to-br from-pitch to-white mb-2" />
                     <p className="text-sm font-medium text-foreground">
-                      System
+                      Système
                     </p>
-                    <p className="text-xs text-muted-foreground">Coming soon</p>
+                    <p className="text-xs text-muted-foreground">Bientôt disponible</p>
                   </button>
                 </div>
 
@@ -558,15 +557,15 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">Language</p>
+                      <p className="font-medium text-foreground">Langue</p>
                       <p className="text-sm text-muted-foreground">
-                        Select your preferred language
+                        Choisissez votre langue préférée
                       </p>
                     </div>
                     <Select defaultValue="en">
                       <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
                         <Globe className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="Language" />
+                        <SelectValue placeholder="Langue" />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
                         <SelectItem value="en">English</SelectItem>
@@ -581,14 +580,14 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">Timezone</p>
+                      <p className="font-medium text-foreground">Fuseau horaire</p>
                       <p className="text-sm text-muted-foreground">
-                        Set your local timezone
+                        Définissez votre fuseau horaire local
                       </p>
                     </div>
                     <Select defaultValue="europe">
                       <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
-                        <SelectValue placeholder="Timezone" />
+                        <SelectValue placeholder="Fuseau horaire" />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
                         <SelectItem value="europe">Europe/Paris</SelectItem>

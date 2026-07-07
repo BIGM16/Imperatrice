@@ -59,10 +59,10 @@ export default function FinancePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-playfair font-bold text-foreground">
-                Finance Management
+                Gestion financière
               </h1>
               <p className="text-muted-foreground mt-1">
-                Track expenses and view financial reports
+                Suivre les dépenses et afficher les rapports financiers
               </p>
             </div>
             <AddExpenseDialog

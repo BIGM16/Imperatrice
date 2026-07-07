@@ -32,9 +32,9 @@ export function TopSellersTable({ data }: TopSellersTableProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-foreground">
-              Top Selling Drinks
+              Meilleur vente
             </CardTitle>
-            <CardDescription>Best performers this week</CardDescription>
+            <CardDescription>Meilleur performeur de la semaine</CardDescription>
           </div>
           <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-gold" />
@@ -46,10 +46,10 @@ export function TopSellersTable({ data }: TopSellersTableProps) {
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="text-muted-foreground font-medium">
-                Drink
+                Boisson
               </TableHead>
               <TableHead className="text-right text-muted-foreground font-medium">
-                Qty Sold
+                Quantité vendue
               </TableHead>
               <TableHead className="text-right text-muted-foreground font-medium">
                 Revenue
@@ -77,11 +77,11 @@ export function TopSellersTable({ data }: TopSellersTableProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="secondary" className="bg-secondary/50">
-                    {drink.quantity} units
+                    {drink.quantity} bouteilles
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-semibold text-gold">
-                  €{drink.revenue.toLocaleString()}
+                  F.C.{drink.revenue.toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}

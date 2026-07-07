@@ -34,7 +34,7 @@ export function FinancialSummaryCards({
               +18.2%
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
+          <p className="text-sm text-muted-foreground mb-1">Revenue Totale</p>
           <p className="text-3xl font-bold text-foreground">
             F.C.{totalRevenue.toLocaleString()}
           </p>

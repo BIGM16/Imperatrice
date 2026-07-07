@@ -35,7 +35,7 @@ const CustomTooltip = ({
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-sm text-gold font-semibold">
-          €{payload[0].value?.toLocaleString()}
+          F.C.{payload[0].value?.toLocaleString()}
         </p>
       </div>
     );
@@ -45,8 +45,8 @@ const CustomTooltip = ({
 
 export function SalesTrendChart({
   data,
-  title = "Sales Trend",
-  description = "Daily revenue for the past week",
+  title = "Tendance des ventes",
+  description = "Revenu quotidien pour la semaine écoulée",
 }: SalesTrendChartProps) {
   return (
     <Card className="bg-card border-border card-hover">
@@ -80,7 +80,7 @@ export function SalesTrendChart({
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `€${value}`}
+                tickFormatter={(value) => `F.C.${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area

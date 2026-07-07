@@ -50,7 +50,7 @@ export function SalesTable({
   return (
     <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-foreground">Recent Sales</CardTitle>
+        <CardTitle className="text-foreground">Ventes récentes</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -64,13 +64,13 @@ export function SalesTable({
                   Date
                 </TableHead>
                 <TableHead className="text-muted-foreground font-medium">
-                  Customer
+                  Client
                 </TableHead>
                 <TableHead className="text-muted-foreground font-medium">
-                  Payment
+                  Paiement
                 </TableHead>
                 <TableHead className="text-right text-muted-foreground font-medium">
-                  Amount
+                  Montant
                 </TableHead>
                 <TableHead className="text-right text-muted-foreground font-medium">
                   Actions
@@ -186,9 +186,9 @@ export function SalesTable({
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
           <p className="text-sm text-muted-foreground">
-            Showing {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}{" "}
-            to {Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
-            {totalItems} sales
+            Affichage {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}{" "}
+            à {Math.min(currentPage * itemsPerPage, totalItems)} de{" "}
+            {totalItems} ventes
           </p>
           <div className="flex gap-2">
             <Button
@@ -197,7 +197,7 @@ export function SalesTable({
               disabled={currentPage === 1 || totalItems === 0}
               onClick={() => onPageChange(currentPage - 1)}
             >
-              Previous
+              Précédent
             </Button>
             <Button
               variant="outline"
@@ -205,7 +205,7 @@ export function SalesTable({
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => onPageChange(currentPage + 1)}
             >
-              Next
+              Suivant
             </Button>
           </div>
         </div>
