@@ -87,7 +87,7 @@ export function RevenueExpensesChart({
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `€${value}`}
+                tickFormatter={(value) => `F.C.${value}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar

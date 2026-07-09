@@ -63,7 +63,9 @@ class VentesParJourView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        sales_by_day_data = SalesByDayService.sales_by_day()
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        sales_by_day_data = SalesByDayService.sales_by_day(start_date, end_date)
         serializer = SalesByDaySerializer(sales_by_day_data, many=True)
         return Response(serializer.data)
 
@@ -72,6 +74,8 @@ class VentesParVendeurView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        sales_by_seller_data = SalesBySellerService.sales_by_seller()
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        sales_by_seller_data = SalesBySellerService.sales_by_seller(start_date, end_date)
         serializer = SalesBySellerSerializer(sales_by_seller_data, many=True)
         return Response(serializer.data)

@@ -105,7 +105,7 @@ export default function DashboardPage() {
           <StatCard
             title="Revenue du Jour"
             value={`${(stats?.revenueToday ?? 0).toLocaleString()} FC`}
-            description="marge du jour"
+            description="Chiffre d'affaire du jour"
             icon={TrendingUp}
             trend={{ value: 12.5, isPositive: true }}
             isLoading={isLoading}
@@ -113,15 +113,15 @@ export default function DashboardPage() {
           <StatCard
             title="Expenses du Jour"
             value={`${(stats?.expensesToday ?? 0).toLocaleString()} FC`}
-            description="fr"
+            description="Dépense du jour"
             icon={TrendingDown}
             trend={{ value: 3.2, isPositive: false }}
             isLoading={isLoading}
           />
           <StatCard
-            title="Net Profit"
+            title="Profit Net"
             value={`${(stats?.netProfit ?? 0).toLocaleString()} FC`}
-            description="marge du jour"
+            description="Profit net du jour"
             icon={DollarSign}
             trend={{ value: 8.1, isPositive: (stats?.netProfit ?? 0) > 0 }}
             isLoading={isLoading}

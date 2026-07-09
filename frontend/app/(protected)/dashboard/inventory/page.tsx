@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -520,8 +521,18 @@ export default function InventoryPage() {
                   className="bg-card border-border card-hover overflow-hidden"
                 >
                   {/* Image placeholder */}
-                  <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
-                    <Wine className="w-12 h-12 text-muted-foreground/30" />
+                  <div className="h-32 relative bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
+                    {drink.image_url ? (
+                      <Image
+                        src={drink.image_url}
+                        alt={drink.name}
+                        width={200}
+                        height={200}
+                        className="object-cover rounded-md"
+                      />
+                    ) : (
+                      <Wine className="w-12 h-12 text-muted-foreground/30" />
+                    )}
                   </div>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">

@@ -1,4 +1,4 @@
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, FloatField, ExpressionWrapper
 from django.utils import timezone
 from django.db.models.functions import TruncDate
 
@@ -10,31 +10,67 @@ from apps.inventory.models import Drink
 class DashboardService:
     @staticmethod
     def get_dashboard_stats():
+
         aujourd_hui = timezone.localdate()
         debut_mois = aujourd_hui.replace(day=1)
+
+        # Calcul propre du dernier jour du mois
         fin_mois = (debut_mois.replace(day=28) + timezone.timedelta(days=4)).replace(day=1) - timezone.timedelta(days=1)
 
+        # 1. Récupération des requêtes de base filtrées par date
         ventes_aujourd_hui = Sale.objects.filter(created_at__date=aujourd_hui)
         depenses_aujourd_hui = Depense.objects.filter(date=aujourd_hui)
         ventes_mois = Sale.objects.filter(created_at__date__range=(debut_mois, fin_mois))
         depenses_mois = Depense.objects.filter(date__range=(debut_mois, fin_mois))
 
+        # 2. Calculs pour AUJOURD'HUI
         chiffre_affaires_aujourd_hui = float(ventes_aujourd_hui.aggregate(total=Sum("total_price"))["total"] or 0)
         depenses_aujourd_hui_total = float(depenses_aujourd_hui.aggregate(total=Sum("montant"))["total"] or 0)
+
+        # Marge brute aujourd'hui = Somme de (quantité * (prix_vente - prix_achat))
+        marge_brute_aujourd_hui = float(
+            ventes_aujourd_hui.aggregate(
+                total_marge=Sum(
+                    F("quantity") * ExpressionWrapper(
+                        F("unit_price") - F("drink__price_purchase"), 
+                        output_field=FloatField()
+                    )
+                )
+            )["total_marge"] or 0
+        )
+        # Revenu net aujourd'hui = Marge brute - Dépenses du jour
+        revenu_net_aujourd_hui = marge_brute_aujourd_hui - depenses_aujourd_hui_total
+
+        # 3. Calculs pour LE MOIS
         chiffre_affaires_mensuel = float(ventes_mois.aggregate(total=Sum("total_price"))["total"] or 0)
         depenses_mensuelles = float(depenses_mois.aggregate(total=Sum("montant"))["total"] or 0)
+        
+        # Marge brute mensuelle
+        marge_brute_mensuelle = float(
+            ventes_mois.aggregate(
+                total_marge=Sum(
+                    F("quantity") * ExpressionWrapper(
+                        F("unit_price") - F("drink__price_purchase"), 
+                        output_field=FloatField()
+                    )
+                )
+            )["total_marge"] or 0
+        )
+        # Revenu net mensuel = Marge brute mensuelle - Dépenses mensuelles
+        revenu_net_mensuel = marge_brute_mensuelle - depenses_mensuelles
+
         total_boissons_vendues = int(ventes_mois.aggregate(total=Sum("quantity"))["total"] or 0)
 
         return {
             "chiffre_affaires_aujourd_hui": float(chiffre_affaires_aujourd_hui),
             "depenses_aujourd_hui": float(depenses_aujourd_hui_total),
-            "benefice_net_aujourd_hui": float(chiffre_affaires_aujourd_hui - depenses_aujourd_hui_total),
+            "benefice_net_aujourd_hui": float(revenu_net_aujourd_hui),
             "nombre_ventes_aujourd_hui": ventes_aujourd_hui.count(),
-            "boissons_en_faible_stock": Drink.objects.filter(stock__lte=10).count(),
+            "boissons_en_faible_stock": Drink.objects.filter(stock__lte=F("min_stock")).count(),
             "chiffre_affaires_mensuel": float(chiffre_affaires_mensuel),
             "depenses_mensuelles": float(depenses_mensuelles),
-            "benefice_net_mensuel": float(chiffre_affaires_mensuel - depenses_mensuelles),
-            "total_boissons_vendues": int(total_boissons_vendues),
+            "benefice_net_mensuel": float(revenu_net_mensuel),
+            "total_boissons_vendues": int(total_boissons_vendues)
         }
 
     @staticmethod
@@ -43,19 +79,27 @@ class DashboardService:
         debut_mois = aujourd_hui.replace(day=1)
         fin_mois = (debut_mois.replace(day=28) + timezone.timedelta(days=4)).replace(day=1) - timezone.timedelta(days=1)
 
+        # Optimisation : On génère les stats une seule fois
+        stats = DashboardService.get_dashboard_stats()
+
         return {
-            "statistiques": DashboardService.get_dashboard_stats(),
-            "rapport_financier": FinanceReportService.get_finance_report(debut_mois, fin_mois),
+            "statistiques": stats,
+            # On réutilise les calculs déjà faits au lieu de relancer des requêtes SQL lourdes
+            "rapport_financier": {
+                "chiffre_affaires": stats["chiffre_affaires_mensuel"],
+                "depenses": stats["depenses_mensuelles"],
+                "benefice_net": stats["benefice_net_mensuel"],
+            },
             "top_boissons": list(SalesReportService.top_drinks(debut_mois, fin_mois, limit=5)),
-            "ventes_par_jour": list(SalesByDayService.sales_by_day()),
-            "ventes_par_vendeur": list(SalesBySellerService.sales_by_seller()),
+            # Optimisation importante : On limite l'historique des graphiques au mois en cours
+            "ventes_par_jour": list(SalesByDayService.sales_by_day(debut_mois, fin_mois)),
+            "ventes_par_vendeur": list(SalesBySellerService.sales_by_seller(debut_mois, fin_mois)),
             "ventes_recentes": list(
                 Sale.objects.select_related("drink", "served_by")
                 .order_by("-created_at")[:10]
                 .values("id", "drink__name", "quantity", "total_price", "served_by__username", "created_at")
             ),
         }
-
 
 class FinanceReportService:
     @staticmethod
@@ -80,6 +124,13 @@ class SalesReportService:
                 quantite_vendue=Sum("quantity"),
                 nom_boisson=F("drink__name"),
                 chiffre_affaires=Sum("total_price"),
+                # Ajout de la marge générée par boisson pour le rapport du Top
+                marge_boisson=Sum(
+                    F("quantity") * ExpressionWrapper(
+                        F("unit_price") - F("drink__price_purchase"), 
+                        output_field=FloatField()
+                    )
+                )
             )
             .order_by("-quantite_vendue")[:limit]
         )
@@ -87,9 +138,10 @@ class SalesReportService:
 
 class SalesByDayService:
     @staticmethod
-    def sales_by_day():
+    def sales_by_day(start_date, end_date):
         return (
-            Sale.objects.annotate(jour=TruncDate("created_at"))
+            Sale.objects.filter(created_at__date__range=(start_date, end_date))
+            .annotate(jour=TruncDate("created_at"))
             .values("jour")
             .annotate(
                 chiffre_affaires=Sum("total_price"),
@@ -101,9 +153,9 @@ class SalesByDayService:
 
 class SalesBySellerService:
     @staticmethod
-    def sales_by_seller():
+    def sales_by_seller(start_date, end_date):
         return (
-            Sale.objects
+            Sale.objects.filter(created_at__date__range=(start_date, end_date))
             .values("served_by__id", "served_by__username")
             .annotate(
                 chiffre_affaires=Sum("total_price"),

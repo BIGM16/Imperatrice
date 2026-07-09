@@ -46,7 +46,7 @@ export default function FinancePage() {
     0,
   );
   const totalExpenses = expenses.reduce(
-    (sum, exp) => sum + (exp.amount || 0),
+    (sum, exp) => sum + ((exp as any).montant || exp.amount || 0),
     0,
   );
   const netProfit = totalRevenue - totalExpenses;

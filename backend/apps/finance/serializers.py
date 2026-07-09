@@ -18,5 +18,4 @@ class DepenseSerializer(serializers.ModelSerializer):
     def get_responsable_nom(self, obj):
         if obj.responsable is None:
             return None
-        # User Django utilise `username`
-        return getattr(obj.responsable, "username", None) or getattr(obj.responsable, "name", None)
+        return getattr(obj.responsable, "username", None) or getattr(obj.responsable, "name", None)
