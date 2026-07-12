@@ -81,7 +81,7 @@ class DrinkViewSet(
 
         action_type = request.data.get("action")
 
-        if action_type not in {"add", "remove"}:
+        if action_type not in {"add", "remove", "set"}:
             return Response(
                 {"success": False, "message": "Action invalide."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -89,7 +89,9 @@ class DrinkViewSet(
 
         try:
             quantity = int(request.data.get("quantity", 1))
-            if quantity <= 0:
+            if quantity < 0:
+                raise ValueError("La quantité ne peut pas être négative.")
+            if action_type in {"add", "remove"} and quantity == 0:
                 raise ValueError("La quantité doit être supérieure à 0.")
 
             drink = InventoryService.update_stock(

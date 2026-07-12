@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, FileText } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { Expense } from "@/types/finance";
 import { expenseCategories } from "./expense-categories";
 
@@ -42,28 +42,13 @@ interface ExpensesTableProps {
 export function ExpensesTable({ expenses }: ExpensesTableProps) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, categoryFilter, dateFilter]);
-
-  const filterByDate = (date: Date) => {
-    const now = new Date();
-    switch (dateFilter) {
-      case "today":
-        return date.toDateString() === now.toDateString();
-      case "week":
-        return date >= subDays(now, 7);
-      case "month":
-        return date >= subDays(now, 30);
-      default:
-        return true;
-    }
-  };
+  }, [search, categoryFilter]);
 
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch =
@@ -74,10 +59,7 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
       false;
     const matchesCategory =
       categoryFilter === "all" || expense.category === categoryFilter;
-    const matchesDate = filterByDate(
-      new Date(expense.created_at ?? Date.now()),
-    );
-    return matchesSearch && matchesCategory && matchesDate;
+    return matchesSearch && matchesCategory;
   });
 
   const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
@@ -118,17 +100,6 @@ export function ExpensesTable({ expenses }: ExpensesTableProps) {
                   {cat.value}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
-              <SelectValue placeholder="Période" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all">Toutes les périodes</SelectItem>
-              <SelectItem value="today">Aujourd'hui</SelectItem>
-              <SelectItem value="week">Cette semaine</SelectItem>
-              <SelectItem value="month">Ce mois-ci</SelectItem>
             </SelectContent>
           </Select>
         </div>

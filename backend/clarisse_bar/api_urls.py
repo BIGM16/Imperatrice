@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.accounts.serializers import EmailTokenObtainPairSerializer
+from apps.accounts.views import UserViewSet
 
 urlpatterns = [
 
@@ -35,6 +36,8 @@ urlpatterns = [
         TokenRefreshView.as_view(),
         name="token_refresh"
     ),
+    
+    path("users/", UserViewSet.as_view({"get": "list"}), name="users"),
     
     # Inclusion des URLs des différentes applications
     path("inventory/", include("apps.inventory.urls")),

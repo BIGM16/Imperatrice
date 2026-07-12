@@ -62,17 +62,20 @@ export default function InventoryPage() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addCategory, setAddCategory] = useState<string>("");
+  const [addImageUrl, setAddImageUrl] = useState<string>("");
+  const [editImageUrl, setEditImageUrl] = useState<string>("");
+  const [newStockValue, setNewStockValue] = useState<number>(0);
 
   // Refs pour les champs de formulaire
   const addNameRef = useRef<HTMLInputElement>(null);
   const addPriceRef = useRef<HTMLInputElement>(null);
   const addCostRef = useRef<HTMLInputElement>(null);
   const addStockRef = useRef<HTMLInputElement>(null);
+  const addMinStockRef = useRef<HTMLInputElement>(null);
   const editNameRef = useRef<HTMLInputElement>(null);
   const editPriceRef = useRef<HTMLInputElement>(null);
   const editCostRef = useRef<HTMLInputElement>(null);
   const editMinStockRef = useRef<HTMLInputElement>(null);
-  const newStockRef = useRef<HTMLInputElement>(null);
 
   const loadInventory = async () => {
     try {
@@ -102,7 +105,7 @@ export default function InventoryPage() {
     const price_sale = parseFloat(addPriceRef.current?.value || "0");
     const price_purchase = parseFloat(addCostRef.current?.value || "0");
     const stock = parseInt(addStockRef.current?.value || "0");
-    const min_stock = parseInt(newStockRef.current?.value || "0");
+    const min_stock = parseInt(addMinStockRef.current?.value || "0");
     if (!name) {
       toast.error("Le nom est requis");
       return;
@@ -116,9 +119,11 @@ export default function InventoryPage() {
         stock,
         min_stock,
         category_id: addCategory || undefined,
+        ...(addImageUrl ? { image_url: addImageUrl } : {}),
       });
       toast.success("Boisson ajoutée avec succès");
       setShowAddDrink(false);
+      setAddImageUrl("");
       await loadInventory();
     } catch {
       toast.error("Erreur lors de l'ajout de la boisson");
@@ -140,6 +145,7 @@ export default function InventoryPage() {
         price_sale,
         price_purchase,
         min_stock,
+        ...(editImageUrl !== "" ? { image_url: editImageUrl } : {}),
       });
       toast.success("Boisson modifiée avec succès");
       setEditingDrink(null);
@@ -153,10 +159,9 @@ export default function InventoryPage() {
 
   const handleUpdateStock = async () => {
     if (!updatingStock) return;
-    const newQty = parseInt(newStockRef.current?.value || "0");
     setIsSubmitting(true);
     try {
-      await inventoryService.updateDrinkStock(updatingStock.id, newQty, "set");
+      await inventoryService.updateDrinkStock(updatingStock.id, newStockValue, "set");
       toast.success("Stock mis à jour");
       setUpdatingStock(null);
       await loadInventory();
@@ -173,7 +178,9 @@ export default function InventoryPage() {
         .toLowerCase()
         .includes(search.toLowerCase());
       const matchesCategory =
-        categoryFilter === "all" || drink.category_id === categoryFilter;
+        categoryFilter === "all" ||
+        String(drink.category_id) === categoryFilter ||
+        String(drink.category?.id) === categoryFilter;
       const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
       const minStockLevel = drink.min_stock ?? 0;
       const matchesStock =
@@ -328,11 +335,24 @@ export default function InventoryPage() {
                     <Input
                       id="min_stock"
                       type="number"
-                      ref={newStockRef}
+                      ref={addMinStockRef}
                       placeholder="10"
                       className="bg-secondary/50 border-border focus:border-gold"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="add-image-url" className="text-foreground">
+                    URL de l&apos;image (optionnel)
+                  </Label>
+                  <Input
+                    id="add-image-url"
+                    type="url"
+                    value={addImageUrl}
+                    onChange={(e) => setAddImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="bg-secondary/50 border-border focus:border-gold"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-foreground">
@@ -601,14 +621,20 @@ export default function InventoryPage() {
                           variant="outline"
                           size="sm"
                           className="flex-1 border-border hover:border-gold/30"
-                          onClick={() => setUpdatingStock(drink)}
+                          onClick={() => {
+                            setUpdatingStock(drink);
+                            setNewStockValue(drink.stock_quantity ?? drink.stock ?? 0);
+                          }}
                         >
                           Mis à jour Stock
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditingDrink(drink)}
+                          onClick={() => {
+                            setEditingDrink(drink);
+                            setEditImageUrl(drink.image_url ?? "");
+                          }}
                         >
                           <Edit3 className="w-4 h-4" />
                         </Button>
@@ -664,14 +690,20 @@ export default function InventoryPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setUpdatingStock(drink)}
+                            onClick={() => {
+                              setUpdatingStock(drink);
+                              setNewStockValue(drink.stock_quantity ?? drink.stock ?? 0);
+                            }}
                           >
                             Mis à jour
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setEditingDrink(drink)}
+                            onClick={() => {
+                              setEditingDrink(drink);
+                              setEditImageUrl(drink.image_url ?? "");
+                            }}
                           >
                             <Edit3 className="w-4 h-4" />
                           </Button>
@@ -725,13 +757,8 @@ export default function InventoryPage() {
                 <Input
                   id="new-stock"
                   type="number"
-                  defaultValue={
-                    updatingStock
-                      ? (updatingStock.stock_quantity ??
-                        updatingStock.stock ??
-                        0)
-                      : 0
-                  }
+                  value={newStockValue}
+                  onChange={(e) => setNewStockValue(Math.max(0, parseInt(e.target.value) || 0))}
                   className="bg-secondary/50 border-border focus:border-gold"
                 />
               </div>
@@ -740,17 +767,7 @@ export default function InventoryPage() {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
-                    if (updatingStock) {
-                      setUpdatingStock({
-                        ...updatingStock,
-                        stock_quantity:
-                          (updatingStock.stock_quantity ??
-                            updatingStock.stock ??
-                            0) + 10,
-                      });
-                    }
-                  }}
+                  onClick={() => setNewStockValue((v) => v + 10)}
                 >
                   <ArrowUp className="w-4 h-4 mr-2" />
                   Ajout 10
@@ -758,19 +775,7 @@ export default function InventoryPage() {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
-                    if (updatingStock) {
-                      setUpdatingStock({
-                        ...updatingStock,
-                        stock_quantity: Math.max(
-                          0,
-                          (updatingStock.stock_quantity ??
-                            updatingStock.stock ??
-                            0) - 10,
-                        ),
-                      });
-                    }
-                  }}
+                  onClick={() => setNewStockValue((v) => Math.max(0, v - 10))}
                 >
                   <ArrowDown className="w-4 h-4 mr-2" />
                   Retrancher 10
@@ -864,6 +869,19 @@ export default function InventoryPage() {
                     className="bg-secondary/50 border-border focus:border-gold"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-image-url" className="text-foreground">
+                  URL de l&apos;image
+                </Label>
+                <Input
+                  id="edit-image-url"
+                  type="url"
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="bg-secondary/50 border-border focus:border-gold"
+                />
               </div>
             </div>
 

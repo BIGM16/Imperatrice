@@ -14,12 +14,14 @@ interface FinancialSummaryCardsProps {
   totalRevenue: number;
   totalExpenses: number;
   netProfit: number;
+  periodLabel?: string;
 }
 
 export function FinancialSummaryCards({
   totalRevenue,
   totalExpenses,
   netProfit,
+  periodLabel = "Ce mois",
 }: FinancialSummaryCardsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -38,7 +40,7 @@ export function FinancialSummaryCards({
           <p className="text-3xl font-bold text-foreground">
             F.C.{totalRevenue.toLocaleString()}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Ce mois</p>
+          <p className="text-xs text-muted-foreground mt-1">{periodLabel}</p>
         </CardContent>
       </Card>
 
@@ -57,7 +59,7 @@ export function FinancialSummaryCards({
           <p className="text-3xl font-bold text-foreground">
             F.C.{totalExpenses.toLocaleString()}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Ce mois</p>
+          <p className="text-xs text-muted-foreground mt-1">{periodLabel}</p>
         </CardContent>
       </Card>
 
@@ -100,7 +102,8 @@ export function FinancialSummaryCards({
                   <ArrowDownRight className="w-4 h-4" />
                   -8.3%
                 </>
-              )}
+              )
+            }
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-1"> Profit Net</p>
@@ -112,7 +115,7 @@ export function FinancialSummaryCards({
           >
             F.C.{netProfit.toLocaleString()}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Ce mois</p>
+          <p className="text-xs text-muted-foreground mt-1">{periodLabel}</p>
         </CardContent>
       </Card>
     </div>

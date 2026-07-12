@@ -5,6 +5,7 @@ import type {
   Personne,
   CreateDepensePayload,
 } from "@/types/finance";
+import type { User } from "@/types/auth";
 
 class financeService {
   async getDepenses(): Promise<Depense[]> {
@@ -39,7 +40,12 @@ class financeService {
     return response.data;
   }
 
-  async depenseToExpense(d: Depense): Promise<Expense> {
+  async getUsers(): Promise<User[]> {
+    const response = await api.get<User[]>("/users/");
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  depenseToExpense(d: Depense): Expense {
     return {
       id: String(d.id),
       category: "Dépense",
@@ -68,6 +74,7 @@ export const deleteDepense = (id: number) =>
 export const getPersonnes = () => financeServiceInstance.getPersonnes();
 export const createPersonne = (name: string) =>
   financeServiceInstance.createPersonne(name);
+export const getUsers = () => financeServiceInstance.getUsers();
 export const depenseToExpense = (d: Depense) =>
   financeServiceInstance.depenseToExpense(d);
 

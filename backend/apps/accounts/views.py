@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from .serializers import UserSerializer
 
@@ -64,3 +65,10 @@ class StatsView(APIView):
             "sales_count": total_today_sales_count,
             "drink_stats": list(stats)
         })
+
+
+class UserViewSet(ReadOnlyModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+

@@ -23,8 +23,8 @@ import {
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { createDepense, getPersonnes } from "@/services/finance";
-import { Personne } from "@/types/finance";
+import { createDepense, getUsers } from "@/services/finance";
+import { User } from "@/types/auth";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -38,13 +38,13 @@ export function AddExpenseDialog({
   onExpenseCreated,
 }: AddExpenseDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [personnes, setPersonnes] = useState<Personne[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedResponsable, setSelectedResponsable] = useState<string>("");
   const motifRef = useRef<HTMLInputElement>(null);
   const montantRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    getPersonnes().then(setPersonnes).catch(() => setPersonnes([]));
+    getUsers().then(setUsers).catch(() => setUsers([]));
   }, []);
 
   const handleAddExpense = async () => {
@@ -159,16 +159,18 @@ export function AddExpenseDialog({
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
                 <SelectItem value="">— Aucun —</SelectItem>
-                {personnes.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.name}
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={String(u.id)}>
+                    {u.first_name || u.last_name
+                      ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
+                      : u.username || u.email}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {personnes.length === 0 && (
+            {users.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Aucun responsable disponible. Ajoutez des personnes dans les paramètres.
+                Aucun responsable disponible.
               </p>
             )}
           </div>

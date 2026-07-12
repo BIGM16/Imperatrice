@@ -140,7 +140,7 @@ export function Sidebar() {
                 alt={user?.full_name || ""}
               />
               <AvatarFallback className="bg-gold/20 text-gold font-semibold">
-                {user?.full_name
+                {user?.username
                   ?.split(" ")
                   .map((n) => n[0])
                   .join("")
@@ -150,7 +150,7 @@ export function Sidebar() {
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {user?.full_name}
+                  {user?.username}
                 </p>
                 <p className="text-xs text-muted-foreground capitalize">
                   {user?.role}

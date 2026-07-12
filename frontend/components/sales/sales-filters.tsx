@@ -14,15 +14,11 @@ import { Search } from "lucide-react";
 interface SalesFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  paymentFilter: string;
-  onPaymentFilterChange: (value: string) => void;
 }
 
 export function SalesFilters({
   search,
   onSearchChange,
-  paymentFilter,
-  onPaymentFilterChange,
 }: SalesFiltersProps) {
   return (
     <Card className="bg-card border-border">
@@ -32,13 +28,13 @@ export function SalesFilters({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Rechercher par client ou ID de transaction..."
+              placeholder="Rechercher par ID de transaction..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
             />
           </div>
-          <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
+          {/* <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
             <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
               <SelectValue placeholder="Moyen de paiement" />
             </SelectTrigger>
@@ -50,7 +46,7 @@ export function SalesFilters({
               <SelectItem value="mtn_money">Mtn money</SelectItem>
               <SelectItem value="afrimall">Afrimall</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
       </CardContent>
     </Card>

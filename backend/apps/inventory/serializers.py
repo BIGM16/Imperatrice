@@ -10,11 +10,10 @@ class CategorieSerializer(serializers.ModelSerializer):
 
 class BoissonSerializer(serializers.ModelSerializer):
     benefice_unitaire = serializers.SerializerMethodField()
-    categorie = CategorieSerializer(read_only=True)
-    categorie_id = serializers.PrimaryKeyRelatedField(
+    category = CategorieSerializer( read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source="category",
-        write_only=True,
         required=False,
         allow_null=True,
     )
@@ -29,8 +28,8 @@ class BoissonSerializer(serializers.ModelSerializer):
             "stock",
             "min_stock",
             "benefice_unitaire",
-            "categorie",
-            "categorie_id",
+            "category",
+            "category_id",
             "volume",
             "image_url",
         ]
