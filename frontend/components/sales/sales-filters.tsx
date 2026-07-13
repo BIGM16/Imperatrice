@@ -34,19 +34,18 @@ export function SalesFilters({
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
             />
           </div>
-          {/* <Select value={paymentFilter} onValueChange={onPaymentFilterChange}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border">
-              <SelectValue placeholder="Moyen de paiement" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all">Tous les moyens</SelectItem>
-              <SelectItem value="cash">Espèces</SelectItem>
-              <SelectItem value="card">Carte</SelectItem>
-              <SelectItem value="orange_money">Orange money</SelectItem>
-              <SelectItem value="mtn_money">Mtn money</SelectItem>
-              <SelectItem value="afrimall">Afrimall</SelectItem>
-            </SelectContent>
-          </Select> */}
+          <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
+                  <Calendar className="w-4 h-4 mr-2 text-gold" />
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="all">Toutes les périodes</SelectItem>
+                  <SelectItem value="today">Aujourd'hui</SelectItem>
+                  <SelectItem value="week">Cette semaine</SelectItem>
+                  <SelectItem value="month">Ce mois-ci</SelectItem>
+                </SelectContent>
+              </Select>
         </div>
       </CardContent>
     </Card>

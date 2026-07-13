@@ -66,7 +66,7 @@ export default function SettingsPage() {
     loadTeamMembers();
   }, []);
 
-  const profileName = user?.full_name || user?.email || "";
+  const profileName = user?.username || user?.email || "";
   const profileInitials = useMemo(() => {
     return (
       profileName
@@ -102,13 +102,7 @@ export default function SettingsPage() {
               <User className="w-4 h-4 mr-2" />
               Profil
             </TabsTrigger>
-            <TabsTrigger
-              value="notifications"
-              className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
-            >
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
+            
             <TabsTrigger
               value="security"
               className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
@@ -116,13 +110,7 @@ export default function SettingsPage() {
               <Shield className="w-4 h-4 mr-2" />
               Sécurité
             </TabsTrigger>
-            <TabsTrigger
-              value="appearance"
-              className="data-[state=active]:bg-gold data-[state=active]:text-pitch"
-            >
-              <Palette className="w-4 h-4 mr-2" />
-              Apparence
-            </TabsTrigger>
+            
           </TabsList>
 
           {/* Profile Tab */}
@@ -156,7 +144,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">
-                      {user?.full_name || user?.email || "Utilisateur"}
+                      {user?.username || "Utilisateur"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {user?.email}
@@ -233,7 +221,7 @@ export default function SettingsPage() {
 
                 <Button
                   className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-                  onClick={() => toast.success("Profile updated successfully")}
+                  onClick={() => toast.success("Profil mise à jour")}
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Enregistrer les modifications
@@ -260,7 +248,7 @@ export default function SettingsPage() {
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={member.avatar_url || ""} />
                           <AvatarFallback className="bg-gold/20 text-gold">
-                            {String(member.full_name || member.email || "U")
+                            {String(member.username || "U")
                               .split(" ")
                               .map((n: string) => n[0])
                               .join("")
@@ -310,123 +298,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Préférences de notification
-                </CardTitle>
-                <CardDescription>
-                  Personnaliser la façon dont vous recevez les notifications
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Notifications par email
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Recevoir des mises à jour par email
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.email}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, email: checked })
-                      }
-                    />
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Notifications Push
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Recevoir des notifications dans l&apos;application
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.push}
-                      onCheckedChange={(checked) =>
-                        setNotifications({ ...notifications, push: checked })
-                      }
-                    />
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Alerte de stock bas
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Être notifié lorsque les stocks sont bas
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.lowStock}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          lowStock: checked,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Notifications de nouvelles ventes
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Être notifié pour chaque nouvelle vente
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.newSales}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          newSales: checked,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        Résumé du rapport quotidien
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Recevoir les résumés des rapports quotidiens
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.dailyReport}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          dailyReport: checked,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          
 
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-6">
@@ -481,26 +353,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Authentification à deux facteurs
-                </CardTitle>
-                <CardDescription>
-                  Ajouter une couche de sécurité supplémentaire
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  L&apos;authentification à deux facteurs ajoute une couche de sécurité supplémentaire
-                  à votre compte en exigeant plus qu&apos;un mot de passe pour vous connecter.
-                </p>
-                <Button variant="outline" className="border-border">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Activer l&apos;authentification à deux facteurs
-                </Button>
-              </CardContent>
-            </Card>
+            
 
             <Card className="bg-red-500/10 border-red-500/30">
               <CardHeader>
@@ -521,86 +374,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           {/* Appearance Tab */}
-          <TabsContent value="appearance" className="space-y-6">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Paramètres d'apparence
-                </CardTitle>
-                <CardDescription>
-                  Personnaliser l'apparence de l'application
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-3 gap-4">
-                  <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center">
-                    <div className="w-12 h-12 mx-auto rounded-lg bg-pitch mb-2" />
-                    <p className="text-sm font-medium text-foreground">Sombre</p>
-                    <p className="text-xs text-muted-foreground">Par défaut</p>
-                  </button>
-                  <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center opacity-50 cursor-not-allowed">
-                    <div className="w-12 h-12 mx-auto rounded-lg bg-white mb-2" />
-                    <p className="text-sm font-medium text-foreground">Clair</p>
-                    <p className="text-xs text-muted-foreground">Bientôt disponible</p>
-                  </button>
-                  <button className="p-4 rounded-lg border-2 border-border bg-secondary/50 hover:border-gold/30 transition-colors text-center opacity-50 cursor-not-allowed">
-                    <div className="w-12 h-12 mx-auto rounded-lg bg-gradient-to-br from-pitch to-white mb-2" />
-                    <p className="text-sm font-medium text-foreground">
-                      Système
-                    </p>
-                    <p className="text-xs text-muted-foreground">Bientôt disponible</p>
-                  </button>
-                </div>
-
-                <Separator className="bg-border" />
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">Langue</p>
-                      <p className="text-sm text-muted-foreground">
-                        Choisissez votre langue préférée
-                      </p>
-                    </div>
-                    <Select defaultValue="en">
-                      <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
-                        <Globe className="w-4 h-4 mr-2" />
-                        <SelectValue placeholder="Langue" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="de">Deutsch</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Separator className="bg-border" />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">Fuseau horaire</p>
-                      <p className="text-sm text-muted-foreground">
-                        Définissez votre fuseau horaire local
-                      </p>
-                    </div>
-                    <Select defaultValue="europe">
-                      <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
-                        <SelectValue placeholder="Fuseau horaire" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        <SelectItem value="europe">Europe/Paris</SelectItem>
-                        <SelectItem value="london">Europe/London</SelectItem>
-                        <SelectItem value="ny">America/New York</SelectItem>
-                        <SelectItem value="la">America/Los Angeles</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          
         </Tabs>
       </div>
     </DashboardLayout>

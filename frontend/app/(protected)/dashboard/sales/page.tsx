@@ -16,6 +16,7 @@ export default function SalesPage() {
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showNewSale, setShowNewSale] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [dateRange, setDateRange] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sales, setSales] = useState<Sale[]>([]);
   const [drinks, setDrinks] = useState<Drink[]>([]);
@@ -48,12 +49,54 @@ export default function SalesPage() {
     return matchesSearch && matchesPayment;
   });
 
+  const filterByDateRange = (dateStr?: string | null) => {
+    if (dateRange === "all") return true;
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    const now = new Date();
+    
+    // Clear times for day comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (dateRange === "today") {
+      return itemDate.getTime() === today.getTime();
+    }
+    
+    if (dateRange === "week") {
+      const oneWeekAgo = new Date(today);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return itemDate >= oneWeekAgo;
+    }
+    
+    if (dateRange === "month") {
+      const oneMonthAgo = new Date(today);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      return itemDate >= oneMonthAgo;
+    }
+    
+    return true;
+  };
+
   // Paginate
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
   const paginatedSales = filteredSales.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+
+  const getPeriodLabel = () => {
+    switch (dateRange) {
+      case "today":
+        return "Aujourd'hui";
+      case "week":
+        return "Cette semaine";
+      case "month":
+        return "Ce mois-ci";
+      default:
+        return "Toutes les périodes";
+    }
+  };
 
   const handleSaleCreated = async () => {
     const salesData = await saleService.getSales({ ordering: "-created_at" });
@@ -85,8 +128,7 @@ export default function SalesPage() {
         <SalesFilters
           search={search}
           onSearchChange={setSearch}
-          paymentFilter={paymentFilter}
-          onPaymentFilterChange={setPaymentFilter}
+          periodLabel={getPeriodLabel()}
         />
 
         {/* Sales table */}
