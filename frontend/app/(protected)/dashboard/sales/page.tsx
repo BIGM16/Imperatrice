@@ -46,7 +46,8 @@ export default function SalesPage() {
       sale.id.toString().toLowerCase().includes(search.toLowerCase());
     const matchesPayment =
       paymentFilter === "all" || sale.payment_method === paymentFilter;
-    return matchesSearch && matchesPayment;
+    const matchesDate = filterByDateRange(sale.created_at);
+    return matchesSearch && matchesPayment && matchesDate;
   });
 
   const filterByDateRange = (dateStr?: string | null) => {
@@ -54,27 +55,31 @@ export default function SalesPage() {
     if (!dateStr) return false;
     const date = new Date(dateStr);
     const now = new Date();
-    
+
     // Clear times for day comparison
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
+    const itemDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
+
     if (dateRange === "today") {
       return itemDate.getTime() === today.getTime();
     }
-    
+
     if (dateRange === "week") {
       const oneWeekAgo = new Date(today);
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       return itemDate >= oneWeekAgo;
     }
-    
+
     if (dateRange === "month") {
       const oneMonthAgo = new Date(today);
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       return itemDate >= oneMonthAgo;
     }
-    
+
     return true;
   };
 
@@ -128,6 +133,8 @@ export default function SalesPage() {
         <SalesFilters
           search={search}
           onSearchChange={setSearch}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
           periodLabel={getPeriodLabel()}
         />
 
@@ -152,4 +159,3 @@ export default function SalesPage() {
     </DashboardLayout>
   );
 }
-

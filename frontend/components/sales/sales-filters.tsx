@@ -9,16 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Calendar } from "lucide-react";
 
 interface SalesFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
+  dateRange: string;
+  onDateRangeChange: (value: string) => void;
+  periodLabel?: string;
 }
 
 export function SalesFilters({
   search,
   onSearchChange,
+  dateRange,
+  onDateRangeChange,
+  periodLabel = "Période",
 }: SalesFiltersProps) {
   return (
     <Card className="bg-card border-border">
@@ -34,18 +40,18 @@ export function SalesFilters({
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
             />
           </div>
-          <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
-                  <Calendar className="w-4 h-4 mr-2 text-gold" />
-                  <SelectValue placeholder="Période" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">Toutes les périodes</SelectItem>
-                  <SelectItem value="today">Aujourd'hui</SelectItem>
-                  <SelectItem value="week">Cette semaine</SelectItem>
-                  <SelectItem value="month">Ce mois-ci</SelectItem>
-                </SelectContent>
-              </Select>
+          <Select value={dateRange} onValueChange={onDateRangeChange}>
+            <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
+              <Calendar className="w-4 h-4 mr-2 text-gold" />
+              <SelectValue placeholder={periodLabel} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">Toutes les périodes</SelectItem>
+              <SelectItem value="today">Aujourd'hui</SelectItem>
+              <SelectItem value="week">Cette semaine</SelectItem>
+              <SelectItem value="month">Ce mois-ci</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>

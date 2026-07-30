@@ -131,7 +131,7 @@ export default function FinancePage() {
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
                   <SelectItem value="all">Toutes les périodes</SelectItem>
-                  <SelectItem value="today">Aujourd'hui</SelectItem>
+                  <SelectItem value="today">Aujourd_hui</SelectItem>
                   <SelectItem value="week">Cette semaine</SelectItem>
                   <SelectItem value="month">Ce mois-ci</SelectItem>
                 </SelectContent>
