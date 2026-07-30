@@ -111,7 +111,7 @@ export function SaleDetailsDrawer({
                   Articles
                 </p>
                 <div className="space-y-2">
-                  {drinks.slice(0, 2).map((drink) => (
+                  {drinks.map((drink) => (
                     <div
                       key={drink.id}
                       className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border"
@@ -120,7 +120,7 @@ export function SaleDetailsDrawer({
                         <p className="text-sm font-medium text-foreground">
                           {drink.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">Qté: 1</p>
+                        <p className="text-xs text-muted-foreground">Qté: {drink.quantity}</p>
                       </div>
                       <span className="font-semibold text-gold">
                         {(

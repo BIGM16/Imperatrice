@@ -134,8 +134,7 @@ export default function SalesPage() {
           search={search}
           onSearchChange={setSearch}
           dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          periodLabel={getPeriodLabel()}
+          setDateRange={setDateRange}
         />
 
         {/* Sales table */}

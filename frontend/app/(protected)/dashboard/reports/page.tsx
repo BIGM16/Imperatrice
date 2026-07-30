@@ -142,9 +142,17 @@ export default function ReportsPage() {
           netProfit: stats.netProfitMonth,
         });
 
+        // 1. Convertis et découpe les données d'abord
+const slicedDayData = salesByDayToChartData(byDay).slice(-7);
+const slicedSellerData = salesBySellerToChartData(bySeller).slice(-5);
+
+// 2. Mets à jour tes states ensuite
+setSalesByDay(slicedDayData);
+setSalesBySeller(slicedSellerData);
+
         setTopSellingDrinks(topDrinksToChartData(topDrinks));
         setSalesByDay(salesByDayToChartData(byDay).slice(-7));
-        setSalesBySeller(salesBySellerToChartData(bySeller));
+        setSalesBySeller(salesBySellerToChartData(bySeller).slice(-5));
       } catch {
         toast.error("Erreur lors du chargement des rapports");
       } finally {

@@ -15,16 +15,14 @@ interface SalesFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
   dateRange: string;
-  onDateRangeChange: (value: string) => void;
-  periodLabel?: string;
+  setDateRange: (value: string) => void;
 }
 
 export function SalesFilters({
   search,
   onSearchChange,
   dateRange,
-  onDateRangeChange,
-  periodLabel = "Période",
+  setDateRange,
 }: SalesFiltersProps) {
   return (
     <Card className="bg-card border-border">
@@ -40,10 +38,10 @@ export function SalesFilters({
               className="pl-10 bg-secondary/50 border-border focus:border-gold"
             />
           </div>
-          <Select value={dateRange} onValueChange={onDateRangeChange}>
+          <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[180px] bg-secondary/50 border-border">
               <Calendar className="w-4 h-4 mr-2 text-gold" />
-              <SelectValue placeholder={periodLabel} />
+              <SelectValue placeholder="Période" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
               <SelectItem value="all">Toutes les périodes</SelectItem>

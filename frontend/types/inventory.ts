@@ -20,4 +20,5 @@ export interface Drink {
   price_sale?: number;
   price_purchase?: number;
   benefice_unitaire?: number;
+  quantity?: number;
 }
