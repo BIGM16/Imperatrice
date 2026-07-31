@@ -40,16 +40,6 @@ export default function SalesPage() {
     loadSalesData();
   }, []);
 
-  const filteredSales = (Array.isArray(sales) ? sales : []).filter((sale) => {
-    const matchesSearch =
-      sale.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-      sale.id.toString().toLowerCase().includes(search.toLowerCase());
-    const matchesPayment =
-      paymentFilter === "all" || sale.payment_method === paymentFilter;
-    const matchesDate = filterByDateRange(sale.created_at);
-    return matchesSearch && matchesPayment && matchesDate;
-  });
-
   const filterByDateRange = (dateStr?: string | null) => {
     if (dateRange === "all") return true;
     if (!dateStr) return false;
@@ -82,6 +72,16 @@ export default function SalesPage() {
 
     return true;
   };
+
+  const filteredSales = (Array.isArray(sales) ? sales : []).filter((sale) => {
+    const matchesSearch =
+      sale.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
+      sale.id.toString().toLowerCase().includes(search.toLowerCase());
+    const matchesPayment =
+      paymentFilter === "all" || sale.payment_method === paymentFilter;
+    const matchesDate = filterByDateRange(sale.created_at);
+    return matchesSearch && matchesPayment && matchesDate;
+  });
 
   // Paginate
   const totalPages = Math.ceil(filteredSales.length / itemsPerPage);

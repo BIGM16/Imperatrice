@@ -198,7 +198,7 @@ export default function AuditLogsPage() {
                 Journal d&apos;activité
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 overflow-x-auto">
               <ScrollArea className="h-[600px] pr-4">
                 {Object.entries(groupedLogs).map(([date, logs], groupIndex) => (
                   <div key={date} className="relative mb-8 last:mb-0">
@@ -245,7 +245,7 @@ export default function AuditLogsPage() {
 
                             {/* Log card */}
                             <div className="rounded-lg bg-secondary/30 border border-border p-4 hover:border-gold/30 transition-colors">
-                              <div className="flex items-start justify-between gap-4">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
                                 <div className="flex items-start gap-3">
                                   {/* Action icon */}
                                   <div

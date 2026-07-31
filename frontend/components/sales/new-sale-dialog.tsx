@@ -97,7 +97,7 @@ export function NewSaleDialog({
           Nouvelle vente
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-card border-border">
+      <DialogContent className="max-w-[95vw] md:max-w-2xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Nouvelle vente</DialogTitle>
           <DialogDescription>
@@ -105,7 +105,7 @@ export function NewSaleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 py-2 md:py-4">
           {/* Drink selection */}
           <div className="space-y-4">
             <Label className="text-foreground font-medium">Selectionnez les boissons</Label>

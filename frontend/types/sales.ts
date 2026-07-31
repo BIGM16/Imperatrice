@@ -12,8 +12,10 @@ export interface Sale {
   user?: User;
   items?: SaleItem[];
   quantity?: number;
+  unit_price?: number;
   total_price?: number;
   drink?: Drink;
+  drink_name?: string;
   served_by?: User;
   seller_name?: string | null;
 }

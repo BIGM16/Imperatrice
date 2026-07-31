@@ -93,8 +93,8 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-foreground text-sm">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="font-medium text-foreground text-sm break-words">
                       {activity.description}
                     </span>
                     <Badge

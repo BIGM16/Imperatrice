@@ -116,15 +116,16 @@ class FinanceReportService:
 
 class SalesReportService:
     @staticmethod
-    def top_drinks(start_date, end_date, limit=5):
+    def top_drinks(start_date=None, end_date=None, limit=5):
+        qs = Sale.objects.all()
+        if start_date and end_date:
+            qs = qs.filter(created_at__date__range=(start_date, end_date))
         return (
-            Sale.objects.filter(created_at__date__range=(start_date, end_date))
-            .values("drink__id", "drink__name")
+            qs.values("drink__id", "drink__name")
             .annotate(
                 quantite_vendue=Sum("quantity"),
                 nom_boisson=F("drink__name"),
                 chiffre_affaires=Sum("total_price"),
-                # Ajout de la marge générée par boisson pour le rapport du Top
                 marge_boisson=Sum(
                     F("quantity") * ExpressionWrapper(
                         F("unit_price") - F("drink__price_purchase"), 
@@ -138,10 +139,12 @@ class SalesReportService:
 
 class SalesByDayService:
     @staticmethod
-    def sales_by_day(start_date, end_date):
+    def sales_by_day(start_date=None, end_date=None):
+        qs = Sale.objects.all()
+        if start_date and end_date:
+            qs = qs.filter(created_at__date__range=(start_date, end_date))
         return (
-            Sale.objects.filter(created_at__date__range=(start_date, end_date))
-            .annotate(jour=TruncDate("created_at"))
+            qs.annotate(jour=TruncDate("created_at"))
             .values("jour")
             .annotate(
                 chiffre_affaires=Sum("total_price"),
@@ -153,10 +156,12 @@ class SalesByDayService:
 
 class SalesBySellerService:
     @staticmethod
-    def sales_by_seller(start_date, end_date):
+    def sales_by_seller(start_date=None, end_date=None):
+        qs = Sale.objects.all()
+        if start_date and end_date:
+            qs = qs.filter(created_at__date__range=(start_date, end_date))
         return (
-            Sale.objects.filter(created_at__date__range=(start_date, end_date))
-            .values("served_by__id", "served_by__username")
+            qs.values("served_by__id", "served_by__username")
             .annotate(
                 chiffre_affaires=Sum("total_price"),
                 nombre_articles=Sum("quantity"),

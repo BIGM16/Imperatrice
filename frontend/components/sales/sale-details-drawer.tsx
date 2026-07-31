@@ -108,30 +108,48 @@ export function SaleDetailsDrawer({
               {/* Items */}
               <div>
                 <p className="text-sm font-medium text-foreground mb-3">
-                  Articles
+                  Articles vendus
                 </p>
                 <div className="space-y-2">
-                  {drinks.map((drink) => (
-                    <div
-                      key={drink.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {drink.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Qté: {drink.quantity}</p>
+                  {(() => {
+                    const saleItems =
+                      sale.items && sale.items.length > 0
+                        ? sale.items.map((item) => ({
+                            id: item.id,
+                            name: item.drink?.name ?? `Boisson #${item.drink_id}`,
+                            quantity: item.quantity,
+                            price: item.subtotal ?? item.unit_price * item.quantity,
+                          }))
+                        : [
+                            {
+                              id: String(sale.id),
+                              name: sale.drink_name || sale.drink?.name || "Boisson",
+                              quantity: sale.quantity ?? 1,
+                              price:
+                                sale.total_price ??
+                                ((sale.unit_price ?? 0) * (sale.quantity ?? 1)),
+                            },
+                          ];
+
+                    return saleItems.map((item, idx) => (
+                      <div
+                        key={item.id || idx}
+                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-border"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Qté: {item.quantity}
+                          </p>
+                        </div>
+                        <span className="font-semibold text-gold">
+                          {(item.price ?? 0).toLocaleString()} FC
+                        </span>
                       </div>
-                      <span className="font-semibold text-gold">
-                        {(
-                          drink.price ??
-                          drink.price_sale ??
-                          0
-                        ).toLocaleString()}{" "}
-                        FC
-                      </span>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
 

@@ -1,52 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Search,
-  Plus,
-  Package,
-  AlertTriangle,
-  Check,
-  X,
-  Edit3,
-  ArrowUp,
-  ArrowDown,
-  Wine,
-  Grid3X3,
-  List,
-} from "lucide-react";
 import { Drink } from "@/types/inventory";
-import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
 import inventoryService from "@/services/inventory";
+
+import { InventoryStatsCards } from "@/components/inventory/inventory-stats-cards";
+import { InventoryFilters } from "@/components/inventory/inventory-filters";
+import { DrinkCard } from "@/components/inventory/drink-card";
+import { DrinkTable } from "@/components/inventory/drink-table";
+import { AddDrinkDialog } from "@/components/inventory/add-drink-dialog";
+import { EditDrinkDialog } from "@/components/inventory/edit-drink-dialog";
+import { UpdateStockDialog } from "@/components/inventory/update-stock-dialog";
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -57,9 +25,7 @@ export default function InventoryPage() {
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [updatingStock, setUpdatingStock] = useState<Drink | null>(null);
   const [drinks, setDrinks] = useState<Drink[]>([]);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addCategory, setAddCategory] = useState<string>("");
   const [addImageUrl, setAddImageUrl] = useState<string>("");
@@ -72,6 +38,7 @@ export default function InventoryPage() {
   const addCostRef = useRef<HTMLInputElement>(null);
   const addStockRef = useRef<HTMLInputElement>(null);
   const addMinStockRef = useRef<HTMLInputElement>(null);
+
   const editNameRef = useRef<HTMLInputElement>(null);
   const editPriceRef = useRef<HTMLInputElement>(null);
   const editCostRef = useRef<HTMLInputElement>(null);
@@ -85,7 +52,7 @@ export default function InventoryPage() {
       ]);
       setDrinks(drinksData || []);
       setCategories(
-        categoriesData.map((cat) => ({
+        (categoriesData || []).map((cat) => ({
           id: String(cat.id),
           name: cat.name,
         })),
@@ -106,6 +73,7 @@ export default function InventoryPage() {
     const price_purchase = parseFloat(addCostRef.current?.value || "0");
     const stock = parseInt(addStockRef.current?.value || "0");
     const min_stock = parseInt(addMinStockRef.current?.value || "0");
+
     if (!name) {
       toast.error("Le nom est requis");
       return;
@@ -172,66 +140,26 @@ export default function InventoryPage() {
     }
   };
 
-  const filteredDrinks = (Array.isArray(drinks) ? drinks : []).filter(
-    (drink) => {
-      const matchesSearch = drink.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesCategory =
-        categoryFilter === "all" ||
-        String(drink.category_id) === categoryFilter ||
-        String(drink.category?.id) === categoryFilter;
-      const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
-      const minStockLevel = drink.min_stock ?? 0;
-      const matchesStock =
-        stockFilter === "all" ||
-        (stockFilter === "low" &&
-          stockQuantity > 0 &&
-          stockQuantity <= minStockLevel) ||
-        (stockFilter === "out" && stockQuantity === 0) ||
-        (stockFilter === "ok" && stockQuantity > minStockLevel);
-      return matchesSearch && matchesCategory && matchesStock;
-    },
-  );
-
-  const getStockStatus = (drink: Drink) => {
+  const filteredDrinks = (Array.isArray(drinks) ? drinks : []).filter((drink) => {
+    const matchesSearch = drink.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" ||
+      String(drink.category_id) === categoryFilter ||
+      String(drink.category?.id) === categoryFilter;
     const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
     const minStockLevel = drink.min_stock ?? 0;
-    if (stockQuantity === 0) {
-      return {
-        label: "Out of Stock",
-        color: "text-red-500",
-        bg: "bg-red-500/10",
-        icon: X,
-      };
-    }
-    if (stockQuantity <= minStockLevel) {
-      return {
-        label: "Low Stock",
-        color: "text-amber-500",
-        bg: "bg-amber-500/10",
-        icon: AlertTriangle,
-      };
-    }
-    return {
-      label: "In Stock",
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-      icon: Check,
-    };
-  };
-
-  const getStockPercentage = (drink: Drink) => {
-    const stockQuantity = drink.stock_quantity ?? drink.stock ?? 0;
-    const minStockLevel = drink.min_stock ?? 0;
-    const maxStock = Math.max(minStockLevel * 3, 50);
-    return Math.min(100, (stockQuantity / maxStock) * 100);
-  };
+    const matchesStock =
+      stockFilter === "all" ||
+      (stockFilter === "low" && stockQuantity > 0 && stockQuantity <= minStockLevel) ||
+      (stockFilter === "out" && stockQuantity === 0) ||
+      (stockFilter === "ok" && stockQuantity > minStockLevel);
+    return matchesSearch && matchesCategory && matchesStock;
+  });
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Page header */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-playfair font-bold text-foreground">
@@ -241,665 +169,103 @@ export default function InventoryPage() {
               Gérer les boissons et suivre les niveaux de stock
             </p>
           </div>
-          <Dialog open={showAddDrink} onOpenChange={setShowAddDrink}>
-            <DialogTrigger asChild>
-              <Button className="bg-gold hover:bg-gold-light text-pitch font-semibold">
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter une boisson
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md bg-card border-border">
-              <DialogHeader>
-                <DialogTitle className="text-foreground">
-                  Nouvelle boisson
-                </DialogTitle>
-                <DialogDescription>
-                  Entrer les détails de la nouvelle boisson
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-foreground">
-                    Nom
-                  </Label>
-                  <Input
-                    id="name"
-                    ref={addNameRef}
-                    placeholder="Drink name"
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-foreground">
-                    Categorie
-                  </Label>
-                  <Select onValueChange={setAddCategory}>
-                    <SelectTrigger className="bg-secondary/50 border-border">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className="text-foreground">
-                      Prix de vente (FC)
-                    </Label>
-                    <Input
-                      id="price"
-                      ref={addPriceRef}
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="bg-secondary/50 border-border focus:border-gold"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cost" className="text-foreground">
-                      Prix d&apos;achat (FC)
-                    </Label>
-                    <Input
-                      id="cost"
-                      ref={addCostRef}
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="bg-secondary/50 border-border focus:border-gold"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="stock" className="text-foreground">
-                      Stock initial
-                    </Label>
-                    <Input
-                      id="stock"
-                      ref={addStockRef}
-                      type="number"
-                      placeholder="0"
-                      className="bg-secondary/50 border-border focus:border-gold"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="min-stock" className="text-foreground">
-                      Stock minimum
-                    </Label>
-                    <Input
-                      id="min_stock"
-                      type="number"
-                      ref={addMinStockRef}
-                      placeholder="10"
-                      className="bg-secondary/50 border-border focus:border-gold"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="add-image-url" className="text-foreground">
-                    URL de l&apos;image (optionnel)
-                  </Label>
-                  <Input
-                    id="add-image-url"
-                    type="url"
-                    value={addImageUrl}
-                    onChange={(e) => setAddImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-foreground">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Drink description"
-                    className="bg-secondary/50 border-border focus:border-gold resize-none"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddDrink(false)}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  onClick={handleAddDrink}
-                  disabled={isSubmitting}
-                  className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-                >
-                  {isSubmitting ? "Ajout..." : "Ajouter boisson"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={() => setShowAddDrink(true)}
+            className="bg-gold hover:bg-gold-light text-pitch font-semibold"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Ajouter une boisson
+          </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-card border-border card-hover">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Total Articles
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {drinks.length}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-gold" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border card-hover">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">En Stock</p>
-                  <p className="text-2xl font-bold text-emerald-500">
-                    {
-                      drinks.filter((d) => {
-                        const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
-                        const minStockLevel = d.min_stock ?? 0;
-                        return stockQuantity > minStockLevel;
-                      }).length
-                    }
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border card-hover">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Stock Faible</p>
-                  <p className="text-2xl font-bold text-amber-500">
-                    {
-                      drinks.filter((d) => {
-                        const stockQuantity = d.stock_quantity ?? d.stock ?? 0;
-                        const minStockLevel = d.min_stock ?? 0;
-                        return (
-                          stockQuantity > 0 && stockQuantity <= minStockLevel
-                        );
-                      }).length
-                    }
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card border-border card-hover">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Stock vidé</p>
-                  <p className="text-2xl font-bold text-red-500">
-                    {
-                      drinks.filter(
-                        (d) => (d.stock_quantity ?? d.stock ?? 0) === 0,
-                      ).length
-                    }
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                  <X className="w-5 h-5 text-red-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Stats Cards */}
+        <InventoryStatsCards drinks={drinks} />
 
         {/* Filters */}
-        <Card className="bg-card border-border">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Recherche boisson..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-secondary/50 border-border focus:border-gold"
-                />
-              </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-[160px] bg-secondary/50 border-border">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">Toutes les categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={stockFilter} onValueChange={setStockFilter}>
-                <SelectTrigger className="w-full sm:w-[160px] bg-secondary/50 border-border">
-                  <SelectValue placeholder="Stock status" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem value="all">Tous Status</SelectItem>
-                  <SelectItem value="ok">En Stock</SelectItem>
-                  <SelectItem value="low">Stock Faible</SelectItem>
-                  <SelectItem value="out">Stock vide</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-1">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  size="icon"
-                  onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" ? "bg-gold text-pitch" : ""}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="icon"
-                  onClick={() => setViewMode("list")}
-                  className={viewMode === "list" ? "bg-gold text-pitch" : ""}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <InventoryFilters
+          search={search}
+          onSearchChange={setSearch}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          stockFilter={stockFilter}
+          onStockFilterChange={setStockFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          categories={categories}
+        />
 
-        {/* Inventory grid/list */}
+        {/* Drink Items Content */}
         {viewMode === "grid" ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredDrinks.map((drink) => {
-              const status = getStockStatus(drink);
-              return (
-                <Card
-                  key={drink.id}
-                  className="bg-card border-border card-hover overflow-hidden"
-                >
-                  {/* Image placeholder */}
-                  <div className="h-32 relative bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
-                    {drink.image_url ? (
-                      <Image
-                        src={drink.image_url}
-                        alt={drink.name}
-                        width={200}
-                        height={200}
-                        className="object-cover rounded-md"
-                      />
-                    ) : (
-                      <Wine className="w-12 h-12 text-muted-foreground/30" />
-                    )}
-                  </div>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base font-semibold text-foreground truncate">
-                          {drink.name}
-                        </CardTitle>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {drink.category?.name}
-                        </p>
-                      </div>
-                      <Badge className={cn("text-xs", status.bg, status.color)}>
-                        {status.label}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {/* Price row */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Prix
-                        </span>
-                        <span className="font-semibold text-gold">
-                          {(
-                            drink.price ??
-                            drink.price_sale ??
-                            0
-                          ).toLocaleString()}{" "}
-                          FC
-                        </span>
-                      </div>
-
-                      {/* Stock progress */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Stock</span>
-                          <span className="font-medium text-foreground">
-                            {drink.stock_quantity ?? drink.stock ?? 0}{" "}
-                            bouteilles
-                          </span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-all",
-                              (drink.stock_quantity ?? drink.stock ?? 0) <=
-                                (drink.min_stock ?? 0)
-                                ? (drink.stock_quantity ?? drink.stock ?? 0) ===
-                                  0
-                                  ? "bg-red-500"
-                                  : "bg-amber-500"
-                                : "bg-gold",
-                            )}
-                            style={{ width: `${getStockPercentage(drink)}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Min: {drink.min_stock ?? 0} bouteilles
-                        </p>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 border-border hover:border-gold/30"
-                          onClick={() => {
-                            setUpdatingStock(drink);
-                            setNewStockValue(drink.stock_quantity ?? drink.stock ?? 0);
-                          }}
-                        >
-                          Mis à jour Stock
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingDrink(drink);
-                            setEditImageUrl(drink.image_url ?? "");
-                          }}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredDrinks.map((drink) => (
+              <DrinkCard
+                key={drink.id}
+                drink={drink}
+                onEdit={(d) => {
+                  setEditingDrink(d);
+                  setEditImageUrl(d.image_url || "");
+                }}
+                onUpdateStock={(d) => {
+                  setUpdatingStock(d);
+                  setNewStockValue(d.stock_quantity ?? d.stock ?? 0);
+                }}
+              />
+            ))}
           </div>
         ) : (
-          <Card className="bg-card border-border">
-            <CardContent className="pt-6">
-              <ScrollArea className="h-[600px]">
-                <div className="space-y-2">
-                  {filteredDrinks.map((drink) => {
-                    const status = getStockStatus(drink);
-                    return (
-                      <div
-                        key={drink.id}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border hover:border-gold/30 transition-colors"
-                      >
-                        <Wine className="w-8 h-8 text-muted-foreground flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground truncate">
-                              {drink.name}
-                            </p>
-                            <Badge
-                              className={cn("text-xs", status.bg, status.color)}
-                            >
-                              {status.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {drink.category?.name}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gold">
-                            {(
-                              drink.price ??
-                              drink.price_sale ??
-                              0
-                            ).toLocaleString()}{" "}
-                            FC
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Stock: {drink.stock_quantity ?? drink.stock ?? 0}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setUpdatingStock(drink);
-                              setNewStockValue(drink.stock_quantity ?? drink.stock ?? 0);
-                            }}
-                          >
-                            Mis à jour
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingDrink(drink);
-                              setEditImageUrl(drink.image_url ?? "");
-                            }}
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <DrinkTable
+            drinks={filteredDrinks}
+            onEdit={(d) => {
+              setEditingDrink(d);
+              setEditImageUrl(d.image_url || "");
+            }}
+            onUpdateStock={(d) => {
+              setUpdatingStock(d);
+              setNewStockValue(d.stock_quantity ?? d.stock ?? 0);
+            }}
+          />
         )}
-
-        {/* Update stock dialog */}
-        <Dialog
-          open={!!updatingStock}
-          onOpenChange={(open) => !open && setUpdatingStock(null)}
-        >
-          <DialogContent className="max-w-md bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">
-                Mettre à jour le stock
-              </DialogTitle>
-              <DialogDescription>{updatingStock?.name}</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 border border-border">
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Stock courant</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {updatingStock
-                      ? (updatingStock.stock_quantity ??
-                        updatingStock.stock ??
-                        0)
-                      : 0}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Stock min</p>
-                  <p className="text-lg font-semibold text-muted-foreground">
-                    {updatingStock?.min_stock ?? 0}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="new-stock" className="text-foreground">
-                  Nouveau Stock
-                </Label>
-                <Input
-                  id="new-stock"
-                  type="number"
-                  value={newStockValue}
-                  onChange={(e) => setNewStockValue(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="bg-secondary/50 border-border focus:border-gold"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setNewStockValue((v) => v + 10)}
-                >
-                  <ArrowUp className="w-4 h-4 mr-2" />
-                  Ajout 10
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setNewStockValue((v) => Math.max(0, v - 10))}
-                >
-                  <ArrowDown className="w-4 h-4 mr-2" />
-                  Retrancher 10
-                </Button>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUpdatingStock(null)}>
-                Annuler
-              </Button>
-              <Button
-                onClick={handleUpdateStock}
-                disabled={isSubmitting}
-                className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-              >
-                {isSubmitting ? "Mise à jour..." : "Mettre à jour"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit drink dialog */}
-        <Dialog
-          open={!!editingDrink}
-          onOpenChange={(open) => !open && setEditingDrink(null)}
-        >
-          <DialogContent className="max-w-md bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">
-                Modifier boisson
-              </DialogTitle>
-              <DialogDescription>
-                Mettre à jour les détails de la boisson
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name" className="text-foreground">
-                  Nom
-                </Label>
-                <Input
-                  id="edit-name"
-                  ref={editNameRef}
-                  defaultValue={editingDrink?.name}
-                  className="bg-secondary/50 border-border focus:border-gold"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-price" className="text-foreground">
-                    Prix de vente (FC)
-                  </Label>
-                  <Input
-                    id="edit-price"
-                    ref={editPriceRef}
-                    type="number"
-                    step="0.01"
-                    defaultValue={
-                      editingDrink?.price_sale ?? editingDrink?.price
-                    }
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-cost" className="text-foreground">
-                    Prix d&apos;achat (FC)
-                  </Label>
-                  <Input
-                    id="edit-cost"
-                    ref={editCostRef}
-                    type="number"
-                    step="0.01"
-                    defaultValue={
-                      editingDrink?.price_purchase ?? editingDrink?.cost
-                    }
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-min-stock" className="text-foreground">
-                    Stock minimal
-                  </Label>
-                  <Input
-                    id="edit-min-stock"
-                    ref={editMinStockRef}
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingDrink?.min_stock ?? 0}
-                    className="bg-secondary/50 border-border focus:border-gold"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-image-url" className="text-foreground">
-                  URL de l&apos;image
-                </Label>
-                <Input
-                  id="edit-image-url"
-                  type="url"
-                  value={editImageUrl}
-                  onChange={(e) => setEditImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="bg-secondary/50 border-border focus:border-gold"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingDrink(null)}>
-                Annuler
-              </Button>
-              <Button
-                onClick={handleEditDrink}
-                disabled={isSubmitting}
-                className="bg-gold hover:bg-gold-light text-pitch font-semibold"
-              >
-                {isSubmitting ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Modals */}
+      <AddDrinkDialog
+        open={showAddDrink}
+        onOpenChange={setShowAddDrink}
+        categories={categories}
+        addCategory={addCategory}
+        onAddCategoryChange={setAddCategory}
+        addImageUrl={addImageUrl}
+        onAddImageUrlChange={setAddImageUrl}
+        isSubmitting={isSubmitting}
+        onAddDrink={handleAddDrink}
+        nameRef={addNameRef}
+        priceRef={addPriceRef}
+        costRef={addCostRef}
+        stockRef={addStockRef}
+        minStockRef={addMinStockRef}
+      />
+
+      <EditDrinkDialog
+        drink={editingDrink}
+        onOpenChange={(open) => !open && setEditingDrink(null)}
+        editImageUrl={editImageUrl}
+        onEditImageUrlChange={setEditImageUrl}
+        isSubmitting={isSubmitting}
+        onEditDrink={handleEditDrink}
+        nameRef={editNameRef}
+        priceRef={editPriceRef}
+        costRef={editCostRef}
+        minStockRef={editMinStockRef}
+      />
+
+      <UpdateStockDialog
+        drink={updatingStock}
+        onOpenChange={(open) => !open && setUpdatingStock(null)}
+        newStockValue={newStockValue}
+        onNewStockValueChange={setNewStockValue}
+        isSubmitting={isSubmitting}
+        onUpdateStock={handleUpdateStock}
+      />
     </DashboardLayout>
   );
 }

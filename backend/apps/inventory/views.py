@@ -36,6 +36,8 @@ from apps.accounts.permissions import (
 )
 
 
+from apps.common.service import AuditLogService
+
 class DrinkViewSet(
     ModelViewSet
 ):
@@ -69,6 +71,39 @@ class DrinkViewSet(
         'created_at'
     ]
 
+    def perform_create(self, serializer):
+        drink = serializer.save()
+        user = self.request.user if self.request.user and self.request.user.is_authenticated else None
+        AuditLogService.log_action(
+            user=user,
+            action="CREATE",
+            model_name="Drink",
+            object_id=drink.id,
+            description=f"Création de la boisson '{drink.name}' (Prix: {drink.price_sale} FC, Stock: {drink.stock})."
+        )
+
+    def perform_update(self, serializer):
+        drink = serializer.save()
+        user = self.request.user if self.request.user and self.request.user.is_authenticated else None
+        AuditLogService.log_action(
+            user=user,
+            action="UPDATE",
+            model_name="Drink",
+            object_id=drink.id,
+            description=f"Modification de la boisson '{drink.name}' (Prix: {drink.price_sale} FC, Stock: {drink.stock})."
+        )
+
+    def perform_destroy(self, instance):
+        user = self.request.user if self.request.user and self.request.user.is_authenticated else None
+        AuditLogService.log_action(
+            user=user,
+            action="DELETE",
+            model_name="Drink",
+            object_id=instance.id,
+            description=f"Suppression de la boisson '{instance.name}'."
+        )
+        instance.delete()
+
     @action(
         detail=True,
         methods=["post"]
@@ -94,10 +129,12 @@ class DrinkViewSet(
             if action_type in {"add", "remove"} and quantity == 0:
                 raise ValueError("La quantité doit être supérieure à 0.")
 
+            user = request.user if request.user and request.user.is_authenticated else None
             drink = InventoryService.update_stock(
                 drink_id=pk,
                 quantity=quantity,
                 action=action_type,
+                user=user,
             )
 
             return Response({"success": True, "new_stock": drink.stock})

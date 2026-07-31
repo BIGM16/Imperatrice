@@ -21,4 +21,8 @@ export interface Drink {
   price_purchase?: number;
   benefice_unitaire?: number;
   quantity?: number;
+  created_at?: string;
+  updated_at?: string;
+  category_name?: string;
+  category_description?: string;
 }

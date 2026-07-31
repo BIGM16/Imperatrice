@@ -9,7 +9,7 @@ class InventoryService:
 
     @staticmethod
     @transaction.atomic
-    def add_stock(drink_id: int, quantity: int):
+    def add_stock(drink_id: int, quantity: int, user=None):
 
         drink = Drink.objects.select_for_update().get(
             pk=drink_id
@@ -19,18 +19,18 @@ class InventoryService:
         drink.save()
 
         AuditLogService.log_action(
-            user=None,  # Replace with actual user if available
-            action="add_stock",
+            user=user,
+            action="STOCK_UPDATE",
             model_name="Drink",
             object_id=drink.id,
-            description=f"Stock ajouté pour {drink.name}: {quantity}"
+            description=f"Stock ajouté pour {drink.name}: +{quantity} (Nouveau stock: {drink.stock})"
         )
 
         return drink
 
     @staticmethod
     @transaction.atomic
-    def remove_stock(drink_id: int, quantity: int):
+    def remove_stock(drink_id: int, quantity: int, user=None):
 
         drink = Drink.objects.select_for_update().get(
             pk=drink_id
@@ -45,18 +45,18 @@ class InventoryService:
         drink.save()
 
         AuditLogService.log_action(
-            user=None,  # Replace with actual user if available
-            action="remove_stock",
+            user=user,
+            action="STOCK_UPDATE",
             model_name="Drink",
             object_id=drink.id,
-            description=f"Stock retiré pour {drink.name}: {quantity}"
+            description=f"Stock retiré pour {drink.name}: -{quantity} (Nouveau stock: {drink.stock})"
         )
 
         return drink
 
     @staticmethod
     @transaction.atomic
-    def set_stock(drink_id: int, quantity: int):
+    def set_stock(drink_id: int, quantity: int, user=None):
 
         drink = Drink.objects.select_for_update().get(
             pk=drink_id
@@ -67,8 +67,8 @@ class InventoryService:
         drink.save()
 
         AuditLogService.log_action(
-            user=None,
-            action="set_stock",
+            user=user,
+            action="STOCK_UPDATE",
             model_name="Drink",
             object_id=drink.id,
             description=f"Stock défini pour {drink.name}: de {old_stock} à {quantity}"
@@ -81,25 +81,29 @@ class InventoryService:
     def update_stock(
         drink_id: int,
         quantity: int,
-        action: str
+        action: str,
+        user=None
     ):
 
         if action == "add":
             return InventoryService.add_stock(
                 drink_id,
-                quantity
+                quantity,
+                user=user
             )
 
         if action == "remove":
             return InventoryService.remove_stock(
                 drink_id,
-                quantity
+                quantity,
+                user=user
             )
 
         if action == "set":
             return InventoryService.set_stock(
                 drink_id,
-                quantity
+                quantity,
+                user=user
             )
 
         raise ValueError(

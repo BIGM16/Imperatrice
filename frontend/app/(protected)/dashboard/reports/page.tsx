@@ -142,17 +142,25 @@ export default function ReportsPage() {
           netProfit: stats.netProfitMonth,
         });
 
-        // 1. Convertis et découpe les données d'abord
-const slicedDayData = salesByDayToChartData(byDay).slice(-7);
-const slicedSellerData = salesBySellerToChartData(bySeller).slice(-5);
+        const dayData = (byDay || []).map((d) => ({
+          name: d.day ? format(new Date(d.day), "dd/MM") : "N/A",
+          value: d.total_sales || 0,
+        })).slice(-7);
 
-// 2. Mets à jour tes states ensuite
-setSalesByDay(slicedDayData);
-setSalesBySeller(slicedSellerData);
+        const sellerData = (bySeller || []).map((s) => ({
+          name: s.served_by__username || "Inconnu",
+          value: s.total_sales || 0,
+        })).slice(-5);
 
-        setTopSellingDrinks(topDrinksToChartData(topDrinks));
-        setSalesByDay(salesByDayToChartData(byDay).slice(-7));
-        setSalesBySeller(salesBySellerToChartData(bySeller).slice(-5));
+        const drinksData = (topDrinks || []).map((d) => ({
+          name: d.drink_name || "Boisson",
+          quantity: d.total_sold || 0,
+          revenue: d.revenue || 0,
+        }));
+
+        setSalesByDay(dayData);
+        setSalesBySeller(sellerData);
+        setTopSellingDrinks(drinksData);
       } catch {
         toast.error("Erreur lors du chargement des rapports");
       } finally {
@@ -612,20 +620,5 @@ setSalesBySeller(slicedSellerData);
       </div>
     </DashboardLayout>
   );
-}
-function setTopSellingDrinks(arg0: any) {
-  throw new Error("Function not implemented.");
-}
-
-function topDrinksToChartData(topDrinks: TopDrink[]): import("react").SetStateAction<{ name: string; quantity: number; revenue: number; }[]> {
-  throw new Error("Function not implemented.");
-}
-
-function salesByDayToChartData(byDay: SalesByDay[]) {
-  throw new Error("Function not implemented.");
-}
-
-function salesBySellerToChartData(bySeller: SalesBySeller[]): import("react").SetStateAction<{ name: string; value: number; }[]> {
-  throw new Error("Function not implemented.");
 }
 

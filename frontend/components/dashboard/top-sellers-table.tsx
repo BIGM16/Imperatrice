@@ -41,7 +41,7 @@ export function TopSellersTable({ data }: TopSellersTableProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
